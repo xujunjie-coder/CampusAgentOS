@@ -69,7 +69,7 @@
         var innerW = W - padL - padR, innerH = H - padT - padB;
 
         // 轴与网格
-        ctx.strokeStyle = "#dfe5ee"; ctx.fillStyle = "#8a94a6";
+        ctx.strokeStyle = "#e5eaf2"; ctx.fillStyle = "#64748b";
         ctx.font = "11px sans-serif"; ctx.lineWidth = 1;
         for (var g = 0; g <= 4; g++) {
             var gy = padT + innerH - innerH * g / 4;
@@ -77,27 +77,56 @@
             ctx.textAlign = "right";
             ctx.fillText(String(Math.round(maxV * g / 4)), padL - 6, gy + 4);
         }
-        // 数据
+        // 数据（西华师大藏青 #003087 主色）
         var step = innerW / labels.length;
         if (chart.type === "line") {
-            ctx.strokeStyle = "#1e9fff"; ctx.lineWidth = 2; ctx.beginPath();
+            ctx.beginPath();
             values.forEach(function (v, i) {
                 var x = padL + step * (i + 0.5), y = padT + innerH - innerH * (v / maxV);
                 i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
             });
-            ctx.stroke();
-            ctx.fillStyle = "#1e5eff";
+            ctx.strokeStyle = "#003087"; ctx.lineWidth = 2.2; ctx.stroke();
+            if (values.length > 1) {
+                var areaGrad = ctx.createLinearGradient(0, padT, 0, padT + innerH);
+                areaGrad.addColorStop(0, "rgba(0, 48, 135, 0.16)");
+                areaGrad.addColorStop(1, "rgba(0, 48, 135, 0.01)");
+                ctx.lineTo(padL + step * (values.length - 0.5), padT + innerH);
+                ctx.lineTo(padL + step * 0.5, padT + innerH);
+                ctx.closePath();
+                ctx.fillStyle = areaGrad;
+                ctx.fill();
+            }
             values.forEach(function (v, i) {
                 var x = padL + step * (i + 0.5), y = padT + innerH - innerH * (v / maxV);
-                ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#003087";
+                ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
             });
         } else {
-            ctx.fillStyle = "#4e9cef";
             values.forEach(function (v, i) {
-                var bw = Math.min(step * 0.55, 46);
+                var bw = Math.min(step * 0.55, 44);
                 var x = padL + step * i + (step - bw) / 2;
                 var bh = innerH * (v / maxV);
-                ctx.fillRect(x, padT + innerH - bh, bw, bh);
+                var y = padT + innerH - bh;
+                var r = Math.min(5, bw / 2, bh);
+                var barGrad = ctx.createLinearGradient(0, y, 0, padT + innerH);
+                barGrad.addColorStop(0, "#003087");
+                barGrad.addColorStop(1, "#2b5cb8");
+                ctx.fillStyle = barGrad;
+                ctx.beginPath();
+                if (bh > r && r > 0) {
+                    ctx.moveTo(x, padT + innerH);
+                    ctx.lineTo(x, y + r);
+                    ctx.quadraticCurveTo(x, y, x + r, y);
+                    ctx.lineTo(x + bw - r, y);
+                    ctx.quadraticCurveTo(x + bw, y, x + bw, y + r);
+                    ctx.lineTo(x + bw, padT + innerH);
+                } else {
+                    ctx.rect(x, y, bw, bh);
+                }
+                ctx.closePath();
+                ctx.fill();
             });
         }
         // x 轴标签（超 8 个截断省略号）

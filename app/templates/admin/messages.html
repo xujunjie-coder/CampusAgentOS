@@ -1,10 +1,8 @@
-{# 对话记录管理页（/admin/messages）：成员 E —— 跨用户查看 messages 表活跃对话。
-   框架壳（功能区 | 列表区 | 分页区）由本模板出，列表 / 详情 / 删除 由 static/js/messages.js 走 /api/admin/messages #}
+{# 对话记录管理页（/admin/messages）：跨用户查看 messages 主表活跃对话 #}
 {% extends "base.html" %}
 
-{% block styles %}
-<link rel='stylesheet' href='/static/css/admin.css'>
-<link rel='stylesheet' href='/static/css/messages.css'>
+{% block admin_styles %}
+<link rel='stylesheet' href='/static/css/messages.css?v=20261119a'>
 {% end %}
 
 {% block admin_content %}
@@ -20,16 +18,16 @@
     </div>
     <div class="msg-status-note">
         <i class="fas fa-info-circle"></i>
-        本页跨用户查看 messages 主表（近期活跃对话）；超过保留期的历史消息已迁移到「会话归档」页可查。
+        跨用户查看活跃对话主表；超过保留期的历史消息已由定时任务迁移至「会话归档」页。
     </div>
 </div>
 
 <!-- 功能区 -->
 <div class="layui-form admin-toolbar msg-toolbar">
-    <div class="layui-input-inline" style="width:150px;">
+    <div class="layui-input-inline" style="width:145px;">
         <input type="text" id="msgUsername" placeholder="用户名（模糊）" autocomplete="off" class="layui-input">
     </div>
-    <div class="layui-input-inline" style="width:170px;">
+    <div class="layui-input-inline" style="width:165px;">
         <input type="text" id="msgSessionId" placeholder="会话 ID（模糊）" autocomplete="off" class="layui-input">
     </div>
     <div class="layui-input-inline" style="width:120px;">
@@ -40,13 +38,13 @@
             {% end %}
         </select>
     </div>
-    <div class="layui-input-inline" style="width:170px;">
+    <div class="layui-input-inline" style="width:155px;">
         <input type="text" id="msgStart" placeholder="起始 YYYY-MM-DD" autocomplete="off" class="layui-input">
     </div>
-    <div class="layui-input-inline" style="width:170px;">
+    <div class="layui-input-inline" style="width:155px;">
         <input type="text" id="msgEnd" placeholder="结束 YYYY-MM-DD" autocomplete="off" class="layui-input">
     </div>
-    <div class="layui-input-inline" style="width:200px;">
+    <div class="layui-input-inline" style="width:185px;">
         <input type="text" id="msgKeyword" placeholder="正文关键词" autocomplete="off" class="layui-input">
     </div>
     <button type="button" class="layui-btn" id="msgSearch"><i class="fas fa-search"></i> 搜索</button>
@@ -61,35 +59,37 @@
 <!-- 列表区 -->
 <div class="layui-card admin-card">
     <div class="layui-card-body admin-list">
-        <table class="layui-table" lay-size="sm">
-            <colgroup>
-                <col width="40">
-                <col width="70">
-                <col width="120">
-                <col width="140">
-                <col width="90">
-                <col>
-                <col width="120">
-                <col width="160">
-                <col width="120">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th><input type="checkbox" id="msgCheckAll" title="全选本页"></th>
-                    <th>ID</th>
-                    <th>用户名</th>
-                    <th>会话 ID</th>
-                    <th>角色</th>
-                    <th>内容摘要</th>
-                    <th>应答助理</th>
-                    <th>时间</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="msgBody">
-                <tr><td colspan="9" class="admin-empty">加载中…</td></tr>
-            </tbody>
-        </table>
+        <div class="admin-table-wrap">
+            <table class="layui-table" lay-size="sm">
+                <colgroup>
+                    <col width="44">
+                    <col width="70">
+                    <col width="120">
+                    <col width="140">
+                    <col width="90">
+                    <col>
+                    <col width="120">
+                    <col width="160">
+                    <col width="120">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="msgCheckAll" class="admin-check-all" title="全选本页"></th>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>会话 ID</th>
+                        <th>角色</th>
+                        <th>内容摘要</th>
+                        <th>应答助理</th>
+                        <th>时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="msgBody">
+                    <tr><td colspan="9" class="admin-empty">加载中…</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

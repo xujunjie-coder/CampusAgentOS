@@ -16,13 +16,15 @@
 (function (global) {
     'use strict';
 
-    var PALETTE = ['#2f6feb', '#13b5a6', '#f0a83a', '#e5544b', '#8a7bf0', '#54b96b',
+    var PALETTE = ['#003087', '#0f766e', '#d97706', '#c41230', '#475569', '#0369a1',
+        '#1d4ed8', '#64748b'];
+    var DARK_PALETTE = ['#2f6feb', '#13b5a6', '#f0a83a', '#e5544b', '#8a7bf0', '#54b96b',
         '#c9a227', '#5a8fbf'];
 
     var LIGHT = {
-        text: '#26324a', sub: '#7c879c', axis: '#dde3ec', split: '#eef1f6',
-        tooltipBg: 'rgba(255,255,255,.96)', tooltipBorder: '#dde3ec', tooltipText: '#26324a',
-        legend: '#5c677a'
+        text: '#0f172a', sub: '#64748b', axis: '#dce4f0', split: '#eef2f7',
+        tooltipBg: 'rgba(255,255,255,.98)', tooltipBorder: '#dce4f0', tooltipText: '#0f172a',
+        legend: '#475569'
     };
     var DARK = {
         text: '#dbe7ff', sub: '#8ba2c4', axis: 'rgba(120,160,220,.28)',
@@ -38,7 +40,10 @@
 
     function theme(dark) { return dark ? DARK : LIGHT; }
 
-    function palette(i) { return PALETTE[i % PALETTE.length]; }
+    function palette(i, dark) {
+        var p = dark ? DARK_PALETTE : PALETTE;
+        return p[i % p.length];
+    }
 
     function resolve(dom) {
         if (typeof dom === 'string') { return global.document.querySelector(dom); }
@@ -195,7 +200,7 @@
         });
         option.legend.show = cfg.legend !== false;
         option.series = (cfg.series || []).map(function (s, i) {
-            var color = s.color || palette(i);
+            var color = s.color || palette(i, dark);
             return {
                 name: s.name,
                 type: 'line',
@@ -240,7 +245,7 @@
         option.yAxis = Object.assign({ type: 'value' }, axisCommon(dark, 'value'));
         option.legend.show = cfg.legend !== false && (cfg.series || []).length > 1;
         option.series = (cfg.series || []).map(function (s, i) {
-            var color = s.color || palette(i);
+            var color = s.color || palette(i, dark);
             return {
                 name: s.name,
                 type: 'bar',
@@ -295,7 +300,7 @@
             },
             labelLine: { show: false },
             data: (cfg.data || []).map(function (d, i) {
-                return { name: d.name, value: d.value, itemStyle: { color: d.color || palette(i) } };
+                return { name: d.name, value: d.value, itemStyle: { color: d.color || palette(i, dark) } };
             })
         }];
         if (!cfg.data || !cfg.data.length) {
@@ -375,8 +380,8 @@
                     itemStyle: {
                         borderRadius: [0, 7, 7, 0],
                         color: new global.echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                            { offset: 0, color: hexA(d.color || palette(i), 0.45) },
-                            { offset: 1, color: d.color || palette(i) }
+                            { offset: 0, color: hexA(d.color || palette(i, dark), 0.45) },
+                            { offset: 1, color: d.color || palette(i, dark) }
                         ])
                     }
                 };

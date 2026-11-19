@@ -4,15 +4,10 @@
 {% end %}
 {% block content %}
 <div class="login-page">
-    <!-- 左：品牌视觉（科技风深空蓝 + 网格/扫描光/粒子，纯 CSS 绘制，无外部图片） -->
+    <!-- 左：西华师大学院蓝品牌视觉（沉稳几何网格 + 渐进出场，无赛博扫描光） -->
     <section class="login-brand">
         <div class="brand-grid"></div>
-        <div class="brand-scan"></div>
-        <span class="particle p1"></span>
-        <span class="particle p2"></span>
-        <span class="particle p3"></span>
-        <span class="particle p4"></span>
-        <span class="particle p5"></span>
+        <div class="brand-ambient" aria-hidden="true"></div>
 
         <header class="brand-top">
             <div class="brand-mark">
@@ -59,7 +54,7 @@
             <p class="panel-sub">使用校园统一账号或人脸识别进入西华师范大学智慧校园大厅</p>
 
             {% if error %}
-            <div class="auth-error"><i class="fas fa-circle-exclamation"></i><span>{% raw error %}</span></div>
+            <div class="auth-error"><i class="fas fa-exclamation-circle"></i><span>{% raw error %}</span></div>
             {% end %}
 
             <div class="auth-tabs">

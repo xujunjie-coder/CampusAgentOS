@@ -7,12 +7,7 @@
     <!-- 左：西华师大校园品牌视觉 -->
     <section class="login-brand">
         <div class="brand-grid"></div>
-        <div class="brand-scan"></div>
-        <span class="particle p1"></span>
-        <span class="particle p2"></span>
-        <span class="particle p3"></span>
-        <span class="particle p4"></span>
-        <span class="particle p5"></span>
+        <div class="brand-ambient" aria-hidden="true"></div>
 
         <header class="brand-top">
             <div class="brand-mark">
@@ -59,7 +54,7 @@
             <p class="panel-sub">创建账号后默认普通用户（user）角色，可直接进入前台工作台。<br>如需后台管理权限，请由管理员在「用户管理」中授予。</p>
 
             {% if error %}
-            <div class="auth-error"><i class="fas fa-circle-exclamation"></i><span>{% raw error %}</span></div>
+            <div class="auth-error"><i class="fas fa-exclamation-circle"></i><span>{% raw error %}</span></div>
             {% end %}
 
             <form action="/auth/register" method="post" autocomplete="on">

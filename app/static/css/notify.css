@@ -1,34 +1,92 @@
-/* notify.css —— 通知配置页面样式（成员 E） */
+/* notify.css —— 通知配置页面样式（现代白蓝卡片风格） */
 .notify-status {
     display: flex;
-    gap: 24px;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    background: #f8f8f8;
-    border-radius: 4px;
-    border: 1px solid #e6e6e6;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    background: var(--surface-card, #ffffff);
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle, #e5eaf2);
+    box-shadow: var(--shadow-card);
 }
+
+.notify-status-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
 .notify-status-item .k {
-    color: #666;
-    margin-right: 8px;
+    color: var(--ink-3, #64748b);
 }
+
+.notify-status-item .k i {
+    color: var(--cwnu-navy, #003087);
+    margin-right: 4px;
+}
+
+.notify-status-item .v {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: var(--ink-3, #64748b);
+}
+
 .notify-status-item .v.ok {
-    color: #16b777;
-    font-weight: bold;
+    background: var(--cwnu-teal-soft, #ecfdf5);
+    color: var(--cwnu-teal, #0f766e);
 }
+
 .notify-status-item .v.off {
-    color: #ff5722;
+    background: var(--cwnu-crimson-soft, #fdf2f4);
+    color: var(--cwnu-crimson, #c41230);
 }
+
+.notify-status-note {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--ink-4, #94a3b8);
+}
+
 .notify-card {
-    margin-bottom: 16px;
+    margin-bottom: 0;
 }
+
+.notify-card .layui-card-body {
+    padding: 18px 20px 10px;
+}
+
+.notify-card .layui-form-label {
+    width: 96px;
+    color: var(--ink-2, #334155);
+    font-size: 13px;
+}
+
+.notify-card .layui-input-block {
+    margin-left: 112px;
+}
+
 .notify-hint {
     font-size: 12px;
-    color: #999;
-    margin-top: 4px;
+    color: var(--ink-4, #94a3b8);
+    margin-top: 5px;
+    line-height: 1.5;
 }
+
 .notify-actions {
-    padding: 16px 0;
+    margin-top: 14px;
+    padding: 14px 18px;
     display: flex;
-    gap: 12px;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-card, #ffffff);
+    border: 1px solid var(--border-subtle, #e5eaf2);
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
 }

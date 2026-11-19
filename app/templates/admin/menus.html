@@ -19,29 +19,31 @@
 <!-- 列表区：树形表格，拖拽行可重新排序 / 改变层级（松手自动保存） -->
 <div class="layui-card admin-card">
     <div class="layui-card-body admin-list">
-        <table class="layui-table admin-tree-table" lay-size="sm">
-            <colgroup>
-                <col width="70">
-                <col>
-                <col width="180">
-                <col width="220">
-                <col width="90">
-                <col width="170">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th>图片</th>
-                    <th>菜单名称</th>
-                    <th>路由地址</th>
-                    <th>简介</th>
-                    <th>状态</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="menuBody">
-                <tr><td colspan="6" class="admin-empty">加载中…</td></tr>
-            </tbody>
-        </table>
+        <div class="admin-table-wrap">
+            <table class="layui-table admin-tree-table" lay-size="sm">
+                <colgroup>
+                    <col width="70">
+                    <col>
+                    <col width="180">
+                    <col width="220">
+                    <col width="90">
+                    <col width="170">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>图片</th>
+                        <th>菜单名称</th>
+                        <th>路由地址</th>
+                        <th>简介</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="menuBody">
+                    <tr><td colspan="6" class="admin-empty">加载中…</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

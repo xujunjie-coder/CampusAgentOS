@@ -1,34 +1,35 @@
 {#
-采集管理独立主页（任务6）：不继承 base.html / 不使用 layui，独立全屏科技感页面。
+采集管理独立主页：不使用 layui，保留独立轻量结构，视觉与西华师大现代学院白蓝体系一致。
 自上而下三区：关键词输入区 | 信源采集选择区（含可视化参数配置） | 采集数据橱窗列表区（1行3列，12条/页）。
-交互逻辑全部在 static/js/collect.js（外部 JS 不经 Tornado 模板解析），样式在 static/css/collect.css。
 #}
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>{{ site_name or "西华师范大学 · 智慧校园" }} | 采集中心</title>
+    {% if site_favicon %}<link rel="icon" href="{{ site_favicon }}">{% end %}
     <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/collect.css">
+    <link rel="stylesheet" href="/static/css/collect.css?v=20261119b">
 </head>
 <body>
-    <!-- 科技感背景层：网格 + 光晕 -->
-    <div class="bg-grid" aria-hidden="true"></div>
-    <div class="bg-glow bg-glow-a" aria-hidden="true"></div>
-    <div class="bg-glow bg-glow-b" aria-hidden="true"></div>
-
     <!-- 顶栏：品牌 + 系统整合入口 + 用户 -->
     <header class="collect-header">
         <div class="brand">
-            <i class="fas fa-satellite-dish brand-icon"></i>
-            <span class="brand-name">数据瞭望 · 采集中心</span>
-            <span class="brand-sub">COLLECT CENTER</span>
+            {% if site_logo %}
+            <img src="{{ site_logo }}" alt="" class="brand-logo" width="28" height="28">
+            {% else %}
+            <span class="brand-crest" aria-hidden="true"><i class="fas fa-satellite-dish"></i></span>
+            {% end %}
+            <div class="brand-titles">
+                <span class="brand-name">{{ site_name or "西华师范大学 · 智慧校园" }} · 采集中心</span>
+                <span class="brand-sub">CAMPUS COLLECT CENTER</span>
+            </div>
         </div>
         <nav class="header-nav">
             <a href="/" class="nav-link"><i class="fas fa-comments"></i> 对话前台</a>
-            <a href="/admin" class="nav-link"><i class="fas fa-cogs"></i> 后台管理</a>
-            <span class="user-chip"><i class="fas fa-user-astronaut"></i> {{ username }}<em class="role-badge">{{ role }}</em></span>
+            <a href="/admin" class="nav-link"><i class="fas fa-sliders-h"></i> 后台管理</a>
+            <span class="user-chip"><i class="fas fa-user-shield"></i> {{ username }}<em class="role-badge">{{ role }}</em></span>
             <a href="javascript:;" id="logoutLink" class="nav-link nav-logout"><i class="fas fa-sign-out-alt"></i> 退出</a>
         </nav>
     </header>
@@ -36,16 +37,19 @@
     <main class="collect-main">
         <!-- ① 关键词输入区 -->
         <section class="panel" id="keywordSection">
-            <div class="panel-title"><i class="fas fa-keyboard"></i> 关键词输入 <span class="panel-en">KEYWORD</span></div>
+            <div class="panel-title">
+                <i class="fas fa-keyboard"></i> 关键词输入
+                <span class="panel-en">KEYWORD</span>
+            </div>
             <div class="keyword-row">
                 <div class="keyword-input-wrap">
                     <i class="fas fa-search keyword-prefix"></i>
-                    <input type="text" id="keywordInput" maxlength="64" placeholder="输入采集关键词，如：四川 数字经济" autocomplete="off">
+                    <input type="text" id="keywordInput" maxlength="64" placeholder="输入采集关键词，如：西华师范大学 奖学金 / 考研就业" autocomplete="off">
                 </div>
-                <label class="ai-switch" title="开启后普通网页优先用智能体解析，失败自动回退规则解析。RSS 直接读取。">
+                <label class="ai-switch" title="开启后普通网页优先用智能体解析，失败自动回退规则解析；RSS 直接读取。">
                     <input type="checkbox" id="useLlm" checked>
                     <span class="ai-track"><span class="ai-thumb"></span></span>
-                    <span class="ai-label"><i class="fas fa-robot"></i> AI 智能解析</span>
+                    <span class="ai-label"><i class="fas fa-magic"></i> AI 智能解析</span>
                 </label>
                 <button type="button" id="runBtn" class="run-btn"><i class="fas fa-bolt"></i> 启动采集</button>
             </div>
@@ -55,16 +59,20 @@
         <!-- ② 信源采集选择区（选中含自定义参数的信源时展开可视化参数配置） -->
         <section class="panel" id="sourceSection">
             <div class="panel-title">
-                <i class="fas fa-rss"></i> 信源采集选择 <span class="panel-en">SOURCES</span>
+                <i class="fas fa-rss"></i> 信源采集选择
+                <span class="panel-en">SOURCES</span>
                 <span class="source-count" id="sourceCount">已选 0 个</span>
             </div>
             <div class="source-grid" id="sourceGrid"></div>
-            <div class="panel-tip"><i class="fas fa-info-circle"></i> 信源来自「后台 · 信源管理」；{关键字}/{分页} 占位符自动填充，其余占位符需在展开的参数配置中填写。</div>
+            <div class="panel-tip"><i class="fas fa-info-circle"></i> 信源来自「后台 · 信源管理」；<code>{关键字}</code> / <code>{分页}</code> 占位符自动填充，其余占位符需在展开的参数配置中填写。</div>
         </section>
 
-        <!-- ③ 采集数据橱窗列表区：1 行 3 列，12 条/页，封面 + 标题 + 时间 -->
+        <!-- ③ 采集数据橱窗列表区：1 行 3 列，12 条/页 -->
         <section class="panel" id="dataSection">
-            <div class="panel-title"><i class="fas fa-th-large"></i> 采集数据 <span class="panel-en">DATA SHOWCASE</span></div>
+            <div class="panel-title">
+                <i class="fas fa-th-large"></i> 采集数据
+                <span class="panel-en">DATA SHOWCASE</span>
+            </div>
             <div class="data-toolbar">
                 <div class="filter-input-wrap">
                     <i class="fas fa-filter"></i>
@@ -83,7 +91,7 @@
         </section>
     </main>
 
-    <footer class="collect-footer">© 2026 GovCheckDataAgentOS · 某省数据瞭望系统 · 采集管理 · Tornado + Agentica + SQLite</footer>
+    <footer class="collect-footer">© 2026 {{ site_name or "西华师范大学 · 智慧校园" }} · 采集中心 · Tornado + Agentica</footer>
 
     <!-- 采集进度遮罩 -->
     <div class="loading-overlay hidden" id="loadingOverlay">
@@ -100,6 +108,7 @@
         {% module xsrf_form_html() %}
     </form>
 
+    <script src="{{ static_url('js/ui-motion.js') }}" defer></script>
     <script src="{{ static_url('js/collect.js') }}"></script>
 </body>
 </html>

@@ -14,7 +14,7 @@
 
     function id(name) { return document.getElementById(name); }
 
-    var RISK_COLORS = { high: '#e5544b', watch: '#f0a83a', normal: '#23b26d', error: '#7c879c' };
+    var RISK_COLORS = { high: '#c41230', watch: '#d97706', normal: '#0f766e', error: '#64748b' };
 
     function kpi(boxId, value, unit) {
         var box = id(boxId);
@@ -66,15 +66,15 @@
             series: [
                 { name: '采集条目', type: 'line', yAxisIndex: 0, smooth: true, symbolSize: 5,
                   data: collect, show: state.visible.collect,
-                  lineStyle: { width: 2, color: '#2f6feb' }, itemStyle: { color: '#2f6feb' },
-                  areaStyle: { color: gradient('#2f6feb') } },
+                  lineStyle: { width: 2, color: '#003087' }, itemStyle: { color: '#003087' },
+                  areaStyle: { color: gradient('#003087') } },
                 { name: '对话消息', type: 'line', yAxisIndex: 0, smooth: true, symbolSize: 5,
                   data: messages, show: state.visible.messages,
-                  lineStyle: { width: 2, color: '#13b5a6' }, itemStyle: { color: '#13b5a6' },
-                  areaStyle: { color: gradient('#13b5a6') } },
+                  lineStyle: { width: 2, color: '#0f766e' }, itemStyle: { color: '#0f766e' },
+                  areaStyle: { color: gradient('#0f766e') } },
                 { name: '模型 Token', type: 'bar', yAxisIndex: 1, barMaxWidth: 12,
                   data: tokens, show: state.visible.tokens,
-                  itemStyle: { color: 'rgba(138,123,240,.55)', borderRadius: [3, 3, 0, 0] } }
+                  itemStyle: { color: 'rgba(180,83,9,.45)', borderRadius: [3, 3, 0, 0] } }
             ]
         };
         inst.setOption(option, true);
@@ -219,9 +219,9 @@
 
     /* ---------------- 图例自选 ---------------- */
     var LEGEND = [
-        { key: 'collect', label: '采集条目', color: '#2f6feb' },
-        { key: 'messages', label: '对话消息', color: '#13b5a6' },
-        { key: 'tokens', label: '模型 Token（右轴）', color: '#8a7bf0' }
+        { key: 'collect', label: '采集条目', color: '#003087' },
+        { key: 'messages', label: '对话消息', color: '#0f766e' },
+        { key: 'tokens', label: '模型 Token（右轴）', color: '#b45309' }
     ];
 
     function buildLegend() {

@@ -1,36 +1,120 @@
-/* base.css：全局基础样式 + 登录/注册页与后台页布局（配合本地 layui/fontawesome 组件） */
+/* base.css —— 全站共享基础样式、西华师大现代学院白蓝 Design Tokens 与动效曲线 */
 
-html, body { height: 100%; }
+:root {
+    /* 品牌与学院语义色（克制、沉稳、去霓虹） */
+    --cwnu-navy: #003087;
+    --cwnu-navy-hover: #002366;
+    --cwnu-navy-soft: #eef3fb;
+    --cwnu-navy-tint: #f5f8fe;
+    --cwnu-navy-border: #ccdcf5;
+    --cwnu-crimson: #c41230;
+    --cwnu-crimson-hover: #a50f28;
+    --cwnu-crimson-soft: #fdf2f4;
+    --cwnu-teal: #0f766e;
+    --cwnu-teal-soft: #ecfdf5;
+    --cwnu-amber: #b45309;
+    --cwnu-amber-soft: #fffbeb;
+
+    /* 表面与文字阶梯 */
+    --surface-canvas: #f4f6fa;
+    --surface-card: #ffffff;
+    --surface-subtle: #f8fafc;
+    --border-subtle: #e5eaf2;
+    --border-strong: #d0d9e6;
+    --ink-1: #0f172a;
+    --ink-2: #334155;
+    --ink-3: #64748b;
+    --ink-4: #94a3b8;
+
+    /* 动效曲线与时长带（Emil / Impeccable 交互规范：仅动画 transform & opacity） */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
+    --dur-fast: 140ms;
+    --dur-base: 210ms;
+    --dur-slow: 300ms;
+
+    /* 圆角与阴影 */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+    --shadow-hover: 0 10px 24px rgba(0, 48, 135, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+    --shadow-float: 0 14px 36px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+html, body {
+    height: 100%;
+}
 
 body {
-    background: #f8fafc;
-    color: #0f172a;
-    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: var(--surface-canvas);
+    color: var(--ink-1);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 a {
-    color: #003087;
+    color: var(--cwnu-navy);
     text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-out);
 }
 
-/* ---------- 登录/注册页 ---------- */
+button, input, select, textarea {
+    font-family: inherit;
+}
+
+/* 统一柔和滚动条 */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 清晰、统一的键盘焦点环 */
+:focus-visible {
+    outline: 2px solid var(--cwnu-navy);
+    outline-offset: 2px;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: none;
+}
+
+/* ---------- 兼容旧版简单居中认证容器 ---------- */
 .auth-wrap {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #1e5eff 0%, #1e9fff 55%, #54f0c8 100%);
+    background: linear-gradient(150deg, #eef3fb 0%, #f8fafc 60%, #edf2f7 100%);
 }
 
 .auth-card {
     width: 380px;
-    border-radius: 10px;
-    box-shadow: 0 12px 32px rgba(0, 21, 41, .28);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-float);
 }
 
 .auth-card .layui-card-header {
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .auth-card .layui-card-body {
@@ -40,7 +124,7 @@ a {
 .auth-error {
     padding: 9px 12px;
     margin-bottom: 14px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-size: 13px;
     color: #fff;
 }
@@ -48,7 +132,7 @@ a {
 .auth-footer {
     text-align: center;
     font-size: 13px;
-    color: #8a8f99;
+    color: var(--ink-3);
     padding-bottom: 6px;
 }
 
@@ -58,11 +142,7 @@ a {
     font-size: 12px;
 }
 
-/* ---------- 后台管理页 ----------
-   后台框架样式（layui-layout-admin 五段式布局）已拆分至 static/css/admin.css，
-   仅由 templates/admin/base.html 引入，避免前台页面加载无用样式 */
-
-/* ---------- 用户工作台首页 ---------- */
+/* ---------- 用户工作台基础工具 ---------- */
 .index-wrap {
     max-width: 960px;
     margin: 0 auto;
@@ -82,7 +162,155 @@ a {
     border-radius: 999px;
     font-size: 11.5px;
     font-weight: 600;
-    color: #003087;
-    background: #eef3fb;
+    color: var(--cwnu-navy);
+    background: var(--cwnu-navy-soft);
     vertical-align: middle;
+}
+
+/* ---------- 轻量丝滑交互组件基础样式（ui-motion.js） ---------- */
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+        navigation: auto;
+    }
+}
+
+.ui-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2.5px;
+    z-index: 99999;
+    pointer-events: none;
+    background: linear-gradient(90deg, var(--cwnu-navy, #003087), #2563eb);
+    transform-origin: left center;
+    transform: scaleX(0);
+    opacity: 0;
+    transition: opacity 150ms var(--ease-out);
+}
+.ui-progress-bar.is-active {
+    opacity: 1;
+    transform: scaleX(0.78);
+    transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1), opacity 120ms var(--ease-out);
+}
+.ui-progress-bar.is-done {
+    opacity: 0;
+    transform: scaleX(1);
+    transition: transform 180ms var(--ease-out), opacity 180ms 80ms var(--ease-out);
+}
+
+/* 分段控件共享元素滑块 */
+.ui-sliding-ready {
+    position: relative;
+}
+.ui-sliding-ready > .ui-sliding-thumb {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;
+    pointer-events: none;
+    will-change: transform, width;
+    transition: transform 220ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+                width 220ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+                opacity 140ms var(--ease-out, ease);
+}
+.ui-sliding-no-anim > .ui-sliding-thumb {
+    transition: none !important;
+}
+
+/* 1) 登录页 .auth-tabs 滑块 */
+.auth-tabs.ui-sliding-ready > .ui-sliding-thumb {
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+.auth-tabs.ui-sliding-ready .auth-tab {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+.auth-tabs.ui-sliding-ready .auth-tab.active {
+    background: transparent;
+    box-shadow: none;
+    color: var(--cwnu-navy, #003087);
+    font-weight: 700;
+}
+
+/* 2) 报表/舆情 .ck-seg 滑块 */
+.ck-seg.ui-sliding-ready {
+    padding: 3px;
+    gap: 2px;
+    background: #f1f5f9;
+    border-radius: 9px;
+    overflow: visible;
+}
+.ck-seg.ui-sliding-ready > .ui-sliding-thumb {
+    border-radius: 6px;
+    background: var(--cwnu-navy, #003087);
+    box-shadow: 0 2px 6px rgba(0, 48, 135, 0.22);
+}
+.ck-seg.ui-sliding-ready button {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+    border-radius: 6px;
+    padding: 4px 10px;
+}
+.ck-seg.ui-sliding-ready button + button {
+    border-left: none;
+}
+.ck-seg.ui-sliding-ready button.is-active {
+    background: transparent;
+    color: #ffffff;
+    font-weight: 600;
+}
+.ck-seg.ui-sliding-ready button:hover:not(.is-active) {
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--cwnu-navy, #003087);
+}
+
+/* 3) 3D 辅导员 .avatar-switcher 滑块 */
+.avatar-switcher.ui-sliding-ready > .ui-sliding-thumb {
+    border-radius: 999px;
+    background: var(--cwnu-navy, #003087);
+    box-shadow: 0 2px 8px rgba(0, 48, 135, 0.24);
+}
+.avatar-switcher.ui-sliding-ready .avatar-switch-btn {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+.avatar-switcher.ui-sliding-ready .avatar-switch-btn.is-active {
+    background: transparent;
+    box-shadow: none;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* 首屏下方渐进显现 */
+.ui-reveal {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 260ms var(--ease-out), transform 260ms var(--ease-out);
+}
+.ui-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 全局动态无障碍兜底 */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    .ui-progress-bar {
+        display: none !important;
+    }
+    .ui-reveal {
+        opacity: 1 !important;
+        transform: none !important;
+    }
 }

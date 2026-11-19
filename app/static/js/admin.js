@@ -28,6 +28,14 @@
 
     function initShell(layer) {
         var layout = $("adminLayout");
+        var SIDE_KEY = "cwnu_admin_side_collapsed";
+        if (layout && !isNarrow()) {
+            try {
+                if (localStorage.getItem(SIDE_KEY) === "1") {
+                    layout.classList.add("is-collapsed");
+                }
+            } catch (err) { /* ignore */ }
+        }
         // 侧栏折叠：宽屏收掉常驻侧栏，窄屏展开抽屉（两套 class 互斥，避免 display:none 压住抽屉）
         var toggle = $("navToggle");
         if (layout && toggle) {
@@ -37,7 +45,8 @@
                     layout.classList.toggle("is-drawer");
                 } else {
                     layout.classList.remove("is-drawer");
-                    layout.classList.toggle("is-collapsed");
+                    var collapsed = layout.classList.toggle("is-collapsed");
+                    try { localStorage.setItem(SIDE_KEY, collapsed ? "1" : "0"); } catch (err) {}
                 }
             });
             // 抽屉态下点内容区（遮罩落在 .layui-body 上）即收起，避免一直挡住操作

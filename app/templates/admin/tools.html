@@ -3,10 +3,8 @@
    工具的增删与绑定在「智能体服务 / 数字员工」里配置，本页不提供写操作，避免两处配置互相覆盖。 #}
 {% extends "base.html" %}
 
-{% block styles %}
-<link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
-<link rel='stylesheet' href='/static/css/admin.css'>
-<link rel='stylesheet' href='/static/css/console.css?v=20261111b'>
+{% block admin_styles %}
+<link rel='stylesheet' href='/static/css/console.css?v=20261119a'>
 {% end %}
 
 {% block admin_content %}
@@ -36,14 +34,16 @@
             <span class="ck-panel-sub">数据来自 app/services/agent_service.py 的 TOOL_REGISTRY 与 digital_employees.tools</span>
         </div>
         <div class="ck-panel-body" style="padding:0 12px 12px;">
-            <table class="ck-table ck-tools-table">
-                <thead>
-                <tr><th style="width:220px;">工具</th><th style="width:110px;">类型</th><th style="width:210px;">提供方</th><th>说明</th><th style="width:250px;">绑定数字员工</th></tr>
-                </thead>
-                <tbody id="toolBody">
-                <tr><td colspan="5" style="color:#9aa4b2;padding:18px;">加载中…</td></tr>
-                </tbody>
-            </table>
+            <div class="admin-table-wrap">
+                <table class="ck-table ck-tools-table">
+                    <thead>
+                    <tr><th style="width:220px;">工具</th><th style="width:110px;">类型</th><th style="width:210px;">提供方</th><th>说明</th><th style="width:250px;">绑定数字员工</th></tr>
+                    </thead>
+                    <tbody id="toolBody">
+                    <tr><td colspan="5" style="color:#9aa4b2;padding:18px;">加载中…</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

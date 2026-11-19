@@ -4,10 +4,8 @@
    首屏服务端渲染，WS 断开时页面仍可读；JS 只做增强不接管初始数据。 #}
 {% extends "base.html" %}
 
-{% block styles %}
-<link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
-<link rel='stylesheet' href='/static/css/admin.css'>
-<link rel='stylesheet' href='/static/css/console.css?v=20261111b'>
+{% block admin_styles %}
+<link rel='stylesheet' href='/static/css/console.css?v=20261119a'>
 {% end %}
 
 {% block admin_content %}
@@ -108,7 +106,7 @@
 
             <div class="ck-panel" style="margin-top:12px;">
                 <div class="ck-panel-head">
-                    <i class="fas fa-circle-info"></i>
+                    <i class="fas fa-info-circle"></i>
                     <span class="ck-panel-title">预警口径与处置</span>
                 </div>
                 <div class="ck-panel-body">

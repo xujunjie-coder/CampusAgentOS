@@ -1115,6 +1115,84 @@
 }
 .chat-music-audio { width: 100%; margin-top: 6px; height: 36px; }
 
+/* ---------- 克制动态与交互质感增强（西华师大现代学院白蓝） ---------- */
+@keyframes popMenuIn {
+    from { opacity: 0; transform: scale(0.96) translateY(5px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes chatReveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes chatMsgIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-header {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(8px);
+}
+
+.chat-side-links {
+    transform-origin: bottom left;
+}
+.chat-side-foot.open .chat-side-links {
+    animation: popMenuIn 180ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+.chat-asst-panel {
+    transform-origin: bottom left;
+}
+.chat-asst-panel:not([hidden]) {
+    animation: popMenuIn 180ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+.chat-welcome-emblem {
+    animation: chatReveal 280ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.chat-welcome-title {
+    animation: chatReveal 280ms 45ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.chat-welcome-sub {
+    animation: chatReveal 280ms 90ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.chat-welcome-card {
+    animation: chatReveal 300ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+    transition: border-color 160ms var(--ease-out, ease), box-shadow 180ms var(--ease-out, ease), transform 180ms var(--ease-out, ease);
+}
+.chat-welcome-card:nth-child(1) { animation-delay: 110ms; }
+.chat-welcome-card:nth-child(2) { animation-delay: 160ms; }
+.chat-welcome-card:nth-child(3) { animation-delay: 210ms; }
+
+.chat-welcome-chip {
+    transition: background-color 140ms var(--ease-out, ease), border-color 140ms var(--ease-out, ease), color 140ms var(--ease-out, ease), transform 140ms var(--ease-out, ease);
+}
+.chat-welcome-chip::before {
+    display: inline-block;
+    margin-right: 2px;
+    transition: transform 140ms var(--ease-out, ease), color 140ms var(--ease-out, ease);
+}
+.chat-welcome-chip:hover::before {
+    transform: translateX(2px);
+}
+
+.chat-msg {
+    animation: chatMsgIn 200ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+.chat-portal-btn.is-primary:active,
+.chat-portal-btn.is-secondary:active,
+.chat-new-btn:active,
+.chat-export-btn:active,
+.chat-asst-btn:active,
+.chat-welcome-chip:active {
+    transform: scale(0.985);
+}
+.chat-send-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
 /* 响应式适配 */
 @media (max-width: 960px) {
     .chat-welcome-grid { grid-template-columns: 1fr; }
