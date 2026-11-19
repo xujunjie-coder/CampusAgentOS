@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>{% if site_name %}{{ site_name }} | {% end %}{{ title }}</title>
+    {% if site_favicon %}<link rel='icon' href='{{ site_favicon }}'>{% end %}
+
+    <!-- 本地依赖组件：layui + fontawesome（由 dist 拷贝至 static/vendor） -->
+    <link rel='stylesheet' href='/static/vendor/layui/css/layui.css'>
+    <link rel='stylesheet' href='/static/vendor/fontawesome/css/all.min.css'>
+    <link rel='stylesheet' href='{{ static_url("css/base.css") }}'>
+    {% block styles %}
+    {% end %}
+
+</head>
+<body>
+    {% block content %}
+    {% end %}
+    <script src='/static/vendor/layui/layui.js'></script>
+    {% block scripts %}
+    {% end %}
+</body>
+</html>

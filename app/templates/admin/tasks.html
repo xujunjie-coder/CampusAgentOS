@@ -1,0 +1,104 @@
+{# 定时任务管理（/admin/tasks）：成员 E —— 周期任务调度 / 自动归档 / 日志清理 / 结果通知。
+   框架壳（功能区 | 列表区 | 分页区）由本模板出，任务与执行流水的增删改查 / 手动触发 / 通知测试
+   由 static/js/tasks.js 走 /api/admin/tasks、/api/admin/task-logs、/api/admin/scheduler、/api/admin/notify/test 渲染 #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/tasks.css'>
+{% end %}
+
+{% block admin_content %}
+<!-- 调度器状态条：引擎、降级说明、通知渠道可用性，数据来自 scheduler_service.status() -->
+<div class="task-status" id="taskStatus"
+     data-options="{{ json_encode({
+         'task_types': task_types,
+         'schedule_types': schedule_types,
+         'notify_on': notify_on,
+         'notify_channels': notify_channels
+     }) }}">
+    <div class="task-status-item engine">
+        <span class="k"><i class="fas fa-stopwatch"></i> 调度引擎</span>
+        <span class="v" id="taskEngineText">{{ scheduler.get('engine', '') }}</span>
+    </div>
+    <div class="task-status-item notify-email">
+        <span class="k"><i class="fas fa-envelope"></i> 邮件通知</span>
+        <span class="v {% if scheduler['notify']['email']['available'] %}ok{% else %}off{% end %}">
+            {% if scheduler['notify']['email']['available'] %}可用{% else %}未配置{% end %}
+        </span>
+    </div>
+    <div class="task-status-item notify-qq">
+        <span class="k"><i class="fab fa-qq"></i> QQ 通知</span>
+        <span class="v {% if scheduler['notify']['qq']['available'] %}ok{% else %}off{% end %}">
+            {% if scheduler['notify']['qq']['available'] %}可用{% else %}未配置{% end %}
+        </span>
+    </div>
+    <div class="task-status-note" id="taskEngineNote"><i class="fas fa-info-circle"></i> {{ scheduler.get('note', '') }}</div>
+</div>
+
+<!-- 功能区 -->
+<div class="layui-form admin-toolbar">
+    <div class="layui-input-wrap admin-search">
+        <div class="layui-input-prefix"><i class="fas fa-search"></i></div>
+        <input type="text" id="taskKeyword" placeholder="按名称 / 简介 / 类型搜索" autocomplete="off" class="layui-input" lay-affix="clear">
+    </div>
+    <div class="layui-input-inline task-status-filter">
+        <select id="taskStatusFilter" lay-filter="taskStatusFilter">
+            <option value="">全部状态</option>
+            <option value="on">已启用</option>
+            <option value="off">已停用</option>
+        </select>
+    </div>
+    <button type="button" class="layui-btn" id="taskSearch"><i class="fas fa-search"></i> 搜索</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="taskReset"><i class="fas fa-undo"></i> 重置</button>
+    <span class="admin-toolbar-split"></span>
+    <button type="button" class="layui-btn layui-btn-normal" id="taskAdd"><i class="fas fa-plus"></i> 新增任务</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="taskLogs"><i class="fas fa-list-alt"></i> 执行日志</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="schedulerReload"><i class="fas fa-sync-alt"></i> 重载调度</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="notifyTest"><i class="fas fa-bell"></i> 通知测试</button>
+    <span class="admin-toolbar-count">共 <b id="taskCount">0</b> 项</span>
+</div>
+
+<!-- 列表区 -->
+<div class="layui-card admin-card">
+    <div class="layui-card-body admin-list">
+        <table class="layui-table" lay-size="sm">
+            <colgroup>
+                <col width="150">
+                <col width="100">
+                <col width="140">
+                <col width="150">
+                <col width="150">
+                <col width="90">
+                <col width="90">
+                <col width="230">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>任务名称</th>
+                    <th>类型</th>
+                    <th>调度方式</th>
+                    <th>上次运行</th>
+                    <th>下次运行</th>
+                    <th>上次结果</th>
+                    <th>启停</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="taskBody">
+                <tr><td colspan="8" class="admin-empty">加载中…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 分页区 -->
+<div class="admin-pager">
+    <span class="admin-pager-tip"><i class="fas fa-info-circle"></i> 每页 {{ page_size }} 条</span>
+    <div class="admin-pager-box" id="taskPager"></div>
+</div>
+{% end %}
+
+{% block admin_scripts %}
+<script src="/static/js/tasks.js"></script>
+{% end %}

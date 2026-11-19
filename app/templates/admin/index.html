@@ -1,0 +1,120 @@
+{# 工作台（/admin）：任务3框架首页，只读概览 + 模块快捷入口 #}
+{% extends "base.html" %}
+
+{% block admin_content %}
+<!-- 指标卡片：layui 栅格 -->
+<div class="layui-row layui-col-space15 admin-stats">
+    <div class="layui-col-md3 layui-col-sm6 layui-col-xs12">
+        <div class="admin-stat is-blue">
+            <div class="admin-stat-icon"><i class="fas fa-users"></i></div>
+            <div class="admin-stat-body">
+                <div class="admin-stat-value">{{ total_users }}</div>
+                <div class="admin-stat-label">用户总数</div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md3 layui-col-sm6 layui-col-xs12">
+        <div class="admin-stat is-orange">
+            <div class="admin-stat-icon"><i class="fas fa-user-shield"></i></div>
+            <div class="admin-stat-body">
+                <div class="admin-stat-value">{{ admin_count }}</div>
+                <div class="admin-stat-label">管理员</div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md3 layui-col-sm6 layui-col-xs12">
+        <div class="admin-stat is-green">
+            <div class="admin-stat-icon"><i class="fas fa-user"></i></div>
+            <div class="admin-stat-body">
+                <div class="admin-stat-value">{{ user_count }}</div>
+                <div class="admin-stat-label">普通用户</div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md3 layui-col-sm6 layui-col-xs12">
+        <div class="admin-stat is-cyan">
+            <div class="admin-stat-icon"><i class="fas fa-comments"></i></div>
+            <div class="admin-stat-body">
+                <div class="admin-stat-value">{{ total_messages }}</div>
+                <div class="admin-stat-label">对话消息</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="layui-row layui-col-space15">
+    <!-- 最近注册 -->
+    <div class="layui-col-md8">
+        <div class="layui-card admin-card">
+            <div class="layui-card-header">
+                <i class="fas fa-user-plus"></i> 最近注册
+                <a class="admin-card-more" href="/admin/users">进入用户管理 <i class="fas fa-angle-right"></i></a>
+            </div>
+            <div class="layui-card-body">
+                <table class="layui-table" lay-size="sm">
+                    <thead>
+                        <tr><th>ID</th><th>用户名</th><th>角色</th><th>创建时间</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for u in recent_users %}
+                        <tr>
+                            <td>{{ u["id"] }}</td>
+                            <td>{{ u["username"] }}</td>
+                            <td>
+                                {% if u["role"] == "admin" %}
+                                <span class="layui-bg-orange admin-tag">admin</span>
+                                {% else %}
+                                <span class="layui-bg-blue admin-tag">user</span>
+                                {% end %}
+                            </td>
+                            <td>{{ u["created_at"] }}</td>
+                        </tr>
+                        {% end %}
+                        {% if not recent_users %}
+                        <tr><td colspan="4" class="admin-empty">暂无用户数据</td></tr>
+                        {% end %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统信息 -->
+    <div class="layui-col-md4">
+        <div class="layui-card admin-card">
+            <div class="layui-card-header"><i class="fas fa-info-circle"></i> 系统信息</div>
+            <div class="layui-card-body">
+                <ul class="admin-desc">
+                    <li><span>当前账号</span><b>{{ username }}</b></li>
+                    <li><span>登录角色</span><b>{{ role }}</b></li>
+                    <li><span>后端</span><b>Tornado 6.6</b></li>
+                    <li><span>前端组件</span><b>layui 2.13.9</b></li>
+                    <li><span>数据库</span><b>SQLite（users / messages）</b></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 模块快捷入口 -->
+<div class="layui-card admin-card">
+    <div class="layui-card-header"><i class="fas fa-grip-horizontal"></i> 管理模块</div>
+    <div class="layui-card-body admin-entries">
+        <a class="admin-entry" href="/admin/users">
+            <i class="fas fa-users"></i>
+            <span class="admin-entry-name">用户管理</span>
+            <span class="admin-entry-desc">列表 / 搜索 / 增删改（任务4）</span>
+        </a>
+        <a class="admin-entry" href="/admin/roles">
+            <i class="fas fa-user-shield"></i>
+            <span class="admin-entry-name">角色管理</span>
+            <span class="admin-entry-desc">admin / user 角色维护（任务4）</span>
+        </a>
+        <a class="admin-entry" href="/admin/menus">
+            <i class="fas fa-bars"></i>
+            <span class="admin-entry-name">菜单管理</span>
+            <span class="admin-entry-desc">后台导航菜单维护（任务4）</span>
+        </a>
+    </div>
+</div>
+{% end %}

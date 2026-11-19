@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+{% block styles %}
+<link rel="stylesheet" href="{{ static_url('css/login.css') }}">
+{% end %}
+{% block content %}
+<div class="login-page">
+    <!-- 左：品牌视觉（科技风深空蓝 + 网格/扫描光/粒子，纯 CSS 绘制，无外部图片） -->
+    <section class="login-brand">
+        <div class="brand-grid"></div>
+        <div class="brand-scan"></div>
+        <span class="particle p1"></span>
+        <span class="particle p2"></span>
+        <span class="particle p3"></span>
+        <span class="particle p4"></span>
+        <span class="particle p5"></span>
+
+        <header class="brand-top">
+            <div class="brand-mark">
+                {% if site_logo %}<img src="{{ site_logo }}" alt="{{ site_name or '西华师范大学' }}">{% else %}<i class="fas fa-university"></i>{% end %}
+            </div>
+            <div class="brand-id">
+                <strong>{{ site_name or "西华师范大学 · 智慧校园" }}</strong>
+                <span>CWNU SMART CAMPUS AGENT OS</span>
+            </div>
+            <span class="brand-chip">SINCE 1946</span>
+        </header>
+
+        <div class="brand-main">
+            <p class="brand-eyebrow">勤奋 · 求实 · 敬业 · 创新</p>
+            <h1>智慧华师<br><em>数智相伴</em></h1>
+            <p class="brand-sub">{{ site_subtitle or "西华师范大学智慧校园服务智能体平台" }}<br>学业奖助 / 考研就业 / 心理关怀 / 校园问数一站直达</p>
+            <ul class="brand-points">
+                <li>
+                    <i class="fas fa-graduation-cap"></i>
+                    <div><b>专属数字员工</b><span>华师小助手、就业顾问、心理健康助手多角色协同答疑</span></div>
+                </li>
+                <li>
+                    <i class="fas fa-user-astronaut"></i>
+                    <div><b>华小竹 3D 辅导员</b><span>西华师大专属 3D 形象实时语音互动，温暖陪伴校园日常</span></div>
+                </li>
+                <li>
+                    <i class="fas fa-chart-bar"></i>
+                    <div><b>校园资讯与智能问数</b><span>汇聚教务、招就、团学多源动态，一键生成校园服务报告</span></div>
+                </li>
+            </ul>
+        </div>
+
+        <footer class="brand-foot">
+            <span>西华师范大学</span>
+            <span class="sep"></span>
+            <span>四川 · 南充（华凤校区 / 北湖校区）</span>
+        </footer>
+    </section>
+
+    <!-- 右：登录表单（结构与原页面一致，仅视觉改造） -->
+    <section class="login-panel">
+        <div class="login-box">
+            <h2>欢迎登录</h2>
+            <p class="panel-sub">使用校园统一账号或人脸识别进入西华师范大学智慧校园大厅</p>
+
+            {% if error %}
+            <div class="auth-error"><i class="fas fa-circle-exclamation"></i><span>{% raw error %}</span></div>
+            {% end %}
+
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab active" data-tab="pwd"><i class="fas fa-key"></i> 账号密码</button>
+                <button type="button" class="auth-tab" data-tab="face"><i class="fas fa-camera"></i> 人脸登录</button>
+            </div>
+
+            <div id="tabPwd">
+                <form action="/auth/login" method="post" autocomplete="on">
+                    {% module xsrf_form_html() %}
+                    <label class="field">
+                        <span class="field-label">用户名</span>
+                        <span class="field-ctrl">
+                            <i class="fas fa-user"></i>
+                            <input type="text" name="username" value="{{ username or '' }}" placeholder="请输入用户名"
+                                   autocomplete="username" class="login-input" id="username" required>
+                        </span>
+                    </label>
+                    <label class="field">
+                        <span class="field-label">密码</span>
+                        <span class="field-ctrl">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" name="password" placeholder="请输入密码"
+                                   autocomplete="current-password" class="login-input" id="password" required>
+                        </span>
+                    </label>
+                    <button type="submit" class="login-submit">登 录</button>
+                </form>
+            </div>
+
+            <div id="tabFace" style="display:none">
+                <div class="face-stage">
+                    <video id="faceVideo" autoplay playsinline muted></video>
+                    <div class="face-scan-overlay" id="faceOverlay" hidden>
+                        <div class="face-guide-frame"></div>
+                        <div class="face-scan-line"></div>
+                        <span class="face-live-badge" id="faceBadge"><i></i> <span id="faceBadgeText">实时识别中</span></span>
+                    </div>
+                    <div class="face-placeholder" id="facePlaceholder"><i class="fas fa-camera-retro"></i><small>CAMERA STANDBY</small></div>
+                </div>
+                <label class="field face-username-field">
+                    <span class="field-label">用户名</span>
+                    <span class="field-ctrl">
+                        <i class="fas fa-id-badge"></i>
+                        <input type="text" id="faceUsername" class="login-input" autocomplete="username"
+                               maxlength="32" required placeholder="请输入已录入人脸的账号">
+                    </span>
+                </label>
+                <label class="face-remember">
+                    <input type="checkbox" id="faceRememberUsername">
+                    <span>在此浏览器记住用户名</span>
+                </label>
+                <div class="face-hint" id="faceHint" role="status"></div>
+                <button type="button" class="btn-ghost face-retry" id="faceRetry" hidden>重试人脸识别</button>
+            </div>
+
+            <div class="login-foot">
+                <span>还没有账号？<a href="/auth/register">立即注册</a></span>
+                <span>忘记密码请联系管理员</span>
+            </div>
+        </div>
+    </section>
+</div>
+{% end %}
+
+{% block scripts %}
+<script src="{{ static_url('js/face-capture.js') }}"></script>
+<script>
+(function () {
+    var video = document.getElementById('faceVideo');
+    var placeholder = document.getElementById('facePlaceholder');
+    var overlay = document.getElementById('faceOverlay');
+    var badge = document.getElementById('faceBadge');
+    var badgeText = document.getElementById('faceBadgeText');
+    var hint = document.getElementById('faceHint');
+    var retry = document.getElementById('faceRetry');
+    var usernameInput = document.getElementById('faceUsername');
+    var rememberUsername = document.getElementById('faceRememberUsername');
+    var rememberKey = 'govcheck.face.username';
+    var MAX_STALL_RECOVERIES = 4;
+    var stream = null;
+    var cameraReady = false;
+    var active = false;
+    var generation = 0;
+    var stallRecoveries = 0;
+    var timer;
+    var request = null;
+
+    try {
+        var remembered = localStorage.getItem(rememberKey);
+        if (remembered && remembered.length <= 32) {
+            usernameInput.value = remembered;
+            rememberUsername.checked = true;
+        }
+    } catch (err) { /* 浏览器禁用本地存储时仍可正常登录。 */ }
+
+    rememberUsername.addEventListener('change', function () {
+        if (!rememberUsername.checked) {
+            try { localStorage.removeItem(rememberKey); } catch (err) {}
+        }
+    });
+
+    document.querySelectorAll('.auth-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('.auth-tab').forEach(function (t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            var face = tab.getAttribute('data-tab') === 'face';
+            document.getElementById('tabPwd').style.display = face ? 'none' : '';
+            document.getElementById('tabFace').style.display = face ? '' : 'none';
+            if (face === active) return;
+            active = face;
+            stallRecoveries = 0;
+            resetCamera();
+            if (active) startCamera(generation);
+        });
+    });
+
+    function showHint(text, isInfo) {
+        hint.textContent = text || '';
+        hint.classList.toggle('is-info', !!isInfo);
+    }
+
+    function setBadge(text, state) {
+        if (!badge || !badgeText) return;
+        badgeText.textContent = text;
+        badge.className = 'face-live-badge' + (state ? ' is-' + state : '');
+    }
+
+    function resetCamera() {
+        generation++;
+        clearTimeout(timer);
+        if (request) request.abort();
+        request = null;
+        if (stream) stream.getTracks().forEach(function (track) { track.stop(); });
+        stream = null;
+        cameraReady = false;
+        video.srcObject = null;
+        video.style.display = 'none';
+        if (overlay) overlay.hidden = true;
+        placeholder.style.display = '';
+        usernameInput.readOnly = false;
+        retry.hidden = true;
+    }
+
+    function showFailure(message) {
+        showHint(message, false);
+        retry.hidden = false;
+    }
+
+    function recoverCamera(reason) {
+        if (!active) return;
+        if (stallRecoveries >= MAX_STALL_RECOVERIES) {
+            resetCamera();
+            showFailure('摄像头画面持续未刷新，请确认未被其他应用占用后点击重试。');
+            return;
+        }
+        stallRecoveries++;
+        resetCamera();
+        showHint(reason || '摄像头画面未刷新，正在自动重连…', true);
+        var attempt = generation;
+        timer = setTimeout(function () {
+            if (active && attempt === generation) startCamera(attempt);
+        }, 350);
+    }
+
+    function scheduleRecognition(delay) {
+        clearTimeout(timer);
+        if (!active || !cameraReady || usernameInput.readOnly || !retry.hidden) return;
+        if (!usernameInput.value.trim()) {
+            setBadge('等待输入账号', 'idle');
+            showHint('请输入用户名，输完后会自动识别。', true);
+            return;
+        }
+        setBadge('实时识别中', 'live');
+        var attempt = generation;
+        timer = setTimeout(function () { recognize(attempt); }, delay);
+    }
+
+    async function startCamera(attempt) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showHint('当前浏览器或非安全上下文（需 https/localhost）不支持摄像头，请改用账号密码登录。', false);
+            return;
+        }
+        showHint('正在打开摄像头，首次使用请允许访问…', true);
+        try {
+            var opened = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false
+            });
+            if (!active || attempt !== generation) {
+                opened.getTracks().forEach(function (track) { track.stop(); });
+                return;
+            }
+            stream = opened;
+            opened.getVideoTracks().forEach(function (track) {
+                track.addEventListener('ended', function () {
+                    if (active && stream === opened && !request) {
+                        recoverCamera('摄像头连接中断，正在自动重连…');
+                    }
+                });
+            });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            placeholder.style.display = 'none';
+            await video.play();
+            if (attempt !== generation) return;
+            cameraReady = true;
+            if (overlay) overlay.hidden = false;
+            setBadge('实时识别中', 'live');
+            showHint('请正对镜头，确保光线充足且画面中只有本人。', true);
+            if (!usernameInput.value.trim()) usernameInput.focus();
+            scheduleRecognition(600);
+        } catch (err) {
+            if (attempt !== generation) return;
+            resetCamera();
+            showFailure('无法打开摄像头，请检查浏览器权限或改用密码登录。');
+        }
+    }
+
+    async function recognize(attempt) {
+        if (!active || attempt !== generation || !stream || usernameInput.readOnly) return;
+        var xsrfInput = document.querySelector('input[name="_xsrf"]');
+        var username = usernameInput.value.trim();
+        if (!username) return;
+        usernameInput.readOnly = true;
+        setBadge('采集中…', 'busy');
+        showHint('正在实时采集人脸画面，请保持正对镜头…', true);
+        var continueRecognition = false;
+        var needCameraRecovery = false;
+        var recoveryReason = '';
+        try {
+            var frames = await window.captureFaceFrames(video);
+            if (attempt !== generation) return;
+            stallRecoveries = 0;
+            setBadge('活体与特征比对中…', 'busy');
+            showHint('正在检查活体并比对人脸…', true);
+            request = new AbortController();
+            var resp = await fetch('/auth/face/login', {
+                method: 'POST',
+                credentials: 'same-origin',
+                signal: request.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Xsrftoken': xsrfInput ? xsrfInput.value : ''
+                },
+                body: JSON.stringify({ username: username, frames: frames })
+            });
+            if (attempt !== generation) return;
+            if (resp.redirected && resp.ok) {
+                try {
+                    if (rememberUsername.checked) localStorage.setItem(rememberKey, username);
+                } catch (err) {}
+                setBadge('识别通过，正在进入…', 'live');
+                showHint('人脸识别通过，正在跳转…', true);
+                request = null;
+                resetCamera();
+                window.location.href = resp.url;
+                return;
+            }
+            var html = await resp.text();
+            if (attempt !== generation) return;
+            var doc = new DOMParser().parseFromString(html, 'text/html');
+            var error = doc.querySelector('.auth-error');
+            var message = error ? error.textContent.trim() : '人脸登录失败，请重试或改用密码登录。';
+            if (message.indexOf('画面未更新') !== -1) {
+                needCameraRecovery = true;
+                recoveryReason = '检测到摄像头画面停滞，正在自动重连…';
+            } else {
+                continueRecognition = resp.headers.get('X-Face-Retry') === '1';
+                if (continueRecognition) {
+                    setBadge('实时识别中', 'live');
+                    showHint(message + ' · 正在持续识别', false);
+                } else {
+                    resetCamera();
+                    showFailure(message);
+                }
+            }
+        } catch (err) {
+            if (attempt === generation) {
+                if (err && err.cameraStalled) {
+                    needCameraRecovery = true;
+                    recoveryReason = err.message;
+                } else {
+                    var failure = request ? '网络异常，请重试或改用密码登录。' : err.message;
+                    resetCamera();
+                    showFailure(failure);
+                }
+            }
+        } finally {
+            if (attempt === generation) {
+                request = null;
+                usernameInput.readOnly = false;
+                if (needCameraRecovery) {
+                    recoverCamera(recoveryReason);
+                } else if (continueRecognition) {
+                    scheduleRecognition(1200);
+                }
+            }
+        }
+    }
+
+    usernameInput.addEventListener('input', function () { scheduleRecognition(800); });
+    retry.addEventListener('click', function () {
+        stallRecoveries = 0;
+        retry.hidden = true;
+        if (stream) scheduleRecognition(0);
+        else startCamera(generation);
+    });
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden || !active || request) return;
+        var tracks = stream ? stream.getVideoTracks() : [];
+        var dead = !tracks.length || tracks.some(function (t) { return t.readyState !== 'live'; });
+        if (dead) {
+            stallRecoveries = 0;
+            resetCamera();
+            startCamera(generation);
+        } else if (video.paused) {
+            video.play().then(function () { scheduleRecognition(400); }).catch(function () {
+                recoverCamera('页面切回前台，正在重新连接摄像头…');
+            });
+        }
+    });
+    window.addEventListener('pagehide', resetCamera);
+})();
+</script>
+{% end %}

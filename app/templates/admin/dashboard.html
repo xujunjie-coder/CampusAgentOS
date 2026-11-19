@@ -1,0 +1,188 @@
+{# 数智大屏（/admin/dashboard）：任务二"数智大屏"——地图 + 实时报表 + 语音问答/播报
+   独立全屏模板，不继承后台五段式壳（大屏需要铺满视口）；顶栏保留"返回后台 / 全屏 / 实时开关"出口。
+   数据来源：GET /api/stats/stream（SSE，event: bootstrap 首帧全量 + snapshot 增量）、
+             POST /api/dashboard/ask（语音/文字问答）、/api/stats/snapshot（断线重连兜底）。 #}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>西华师范大学智慧校园服务数据中心 · 数智大屏</title>
+    {% if site_favicon %}<link rel='icon' href='{{ site_favicon }}'>{% end %}
+    <link rel='stylesheet' href='/static/vendor/fontawesome/css/all.min.css'>
+    <link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
+    <link rel='stylesheet' href='/static/css/console.css?v=20261111b'>
+    <!-- 西华师范大学品牌色覆盖 -->
+    <style>
+        :root { --cwnu-blue: #003087; --cwnu-red: #C41230; }
+        .ckb-brand-icon, .ckb-live-flag, .ckb-panel-title .fas { color: var(--cwnu-blue) !important; }
+        .ckb-head { border-bottom-color: var(--cwnu-blue) !important; }
+        .ckb-kw-tag { background: var(--cwnu-blue) !important; }
+        .ckb-footer-tag { color: var(--cwnu-blue) !important; }
+    </style>
+</head>
+<body>
+<div class="ckb-page {% if watermark %}is-watermark{% end %}" id="consolePage"
+     data-refresh="{{ refresh_seconds }}">
+    <!-- 顶栏 -->
+    <div class="ckb-head">
+        <div class="ckb-brand">
+            {% if site_logo %}
+            <img src="{{ site_logo }}" alt="{{ site_name }}" width="26" height="26">
+            {% else %}
+            <span class="ckb-brand-icon"><i class="fas fa-shield-alt"></i></span>
+            {% end %}
+            <div>
+                <div class="ckb-title">西华师范大学 · 智慧校园服务数据中心</div>
+                <div class="ckb-sub">问答服务 / 政策速报 / 就业指导 / 心理支持 实时态势</div>
+            </div>
+        </div>
+        <div class="ckb-head-clock">
+            <div class="ckb-clock" id="clock">--:--:--</div>
+            <div class="ckb-date" id="today">-</div>
+        </div>
+        <div class="ckb-head-actions">
+            <span class="ck-live" id="liveFlag" style="color:#8fb3d9"><i></i><span id="liveText">连接中</span></span>
+            <button type="button" class="ckb-btn" id="btnRefresh"><i class="fas fa-sync-alt"></i> 刷新</button>
+            <button type="button" class="ckb-btn" id="btnFull"><i class="fas fa-expand"></i> 全屏</button>
+            <button type="button" class="ckb-btn" id="btnSound"><i class="fas fa-volume-up"></i> 播报开</button>
+            <a class="ckb-btn" href="/admin"><i class="fas fa-arrow-left"></i> 返回后台</a>
+        </div>
+    </div>
+
+    <!-- 主体：KPI 条 + 五块面板（bootstrap grid 只做间距/栅格工具，主布局用 CSS Grid 锁死大屏比例） -->
+    <div class="ckb-body">
+        <div class="ckb-kpis">
+            <div class="ckb-kpi">
+                <div class="ckb-kpi-k">采集总量</div>
+                <div class="ckb-kpi-v" id="kpiCollect">0<small>条</small></div>
+                <div class="ckb-kpi-sub" id="kpiCollectSub">今日新增 0</div>
+            </div>
+            <div class="ckb-kpi">
+                <div class="ckb-kpi-k">今日新增</div>
+                <div class="ckb-kpi-v" id="kpiToday">0<small>条</small></div>
+                <div class="ckb-kpi-sub">采集链路当日增量</div>
+            </div>
+            <div class="ckb-kpi">
+                <div class="ckb-kpi-k">数仓正文</div>
+                <div class="ckb-kpi-v" id="kpiWarehouse">0<small>篇</small></div>
+                <div class="ckb-kpi-sub">深采入库可检索</div>
+            </div>
+            <div class="ckb-kpi" data-tone="risk">
+                <div class="ckb-kpi-k">高风险线索</div>
+                <div class="ckb-kpi-v" id="kpiRiskHigh">0<small>条</small></div>
+                <div class="ckb-kpi-sub" id="kpiRiskSub">关注 0 · 待复核 0</div>
+            </div>
+            <div class="ckb-kpi">
+                <div class="ckb-kpi-k">模型调用</div>
+                <div class="ckb-kpi-v" id="kpiToken">0<small>次</small></div>
+                <div class="ckb-kpi-sub" id="kpiTokenSub">Token 0</div>
+            </div>
+            <div class="ckb-kpi" data-tone="ok">
+                <div class="ckb-kpi-k">活跃会话</div>
+                <div class="ckb-kpi-v" id="kpiActive">0<small>个</small></div>
+                <div class="ckb-kpi-sub" id="kpiUserSub">用户 0 · 消息 0</div>
+            </div>
+        </div>
+
+        <!-- 左：采集与对话趋势 -->
+        <section class="ckb-panel ckb-left-top">
+            <div class="ckb-panel-head">
+                <span class="ckb-panel-title"><i class="fas fa-chart-area"></i>问答服务量趋势</span>
+                <span class="ckb-panel-sub">近 14 日</span>
+            </div>
+            <div class="ckb-panel-body">
+                <div class="ckb-chart" id="chartTrend"></div>
+            </div>
+        </section>
+
+        <!-- 中：中国地图 + 热词 -->
+        <section class="ckb-panel ckb-center">
+            <div class="ckb-panel-head">
+                <span class="ckb-panel-title"><i class="fas fa-map-marked-alt"></i>信源覆盖与地域提及</span>
+                <span class="ckb-panel-sub" id="mapSub">省级行政区着色</span>
+            </div>
+            <div class="ckb-panel-body" style="display:flex;flex-direction:column;">
+                <div class="ckb-chart ckb-chart-flex" id="chartMap"></div>
+                <div class="ckb-legend-tip" id="mapTip">口径：按采集标题/摘要中出现的省级行政区或省会城市计数</div>
+                <div class="ckb-hotwords" id="hotwords"></div>
+            </div>
+        </section>
+
+        <!-- 右：风险等级分布 -->
+        <section class="ckb-panel ckb-right-top">
+            <div class="ckb-panel-head">
+                <span class="ckb-panel-title"><i class="fas fa-exclamation-triangle"></i>话题分类</span>
+                <span class="ckb-panel-sub" id="riskTotal">共 0 条</span>
+            </div>
+            <div class="ckb-panel-body">
+                <div class="ckb-chart" id="chartRisk"></div>
+            </div>
+        </section>
+
+        <!-- 左：信源采集排行 -->
+        <section class="ckb-panel ckb-left-bottom">
+            <div class="ckb-panel-head">
+                <span class="ckb-panel-title"><i class="fas fa-rss"></i>助手使用分布</span>
+                <span class="ckb-panel-sub">Top 10</span>
+            </div>
+            <div class="ckb-panel-body">
+                <div class="ckb-chart" id="chartSource"></div>
+            </div>
+        </section>
+
+        <!-- 右：实时预警流 -->
+        <section class="ckb-panel ckb-right-bottom">
+            <div class="ckb-panel-head">
+                <span class="ckb-panel-title"><i class="fas fa-bell"></i>实时预警流</span>
+                <span class="ckb-panel-sub" id="feedSub">最近 8 条</span>
+            </div>
+            <div class="ckb-panel-body" style="padding:4px 10px;">
+                <ul class="ckb-feed" id="feedRisk"><li class="ckb-feed-empty">等待风险分析结果…</li></ul>
+            </div>
+        </section>
+    </div>
+
+    <!-- 底部滚动：最新采集 -->
+    <div class="ckb-foot">
+        <span class="ckb-foot-label"><i class="fas fa-bolt"></i> 最新采集</span>
+        <div class="ckb-ticker" id="footTicker"><span>暂无采集记录</span></div>
+        <span class="ckb-foot-time">数据生成 <b id="genTime">-</b></span>
+    </div>
+
+    <!-- 语音问答浮层 -->
+    <div class="ckb-ask" id="askPanel">
+        <div class="ckb-ask-head" id="askHead">
+            <i class="fas fa-robot"></i>
+            <span>大屏智能问答</span>
+            <span class="ckb-ask-toggle" id="askToggle">收起</span>
+        </div>
+        <div class="ckb-ask-body">
+            <div class="ckb-ask-log" id="askLog">
+                <div class="ckb-ask-a">可以问我：最新数据情况、风险预警情况、信源采集排名、近七天趋势。语音或文字均可。</div>
+            </div>
+            <div class="ckb-ask-input">
+                <input type="text" id="askInput" maxlength="120" placeholder="例如：最新数据情况" autocomplete="off">
+                <button type="button" class="ckb-btn is-mic" id="btnMic" title="语音输入"><i class="fas fa-microphone"></i></button>
+                <button type="button" class="ckb-btn is-primary" id="btnAsk" title="发送"><i class="fas fa-paper-plane"></i></button>
+            </div>
+            <div class="ckb-ask-tip">
+                <span id="asrTip">语音识别：浏览器原生 Web Speech，不可用时请键盘输入</span>
+                <a href="/qa" target="_blank" style="color:#7fa3cf;text-decoration:none;">深度问数 →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 强制下发 xsrf cookie（大屏问答 POST 需要；不提交该表单） -->
+    <form id="xsrfForm" style="display:none" onsubmit="return false;">{% module xsrf_form_html() %}</form>
+</div>
+<div style="text-align:center;padding:6px 0;opacity:.5;font-size:12px;color:#aaa;">
+    © 西华师范大学信息技术团队 &nbsp;|&nbsp; 智慧校园服务数据中心
+</div>
+
+<script src="/static/vendor/echarts/echarts.min.js"></script>
+<script src="/static/js/chart-kit.js"></script>
+<script src="/static/js/console-common.js"></script>
+<script src="/static/js/dashboard.js"></script>
+</body>
+</html>

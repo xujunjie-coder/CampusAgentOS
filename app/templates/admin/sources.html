@@ -1,0 +1,52 @@
+{# 信源管理（/admin/sources）：任务5 —— URL 规格 + Request Headers 规则的增删改查分页；只管理数据源与规则，不含采集任务，由 admin.js 走 /api/admin/sources #}
+{% extends "base.html" %}
+
+{% block admin_content %}
+<!-- 功能区 -->
+<div class="layui-form admin-toolbar">
+    <div class="layui-input-wrap admin-search">
+        <div class="layui-input-prefix"><i class="fas fa-search"></i></div>
+        <input type="text" id="sourceKeyword" placeholder="按名称 / URL / 简介搜索" autocomplete="off" class="layui-input" lay-affix="clear">
+    </div>
+    <button type="button" class="layui-btn" id="sourceSearch"><i class="fas fa-search"></i> 搜索</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="sourceReset"><i class="fas fa-undo"></i> 重置</button>
+    <span class="admin-toolbar-split"></span>
+    <button type="button" class="layui-btn layui-btn-normal" id="sourceAdd"><i class="fas fa-plus"></i> 新增信源</button>
+    <span class="admin-toolbar-count">共 <b id="sourceCount">0</b> 条</span>
+</div>
+
+<!-- 列表区 -->
+<div class="layui-card admin-card">
+    <div class="layui-card-body admin-list">
+        <table class="layui-table" lay-size="sm">
+            <colgroup>
+                <col width="160">
+                <col>
+                <col width="110">
+                <col width="200">
+                <col width="90">
+                <col width="300">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>信源名称</th>
+                    <th>URL 规格</th>
+                    <th>请求头</th>
+                    <th>简介</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="sourceBody">
+                <tr><td colspan="6" class="admin-empty">加载中…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 分页区 -->
+<div class="admin-pager">
+    <span class="admin-pager-tip"><i class="fas fa-info-circle"></i> 每页 {{ page_size }} 条</span>
+    <div class="admin-pager-box" id="sourcePager"></div>
+</div>
+{% end %}

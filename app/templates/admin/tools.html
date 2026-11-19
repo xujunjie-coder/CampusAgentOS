@@ -1,0 +1,60 @@
+{# 工具链路（/admin/tools）：任务一后台"工具链路"页
+   只读查看工具注册表（agentica 内置 + 数仓检索 + MCP）与数字员工绑定矩阵；
+   工具的增删与绑定在「智能体服务 / 数字员工」里配置，本页不提供写操作，避免两处配置互相覆盖。 #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/console.css?v=20261111b'>
+{% end %}
+
+{% block admin_content %}
+<div class="ck-report">
+    <div class="layui-form admin-toolbar">
+        <div class="layui-input-wrap admin-search">
+            <div class="layui-input-prefix"><i class="fas fa-search"></i></div>
+            <input type="text" id="toolKeyword" class="layui-input" autocomplete="off"
+                   placeholder="按工具名称 / 标识 / 说明搜索">
+        </div>
+        <button type="button" class="layui-btn layui-btn-primary" id="btnReload"><i class="fas fa-sync-alt"></i> 刷新</button>
+        <a class="layui-btn" href="/admin/employees"><i class="fas fa-users-cog"></i> 去数字员工配置绑定</a>
+        <span class="admin-toolbar-count">工具 <b id="toolCount">0</b> 个 · 绑定关系 <b id="bindCount">0</b> 条</span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-6 col-xl-3"><div class="ck-kpi"><div class="ck-kpi-k">注册工具</div><div class="ck-kpi-v" id="kpiTools">—<small>个</small></div><div class="ck-kpi-sub">代码注册表实际可用</div></div></div>
+        <div class="col-6 col-xl-3"><div class="ck-kpi" data-tone="info"><div class="ck-kpi-k">绑定关系</div><div class="ck-kpi-v" id="kpiBinds">—<small>条</small></div><div class="ck-kpi-sub">员工 × 工具</div></div></div>
+        <div class="col-6 col-xl-3"><div class="ck-kpi"><div class="ck-kpi-k">数字员工</div><div class="ck-kpi-v" id="kpiEmployees">—<small>个</small></div><div class="ck-kpi-sub" id="kpiEmployeesSub">启用 0</div></div></div>
+        <div class="col-6 col-xl-3"><div class="ck-kpi" data-tone="ok"><div class="ck-kpi-k">工具类型</div><div class="ck-kpi-v" id="kpiKinds">—<small>类</small></div><div class="ck-kpi-sub">内置 / 数据 / MCP</div></div></div>
+    </div>
+
+    <div class="ck-panel" style="margin-top:12px;">
+        <div class="ck-panel-head">
+            <i class="fas fa-link"></i>
+            <span class="ck-panel-title">工具注册表与绑定矩阵</span>
+            <span class="ck-panel-sub">数据来自 app/services/agent_service.py 的 TOOL_REGISTRY 与 digital_employees.tools</span>
+        </div>
+        <div class="ck-panel-body" style="padding:0 12px 12px;">
+            <table class="ck-table ck-tools-table">
+                <thead>
+                <tr><th style="width:220px;">工具</th><th style="width:110px;">类型</th><th style="width:210px;">提供方</th><th>说明</th><th style="width:250px;">绑定数字员工</th></tr>
+                </thead>
+                <tbody id="toolBody">
+                <tr><td colspan="5" style="color:#9aa4b2;padding:18px;">加载中…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="ck-note">
+        说明：工具是否可用由 <code>TOOL_REGISTRY</code>（代码注册）决定，绑定关系存在 <code>digital_employees.tools</code> 字段。
+        本页只读展示，避免与数字员工页形成双写；新增工具需在 <code>app/services/agent_service.py</code> 注册后在此自动出现。
+    </div>
+</div>
+{% end %}
+
+{% block admin_scripts %}
+<script src="/static/js/console-common.js"></script>
+<script src="/static/js/tools.js"></script>
+{% end %}

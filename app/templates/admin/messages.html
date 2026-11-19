@@ -1,0 +1,105 @@
+{# 对话记录管理页（/admin/messages）：成员 E —— 跨用户查看 messages 表活跃对话。
+   框架壳（功能区 | 列表区 | 分页区）由本模板出，列表 / 详情 / 删除 由 static/js/messages.js 走 /api/admin/messages #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/messages.css'>
+{% end %}
+
+{% block admin_content %}
+<!-- 顶部统计条 -->
+<div class="msg-status" id="msgStatus">
+    <div class="msg-status-item">
+        <span class="k"><i class="fas fa-comments"></i> 活跃消息总量</span>
+        <span class="v" id="msgTotalAll">{{ total }}</span>
+    </div>
+    <div class="msg-status-item">
+        <span class="k"><i class="fas fa-filter"></i> 当前筛选</span>
+        <span class="v" id="msgFiltered">共 {{ total }} 条</span>
+    </div>
+    <div class="msg-status-note">
+        <i class="fas fa-info-circle"></i>
+        本页跨用户查看 messages 主表（近期活跃对话）；超过保留期的历史消息已迁移到「会话归档」页可查。
+    </div>
+</div>
+
+<!-- 功能区 -->
+<div class="layui-form admin-toolbar msg-toolbar">
+    <div class="layui-input-inline" style="width:150px;">
+        <input type="text" id="msgUsername" placeholder="用户名（模糊）" autocomplete="off" class="layui-input">
+    </div>
+    <div class="layui-input-inline" style="width:170px;">
+        <input type="text" id="msgSessionId" placeholder="会话 ID（模糊）" autocomplete="off" class="layui-input">
+    </div>
+    <div class="layui-input-inline" style="width:120px;">
+        <select id="msgRole" lay-filter="msgRole">
+            <option value="">全部角色</option>
+            {% for r in roles %}
+            <option value="{{ r }}">{{ r }}</option>
+            {% end %}
+        </select>
+    </div>
+    <div class="layui-input-inline" style="width:170px;">
+        <input type="text" id="msgStart" placeholder="起始 YYYY-MM-DD" autocomplete="off" class="layui-input">
+    </div>
+    <div class="layui-input-inline" style="width:170px;">
+        <input type="text" id="msgEnd" placeholder="结束 YYYY-MM-DD" autocomplete="off" class="layui-input">
+    </div>
+    <div class="layui-input-inline" style="width:200px;">
+        <input type="text" id="msgKeyword" placeholder="正文关键词" autocomplete="off" class="layui-input">
+    </div>
+    <button type="button" class="layui-btn" id="msgSearch"><i class="fas fa-search"></i> 搜索</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="msgReset"><i class="fas fa-undo"></i> 重置</button>
+    <span class="admin-toolbar-split"></span>
+    <button type="button" class="layui-btn layui-btn-danger layui-btn-primary" id="msgBatchDelete">
+        <i class="fas fa-trash-alt"></i> 批量删除
+    </button>
+    <span class="admin-toolbar-count">共 <b id="msgCount">0</b> 条</span>
+</div>
+
+<!-- 列表区 -->
+<div class="layui-card admin-card">
+    <div class="layui-card-body admin-list">
+        <table class="layui-table" lay-size="sm">
+            <colgroup>
+                <col width="40">
+                <col width="70">
+                <col width="120">
+                <col width="140">
+                <col width="90">
+                <col>
+                <col width="120">
+                <col width="160">
+                <col width="120">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="msgCheckAll" title="全选本页"></th>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>会话 ID</th>
+                    <th>角色</th>
+                    <th>内容摘要</th>
+                    <th>应答助理</th>
+                    <th>时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="msgBody">
+                <tr><td colspan="9" class="admin-empty">加载中…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 分页区 -->
+<div class="admin-pager">
+    <span class="admin-pager-tip"><i class="fas fa-info-circle"></i> 每页 {{ page_size }} 条</span>
+    <div class="admin-pager-box" id="msgPager"></div>
+</div>
+{% end %}
+
+{% block admin_scripts %}
+<script src="/static/js/messages.js"></script>
+{% end %}

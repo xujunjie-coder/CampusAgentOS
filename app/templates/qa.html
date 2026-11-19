@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block styles %}
+<link rel="stylesheet" href="{{ static_url('css/qa.css') }}">
+{% end %}
+{% block content %}
+<div class="qa-app" data-username="{{ username }}">
+    <!-- XSRF：与 chat.js 同口径 -->
+    <span id="xsrfBox" hidden>{% module xsrf_form_html() %}</span>
+
+    <header class="qa-top">
+        <a href="/" class="qa-back"><i class="fas fa-arrow-left"></i> 返回对话大厅</a>
+        <span class="qa-top-title"><i class="fas fa-chart-bar"></i> 西华师大 · 校园智能问数</span>
+        <span class="qa-top-tip">汇聚校园多源资讯与师生服务数据，由数字员工生成研判报告</span>
+    </header>
+
+    <main class="qa-layout">
+        <!-- 左侧：提问 + 历史 -->
+        <aside class="qa-side">
+            <div class="qa-side-title">选择数字员工</div>
+            <select id="qaAssistant" class="layui-input"></select>
+
+            <div class="qa-side-title">提出问题</div>
+            <textarea id="qaInput" class="layui-input qa-textarea" rows="3"
+                      maxlength="500" placeholder="例如：近期西华师大各信源校园动态分布如何？师生关注热词有哪些？"></textarea>
+            <button type="button" class="layui-btn layui-btn-fluid" id="qaAskBtn">
+                <i class="fas fa-magic"></i> 生成校园问数报告
+            </button>
+
+            <div class="qa-side-title">校园快捷问数</div>
+            <ul class="qa-quick">
+                <li><button type="button" class="qa-quick-item" data-q="最近校园采集数据整体情况如何？哪个校园信源占比最高？">校园信源占比</button></li>
+                <li><button type="button" class="qa-quick-item" data-q="近7天校园资讯与服务动态趋势怎么样？">近7日校园趋势</button></li>
+                <li><button type="button" class="qa-quick-item" data-q="当前师生关注度分布情况如何，高频校园关键词有哪些？">师生关注热词</button></li>
+            </ul>
+
+            <div class="qa-side-title">问数历史</div>
+            <div class="qa-history" id="qaHistory"><div class="qa-muted">加载中…</div></div>
+        </aside>
+
+        <!-- 右侧：报告 -->
+        <section class="qa-report" id="qaReport">
+            <div class="qa-empty"><i class="fas fa-database"></i><p>提出一个问题，这里会展示完整问数报告</p></div>
+        </section>
+    </main>
+</div>
+{% end %}
+
+{% block scripts %}
+<script src="{{ static_url('js/qa.js') }}"></script>
+{% end %}

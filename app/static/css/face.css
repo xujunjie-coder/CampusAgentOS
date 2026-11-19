@@ -1,0 +1,210 @@
+/* ================= 任务18：登录后自助人脸录入（前台「人脸设置」弹层） ================= */
+.face-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, .45);
+    backdrop-filter: blur(3px);
+}
+
+.face-mask[hidden] { display: none; }
+
+.face-dialog {
+    width: 100%;
+    max-width: 780px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, .18);
+    overflow: hidden;
+}
+
+.face-dialog-head {
+    flex: 0 0 54px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 15.5px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.face-dialog-head i { color: #003087; margin-right: 7px; }
+
+.face-close {
+    border: 0;
+    background: transparent;
+    color: #8a94a6;
+    font-size: 16px;
+    line-height: 1;
+    padding: 6px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.face-close:hover { background: #f2f4f8; color: #1f2733; }
+
+.face-dialog-body {
+    padding: 14px 16px 18px;
+    overflow-y: auto;
+}
+
+/* ---------- 引擎状态提示 ---------- */
+.face-engine {
+    font-size: 12px;
+    line-height: 1.7;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    background: #f5f7fb;
+    color: #4a5568;
+}
+
+.face-engine.is-degraded { background: #fff7e6; color: #a25b00; border: 1px solid #ffe1a8; }
+.face-engine.is-real { background: #eefaf0; color: #1f7a33; border: 1px solid #bfe6c8; }
+
+/* ---------- 左右分栏 ---------- */
+.face-grid { display: flex; gap: 16px; align-items: flex-start; }
+.face-left { flex: 0 0 300px; }
+.face-right { flex: 1 1 auto; min-width: 0; }
+
+/* ---------- 取景区 ---------- */
+.face-stage {
+    position: relative;
+    width: 100%;
+    padding-top: 75%;
+    background: #0b1220;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.face-stage video,
+.face-stage img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.face-stage video { display: none; transform: scaleX(-1); }
+.face-stage img { display: none; }
+
+.face-stage.is-live video { display: block; }
+.face-stage.is-shot img { display: block; }
+.face-stage.is-live .face-stage-tip,
+.face-stage.is-shot .face-stage-tip { display: none; }
+
+.face-stage-tip {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    color: #59657c;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.face-stage-tip i { font-size: 30px; color: #3d4b63; }
+
+.face-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.face-upload { margin-bottom: 0; }
+
+.face-hint {
+    min-height: 18px;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #d9534f;
+}
+
+.face-hint.is-ok { color: #1f7a33; }
+.face-hint.is-info { color: #59657c; }
+
+.face-submit {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.face-submit .layui-input { height: 30px; flex: 1 1 auto; }
+.face-submit .layui-btn { flex: 0 0 auto; }
+
+/* ---------- 已录入列表 ---------- */
+.face-right-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eceff5;
+    font-size: 13px;
+    color: #1f2733;
+}
+
+.face-switch { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #59657c; cursor: pointer; }
+.face-switch input { width: 15px; height: 15px; cursor: pointer; }
+.face-switch.is-disabled { opacity: .55; cursor: not-allowed; }
+
+.face-list { margin-top: 8px; max-height: 240px; overflow-y: auto; }
+
+.face-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 2px;
+    font-size: 12px;
+    color: #3d4b63;
+    border-bottom: 1px dashed #eceff5;
+}
+
+.face-row-main { flex: 1 1 auto; min-width: 0; }
+.face-row-label { font-weight: 600; color: #1f2733; }
+.face-row-meta { color: #8a94a6; margin-top: 2px; }
+
+.face-empty {
+    padding: 18px 0;
+    text-align: center;
+    font-size: 12px;
+    color: #8a94a6;
+}
+
+.face-note {
+    margin: 10px 0 0;
+    font-size: 11px;
+    line-height: 1.7;
+    color: #8a94a6;
+}
+
+.face-busy { opacity: .6; pointer-events: none; }
+
+/* ---------- 小屏适配（手机 / 窄窗口） ---------- */
+@media (max-width: 720px) {
+    .face-mask { padding: 0; align-items: flex-end; }
+    .face-dialog { max-width: none; width: 100%; max-height: 92vh; border-radius: 12px 12px 0 0; }
+    .face-grid { flex-direction: column; }
+    .face-left { flex: 1 1 auto; width: 100%; }
+    .face-right { width: 100%; }
+    .face-list { max-height: 180px; }
+}

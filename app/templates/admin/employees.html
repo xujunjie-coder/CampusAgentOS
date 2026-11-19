@@ -1,0 +1,45 @@
+{# 数字员工管理（/admin/employees）：任务9 —— agentica 智能体配置入库（instructions/tools/workspace），增删改查+启停+设默认；橱窗一行 4 列、12 条/页，卡片/MD编辑器/文件浏览由 employees.js 走 /api/admin/employees 渲染 #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/employees.css'>
+{% end %}
+
+{% block admin_content %}
+<!-- 功能区 -->
+<div class="layui-form admin-toolbar emp-toolbar" id="employeeToolOptions"
+     data-options="{{ json_encode(tool_options) }}">
+    <div class="layui-input-wrap admin-search">
+        <div class="layui-input-prefix"><i class="fas fa-search"></i></div>
+        <input type="text" id="empKeyword" placeholder="按名称 / 简介 / 提示词搜索" autocomplete="off" class="layui-input" lay-affix="clear">
+    </div>
+    <div class="layui-input-inline emp-status-filter">
+        <select id="empStatus" lay-filter="empStatus">
+            <option value="">全部状态</option>
+            <option value="on">启用中</option>
+            <option value="off">已停用</option>
+        </select>
+    </div>
+    <button type="button" class="layui-btn" id="empSearch"><i class="fas fa-search"></i> 搜索</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="empReset"><i class="fas fa-undo"></i> 重置</button>
+    <span class="admin-toolbar-split"></span>
+    <button type="button" class="layui-btn layui-btn-normal" id="empAdd"><i class="fas fa-plus"></i> 新增数字员工</button>
+    <span class="admin-toolbar-count">共 <b id="empCount">0</b> 位数字员工</span>
+</div>
+
+<!-- 橱窗列表区：一行 4 列，卡片由 employees.js 渲染 -->
+<div class="emp-grid" id="empGrid">
+    <div class="emp-grid-empty"><i class="fas fa-spinner fa-spin"></i> 加载中…</div>
+</div>
+
+<!-- 分页区 -->
+<div class="admin-pager">
+    <span class="admin-pager-tip"><i class="fas fa-info-circle"></i> 橱窗模式 · 每页 {{ employee_page_size }} 位数字员工</span>
+    <div class="admin-pager-box" id="empPager"></div>
+</div>
+{% end %}
+
+{% block admin_scripts %}
+<script src="/static/js/employees.js"></script>
+{% end %}

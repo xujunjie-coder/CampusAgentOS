@@ -1,0 +1,317 @@
+{# 系统设置（/admin/settings）：任务三"系统管理模块"
+   - 系统名称 / 副标题 / 图标（Logo、Favicon）/ 水印：写 system_settings，模板注入即时生效
+   - 数据库：SQLite（默认）/ MySQL 切换，先测试连通性再切，失败自动回滚
+   - 语音与人脸模型：TTS 语音/语速/自动播报、ASR 开关、人脸引擎与阈值
+   - 安全参数：会话有效期、登录失败次数与锁定时长、审计保留天数
+   仅超级管理员可访问（后端 role_code == admin 强校验）；表单统一用 layui，密码不落库、只写 .env。 #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/console.css?v=20261111b'>
+{% end %}
+
+{% block admin_content %}
+<div class="ck-settings">
+    <div class="row g-3">
+        <!-- 系统标识 -->
+        <div class="col-xl-6">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-fingerprint"></i>
+                    <span class="ck-panel-title">系统标识</span>
+                    <span class="ck-panel-sub">改完即时生效，无需重启</span>
+                </div>
+                <div class="ck-panel-body">
+                    <div class="layui-form">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">系统名称</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="siteName" class="layui-input" maxlength="48"
+                                       value="{{ values.get('site_name', '') }}">
+                                <div class="ck-field-tip">显示在浏览器标题、后台顶栏与数智大屏标题，1~48 字。</div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">副标题</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="siteSubtitle" class="layui-input" maxlength="64"
+                                       value="{{ values.get('site_subtitle', '') }}">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">系统图标</label>
+                            <div class="layui-input-block">
+                                <div class="ck-brand-row">
+                                    <div class="ck-brand-preview" id="logoPreview">
+                                        {% if values.get('site_logo') %}
+                                        <img src="{{ values.get('site_logo') }}" alt="logo">
+                                        {% else %}<i class="fas fa-image"></i>{% end %}
+                                    </div>
+                                    <div>
+                                        <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" style="display:none;">
+                                        <button type="button" class="layui-btn layui-btn-primary layui-btn-sm" id="btnPickLogo">
+                                            <i class="fas fa-upload"></i> 上传 Logo
+                                        </button>
+                                        <div class="ck-field-tip">PNG / JPG / WebP / SVG，≤ 64 KB，自动落到 static/uploads/brand。</div>
+                                    </div>
+                                    <input type="hidden" id="siteLogo" value="{{ values.get('site_logo', '') }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">浏览器图标</label>
+                            <div class="layui-input-block">
+                                <div class="ck-brand-row">
+                                    <div class="ck-brand-preview" id="faviconPreview" style="width:40px;height:40px;flex:0 0 40px;">
+                                        {% if values.get('site_favicon') %}
+                                        <img src="{{ values.get('site_favicon') }}" alt="favicon">
+                                        {% else %}<i class="fas fa-star"></i>{% end %}
+                                    </div>
+                                    <div>
+                                        <input type="file" id="faviconFile" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" style="display:none;">
+                                        <button type="button" class="layui-btn layui-btn-primary layui-btn-sm" id="btnPickFavicon">
+                                            <i class="fas fa-upload"></i> 上传 Favicon
+                                        </button>
+                                    </div>
+                                    <input type="hidden" id="siteFavicon" value="{{ values.get('site_favicon', '') }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">大屏水印</label>
+                            <div class="layui-input-block">
+                                <input type="checkbox" id="uiWatermark" lay-skin="switch" lay-text="开|关"
+                                       {% if values.get('ui_watermark') == '1' %}checked{% end %}>
+                                <div class="ck-field-tip">开启后数智大屏右下角显示"内部演示数据"水印。</div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">大屏刷新</label>
+                            <div class="layui-input-inline" style="width:140px;">
+                                <input type="number" id="dashboardRefresh" class="layui-input" min="5" max="120"
+                                       value="{{ values.get('dashboard_refresh', '10') }}">
+                            </div>
+                            <div class="layui-form-mid" style="color:#9aa4b2;">秒（SSE 推送间隔，5~120）</div>
+                        </div>
+                        <button type="button" class="layui-btn" id="btnSaveBrand"><i class="fas fa-save"></i> 保存标识设置</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据库 -->
+        <div class="col-xl-6">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-database"></i>
+                    <span class="ck-panel-title">数据库连接</span>
+                    <span class="ck-panel-sub">默认 SQLite，可切 MySQL</span>
+                </div>
+                <div class="ck-panel-body">
+                    <div class="ck-db-current" style="margin-bottom:10px;">
+                        <span class="ck-db-badge" data-ok="{{ '1' if database['ok'] else '0' }}">
+                            {{ database['label'] }}
+                        </span>
+                        <span style="font-size:12px;color:#6b7789;">{{ database['target'] }}</span>
+                        <span class="ck-live {{ 'is-on' if database['ok'] else '' }}"><i></i>
+                            {{ '连接正常' if database['ok'] else '连接异常' }}
+                        </span>
+                    </div>
+                    {% if database['error'] %}
+                    <div class="ck-note" style="color:#c0342b;">{{ database['error'] }}</div>
+                    {% end %}
+
+                    <div class="layui-form">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">驱动</label>
+                            <div class="layui-input-block">
+                                {% for d in drivers %}
+                                <input type="radio" name="dbDriver" value="{{ d['code'] }}" title="{{ d['label'] }}"
+                                       {% if database['driver'] == d['code'] %}checked{% end %}>
+                                {% end %}
+                            </div>
+                        </div>
+
+                        <div class="ck-db-fields {{ 'is-on' if database['driver'] == 'mysql' else '' }}" id="mysqlFields">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">主机 / 端口</label>
+                                <div class="layui-input-inline" style="width:200px;">
+                                    <input type="text" id="dbHost" class="layui-input" value="{{ mysql['host'] }}">
+                                </div>
+                                <div class="layui-input-inline" style="width:110px;">
+                                    <input type="number" id="dbPort" class="layui-input" value="{{ mysql['port'] }}">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">账号 / 密码</label>
+                                <div class="layui-input-inline" style="width:160px;">
+                                    <input type="text" id="dbUser" class="layui-input" value="{{ mysql['user'] }}">
+                                </div>
+                                <div class="layui-input-inline" style="width:200px;">
+                                    <input type="password" id="dbPassword" class="layui-input"
+                                           value="{{ mysql['password'] }}" placeholder="留空表示不修改">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">库名 / 字符集</label>
+                                <div class="layui-input-inline" style="width:200px;">
+                                    <input type="text" id="dbName" class="layui-input" value="{{ mysql['name'] }}">
+                                </div>
+                                <div class="layui-input-inline" style="width:120px;">
+                                    <input type="text" id="dbCharset" class="layui-input" value="{{ mysql['charset'] }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">操作</label>
+                            <div class="layui-input-block">
+                                <button type="button" class="layui-btn layui-btn-primary" id="btnTestDb">
+                                    <i class="fas fa-plug"></i> 测试连接
+                                </button>
+                                <button type="button" class="layui-btn layui-btn-danger" id="btnSwitchDb">
+                                    <i class="fas fa-exchange-alt"></i> 保存并切换
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ck-note ck-danger-note">
+                        切换会先测通再改：MySQL 连接失败会自动回滚到原驱动，不会把站点切坏。
+                        目标库是空库，历史数据<b>不会自动迁移</b>，切回 SQLite 原数据仍在；
+                        切换后当前登录会话在新库里不存在，需要重新登录。密码只写入 <code>{{ env_path }}</code>，不入库。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 语音与人脸 -->
+        <div class="col-xl-6">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-microphone"></i>
+                    <span class="ck-panel-title">语音与人脸模型</span>
+                    <span class="ck-panel-sub">TTS / ASR / 人脸阈值</span>
+                </div>
+                <div class="ck-panel-body">
+                    <div class="layui-form">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">播报语音</label>
+                            <div class="layui-input-block">
+                                <select id="ttsVoice" lay-filter="ttsVoice">
+                                    <option value="">自动（优先中文语音）</option>
+                                    {% if values.get('tts_voice') %}
+                                    <option value="{{ values.get('tts_voice') }}" selected>{{ values.get('tts_voice') }}</option>
+                                    {% end %}
+                                </select>
+                                <div class="ck-field-tip">列表由当前浏览器的 speechSynthesis 提供，换机器后需重选。</div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">语速</label>
+                            <div class="layui-input-inline" style="width:120px;">
+                                <input type="number" id="ttsRate" class="layui-input" step="0.05" min="0.5" max="2.5"
+                                       value="{{ values.get('tts_rate', '1.05') }}">
+                            </div>
+                            <div class="layui-form-mid" style="color:#9aa4b2;">0.5 ~ 2.5</div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">自动播报</label>
+                            <div class="layui-input-block">
+                                <input type="checkbox" id="ttsAutoplay" lay-skin="switch" lay-text="开|关"
+                                       {% if values.get('tts_autoplay') == '1' %}checked{% end %}>
+                                <div class="ck-field-tip">大屏收到新高风险时自动语音提示。</div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">语音识别</label>
+                            <div class="layui-input-block">
+                                <input type="checkbox" id="asrEnabled" lay-skin="switch" lay-text="开|关"
+                                       {% if values.get('asr_enabled') == '1' %}checked{% end %}>
+                                <div class="ck-field-tip">关闭后大屏麦克风按钮置灰，仅保留文字输入。</div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">人脸引擎</label>
+                            <div class="layui-input-inline" style="width:240px;">
+                                <select id="faceEngine">
+                                    {% for e in face_engines %}
+                                    <option value="{{ e['code'] }}" {% if values.get('face_engine') == e['code'] %}selected{% end %}>{{ e['label'] }}</option>
+                                    {% end %}
+                                </select>
+                            </div>
+                            <div class="layui-input-inline" style="width:110px;">
+                                <input type="number" id="faceThreshold" class="layui-input" step="0.01" min="0.2" max="0.9"
+                                       value="{{ values.get('face_threshold', '0.35') }}">
+                            </div>
+                            <div class="layui-form-mid" style="color:#9aa4b2;">阈值 0.2~0.9</div>
+                        </div>
+                        <button type="button" class="layui-btn" id="btnSaveVoice"><i class="fas fa-save"></i> 保存语音与人脸</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 安全参数 -->
+        <div class="col-xl-6">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-shield-alt"></i>
+                    <span class="ck-panel-title">安全与会话</span>
+                    <span class="ck-panel-sub">写回 .env，下次登录生效</span>
+                </div>
+                <div class="ck-panel-body">
+                    <div class="layui-form">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">会话有效期</label>
+                            <div class="layui-input-inline" style="width:120px;">
+                                <input type="number" id="sessionTtl" class="layui-input" min="1" max="8760"
+                                       value="{{ values.get('session_ttl_hours', '12') }}">
+                            </div>
+                            <div class="layui-form-mid" style="color:#9aa4b2;">小时（1~8760）</div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">失败锁定</label>
+                            <div class="layui-input-inline" style="width:110px;">
+                                <input type="number" id="loginFails" class="layui-input" min="1" max="100"
+                                       value="{{ values.get('login_max_fails', '5') }}">
+                            </div>
+                            <div class="layui-form-mid">次后锁定</div>
+                            <div class="layui-input-inline" style="width:110px;">
+                                <input type="number" id="lockMinutes" class="layui-input" min="0" max="1440"
+                                       value="{{ values.get('login_lock_minutes', '10') }}">
+                            </div>
+                            <div class="layui-form-mid" style="color:#9aa4b2;">分钟</div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">审计保留</label>
+                            <div class="layui-input-inline" style="width:120px;">
+                                <input type="number" id="auditDays" class="layui-input" min="1" max="365"
+                                       value="{{ values.get('audit_keep_days', '30') }}">
+                            </div>
+                            <div class="layui-form-mid" style="color:#9aa4b2;">天（登录审计/任务日志清理口径）</div>
+                        </div>
+                        <button type="button" class="layui-btn" id="btnSaveSecurity"><i class="fas fa-save"></i> 保存安全参数</button>
+                    </div>
+                    <div class="ck-note">
+                        当前生效值来自进程配置；保存后会写回 .env 并热重载，已登录会话不受影响，新登录按新策略执行。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ck-note">
+        配置存储：<code>system_settings</code>（key-value）；运行参数同步 <code>{{ env_path }}</code>。
+        图标文件落在 <code>app/static/uploads/brand/</code>，文件名随机化并校验真实图片格式。
+        仅超级管理员可读写本页，普通后台角色访问会被 403 拒绝。
+    </div>
+</div>
+{% end %}
+
+{% block admin_scripts %}
+<script src="/static/js/console-common.js"></script>
+<script src="/static/js/settings.js"></script>
+{% end %}

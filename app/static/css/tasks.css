@@ -1,0 +1,117 @@
+/*
+ * tasks.css —— 定时任务管理页样式（表现层，成员 E）
+ * 仅补充 admin.css 未覆盖的模块专有样式：调度器状态条、任务行、状态徽标、参数区与日志弹层
+ */
+
+/* ---------- 调度器状态条 ---------- */
+.task-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    background: linear-gradient(90deg, #f5f7fb, #eef2f9);
+    border: 1px solid #e2e7f0;
+    border-radius: 8px;
+}
+.task-status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #5b6473;
+}
+.task-status-item .k i {
+    margin-right: 4px;
+    color: #1e9fff;
+}
+.task-status-item .v {
+    font-weight: 600;
+    color: #23262f;
+}
+.task-status-item .v.ok { color: #16b777; }
+.task-status-item .v.off { color: #a5aebb; font-weight: 400; }
+.task-status-note {
+    width: 100%;
+    font-size: 12px;
+    color: #8a94a6;
+    line-height: 1.6;
+}
+.task-status-note i { margin-right: 4px; color: #ffb800; }
+
+/* ---------- 任务列表行 ---------- */
+.task-row .task-name .n {
+    font-weight: 600;
+    color: #23262f;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.task-row .task-name .d {
+    font-size: 12px;
+    color: #98a1b0;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.task-type-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 12px;
+    color: #1e6fd9;
+    background: #eaf2fd;
+    border-radius: 3px;
+}
+.task-sched code {
+    padding: 1px 5px;
+    font-size: 12px;
+    background: #f2f3f5;
+    border-radius: 3px;
+    color: #6b7280;
+}
+.task-sched i { margin-right: 4px; color: #1e9fff; }
+.task-time { font-size: 12px; color: #6b7280; }
+.task-ops { white-space: nowrap; }
+.task-ops .layui-btn { margin-right: 2px; }
+
+/* ---------- 运行状态徽标 ---------- */
+.task-st {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 12px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+.task-st.ok { color: #16b777; background: #e7f8f1; }
+.task-st.bad { color: #ff5722; background: #fdeee9; }
+.task-st.run { color: #1e9fff; background: #eaf4ff; }
+.task-st.none { color: #a5aebb; background: #f2f3f5; }
+
+/* ---------- 表单分区标题 ---------- */
+.task-section-title {
+    padding: 10px 16px 6px;
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #33394a;
+    border-top: 1px dashed #e2e7f0;
+}
+.task-section-title i { margin-right: 6px; color: #1e9fff; }
+.task-form .layui-form-item { margin-bottom: 12px; }
+.task-form .tip, .task-param-empty { font-size: 12px; }
+
+/* ---------- 执行日志弹层 ---------- */
+.task-logs { padding: 8px 12px; }
+.task-logs .layui-table { margin-top: 0; }
+.task-logs .log-result {
+    font-size: 12px;
+    color: #5b6473;
+    max-width: 320px;
+    word-break: break-all;
+}
+
+/* ---------- 通知测试弹层 ---------- */
+.task-notify-test { padding: 16px 8px; }

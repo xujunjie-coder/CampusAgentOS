@@ -1,0 +1,88 @@
+/* base.css：全局基础样式 + 登录/注册页与后台页布局（配合本地 layui/fontawesome 组件） */
+
+html, body { height: 100%; }
+
+body {
+    background: #f8fafc;
+    color: #0f172a;
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+a {
+    color: #003087;
+    text-decoration: none;
+}
+
+/* ---------- 登录/注册页 ---------- */
+.auth-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1e5eff 0%, #1e9fff 55%, #54f0c8 100%);
+}
+
+.auth-card {
+    width: 380px;
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 21, 41, .28);
+}
+
+.auth-card .layui-card-header {
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.auth-card .layui-card-body {
+    padding: 24px 28px 16px;
+}
+
+.auth-error {
+    padding: 9px 12px;
+    margin-bottom: 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #fff;
+}
+
+.auth-footer {
+    text-align: center;
+    font-size: 13px;
+    color: #8a8f99;
+    padding-bottom: 6px;
+}
+
+.auth-role-tip {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+/* ---------- 后台管理页 ----------
+   后台框架样式（layui-layout-admin 五段式布局）已拆分至 static/css/admin.css，
+   仅由 templates/admin/base.html 引入，避免前台页面加载无用样式 */
+
+/* ---------- 用户工作台首页 ---------- */
+.index-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+
+.index-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.badge-role {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #003087;
+    background: #eef3fb;
+    vertical-align: middle;
+}

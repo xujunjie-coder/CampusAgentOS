@@ -1,0 +1,50 @@
+# ==============================================================================
+# GovCheckDataAgentOS 运行依赖（按 venv 实际版本固化）
+# 安装：venv\Scripts\python.exe -m pip install -r requirements.txt
+# ==============================================================================
+
+# ----- Web 层 -----
+tornado==6.6                # HTTP/SSE/WebSocket 框架（app/application.py、controllers）
+python-dotenv==1.2.4        # .env 读取（app/config.py 唯一入口）
+
+# ----- 智能体 / 大模型 -----
+agentica==1.5.0             # 智能体编排（app/services/agent_service.py）
+openai==3.42.1              # OpenAI 范式客户端（模型测试、深采分析）
+markdownify==1.2.3          # 采集/深采的 HTML→Markdown
+
+# ----- 定时任务（成员 E，任务2）-----
+apscheduler==3.11.3         # 周期任务调度（cron/interval）；缺失时降级 tornado，仅间隔任务可自动排程
+
+# ----- 采集与深度采集 -----
+requests==2.34.2            # 信源抓取 / 深度采集回退通道
+beautifulsoup4==4.15.0      # 启发式解析与正文抽取
+Crawl4AI==0.9.5             # 深度采集主引擎（需 playwright 浏览器内核）
+playwright==1.64.1          # Crawl4AI 依赖（python -m playwright install chromium）
+playwright-stealth==2.0.3   # 反爬场景的浏览器指纹处理
+
+# ----- 人脸识别（任务12）-----
+pillow==13.0.0              # 图片解码/校验/归一化
+numpy==2.5.4                # 特征向量与余弦相似度（含降级后端）
+opencv-python-headless==4.13.0.92  # YuNet 单脸检测与五点对齐
+cryptography==50.0.2        # 人脸特征静态加密（不返回原始向量）
+huggingface_hub==2.4.0      # 可选：下载 InsightFace ONNX 模型（tools/download_face_model.py 走其镜像能力）
+
+# ----- 多数据库（任务14，可选）-----
+# SQLite 为默认驱动，无需安装；切 MySQL 时必须安装：
+PyMySQL==1.2.3
+python-docx==1.2.0          # 知识仓库 .docx 文件解析（app/controllers/intelligence.py）
+olefile==0.47               # 知识仓库 .doc（Word97-2003 OLE2 格式）文件解析
+
+# ----- 成员 D：前台用户端（任务2）-----
+reportlab==5.1.0            # 导出对话 PDF（app/services/pdf_service.py，服务端生成真 .pdf）
+# 3D 数字人（虚拟主播）使用本地 vendor 静态资源，非 pip 依赖、无需下载：
+#   app/static/vendor/three/three.min.js（three.js r128，约 600KB）
+#   app/static/vendor/three/GLTFLoader.js（r128 配套加载器）
+#   app/static/vendor/three/models/three-vrm-girl.glb（pixiv VRM 动漫模型，约 5.3MB）
+# 语音朗读用浏览器原生 Web Speech API，服务端零依赖；示例曲库音频在 app/static/music/。
+
+# ----- 可选：真实精度人脸后端（任务12）-----
+# 本机 venv 已验证安装 onnxruntime==1.31.1；如需复现新机器再执行：
+# onnxruntime==1.31.1
+# 人脸录入和登录要求 ONNX 引擎可用；缺少识别或检测模型时请使用密码登录。
+# 运行 tools/download_face_model.py 下载 ArcFace、YuNet 和 MiniFASNetV2 到 database/models/face/。

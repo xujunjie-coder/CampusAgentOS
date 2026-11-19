@@ -1,0 +1,105 @@
+{#
+采集管理独立主页（任务6）：不继承 base.html / 不使用 layui，独立全屏科技感页面。
+自上而下三区：关键词输入区 | 信源采集选择区（含可视化参数配置） | 采集数据橱窗列表区（1行3列，12条/页）。
+交互逻辑全部在 static/js/collect.js（外部 JS 不经 Tornado 模板解析），样式在 static/css/collect.css。
+#}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/collect.css">
+</head>
+<body>
+    <!-- 科技感背景层：网格 + 光晕 -->
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="bg-glow bg-glow-a" aria-hidden="true"></div>
+    <div class="bg-glow bg-glow-b" aria-hidden="true"></div>
+
+    <!-- 顶栏：品牌 + 系统整合入口 + 用户 -->
+    <header class="collect-header">
+        <div class="brand">
+            <i class="fas fa-satellite-dish brand-icon"></i>
+            <span class="brand-name">数据瞭望 · 采集中心</span>
+            <span class="brand-sub">COLLECT CENTER</span>
+        </div>
+        <nav class="header-nav">
+            <a href="/" class="nav-link"><i class="fas fa-comments"></i> 对话前台</a>
+            <a href="/admin" class="nav-link"><i class="fas fa-cogs"></i> 后台管理</a>
+            <span class="user-chip"><i class="fas fa-user-astronaut"></i> {{ username }}<em class="role-badge">{{ role }}</em></span>
+            <a href="javascript:;" id="logoutLink" class="nav-link nav-logout"><i class="fas fa-sign-out-alt"></i> 退出</a>
+        </nav>
+    </header>
+
+    <main class="collect-main">
+        <!-- ① 关键词输入区 -->
+        <section class="panel" id="keywordSection">
+            <div class="panel-title"><i class="fas fa-keyboard"></i> 关键词输入 <span class="panel-en">KEYWORD</span></div>
+            <div class="keyword-row">
+                <div class="keyword-input-wrap">
+                    <i class="fas fa-search keyword-prefix"></i>
+                    <input type="text" id="keywordInput" maxlength="64" placeholder="输入采集关键词，如：四川 数字经济" autocomplete="off">
+                </div>
+                <label class="ai-switch" title="开启后普通网页优先用智能体解析，失败自动回退规则解析。RSS 直接读取。">
+                    <input type="checkbox" id="useLlm" checked>
+                    <span class="ai-track"><span class="ai-thumb"></span></span>
+                    <span class="ai-label"><i class="fas fa-robot"></i> AI 智能解析</span>
+                </label>
+                <button type="button" id="runBtn" class="run-btn"><i class="fas fa-bolt"></i> 启动采集</button>
+            </div>
+            <div class="collect-status" id="collectStatus">待命 · 输入关键词并勾选信源后启动采集</div>
+        </section>
+
+        <!-- ② 信源采集选择区（选中含自定义参数的信源时展开可视化参数配置） -->
+        <section class="panel" id="sourceSection">
+            <div class="panel-title">
+                <i class="fas fa-rss"></i> 信源采集选择 <span class="panel-en">SOURCES</span>
+                <span class="source-count" id="sourceCount">已选 0 个</span>
+            </div>
+            <div class="source-grid" id="sourceGrid"></div>
+            <div class="panel-tip"><i class="fas fa-info-circle"></i> 信源来自「后台 · 信源管理」；{关键字}/{分页} 占位符自动填充，其余占位符需在展开的参数配置中填写。</div>
+        </section>
+
+        <!-- ③ 采集数据橱窗列表区：1 行 3 列，12 条/页，封面 + 标题 + 时间 -->
+        <section class="panel" id="dataSection">
+            <div class="panel-title"><i class="fas fa-th-large"></i> 采集数据 <span class="panel-en">DATA SHOWCASE</span></div>
+            <div class="data-toolbar">
+                <div class="filter-input-wrap">
+                    <i class="fas fa-filter"></i>
+                    <input type="text" id="filterKeyword" placeholder="搜索标题 / 采集关键词" autocomplete="off">
+                </div>
+                <select id="filterSource" class="filter-select"><option value="">全部信源</option></select>
+                <span class="data-total" id="dataTotal">共 0 条</span>
+                <button type="button" id="refreshBtn" class="icon-btn" title="刷新列表"><i class="fas fa-sync-alt"></i></button>
+            </div>
+            <div class="showcase" id="showcase"></div>
+            <div class="empty-tip" id="emptyTip">
+                <i class="fas fa-satellite"></i>
+                <p>暂无采集数据 · 启动一次采集点亮橱窗</p>
+            </div>
+            <div class="pager" id="pager"></div>
+        </section>
+    </main>
+
+    <footer class="collect-footer">© 2026 GovCheckDataAgentOS · 某省数据瞭望系统 · 采集管理 · Tornado + Agentica + SQLite</footer>
+
+    <!-- 采集进度遮罩 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loader-ring"></div>
+        <div class="loading-text" id="loadingText">正在采集 …</div>
+        <div class="loading-sub" id="loadingDetail">正在抓取信源并解析结果</div>
+    </div>
+
+    <!-- 轻提示 -->
+    <div class="toast-box" id="toastBox"></div>
+
+    <!-- XSRF：API 请求头与退出登录表单共用 -->
+    <form action="/auth/logout" method="post" id="logoutForm" class="hidden-form">
+        {% module xsrf_form_html() %}
+    </form>
+
+    <script src="{{ static_url('js/collect.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block styles %}
+<link rel="stylesheet" href="{{ static_url('css/user.css') }}">
+{% end %}
+{% block content %}
+<div class="user-app" data-username="{{ username }}">
+    <!-- XSRF：与 chat.js 同口径，读模板下发的隐藏 _xsrf 输入 -->
+    <span id="xsrfBox" hidden>{% module xsrf_form_html() %}</span>
+    <header class="user-top">
+        <a href="/" class="user-back"><i class="fas fa-arrow-left"></i> 返回对话大厅</a>
+        <span class="user-top-title"><i class="fas fa-id-badge"></i> 西华师大 · 师生个人中心</span>
+        <span class="user-top-user">
+            {{ username }} <span class="badge-role">{{ role or "user" }}</span>
+        </span>
+    </header>
+
+    <main class="user-grid">
+        <!-- 资料卡：头像 + 昵称 + 概览统计 -->
+        <section class="user-card user-profile">
+            <div class="user-avatar-big"><i class="fas fa-user" id="avatarBig"></i></div>
+            <div class="user-meta">
+                <div class="user-name" id="profileName">{{ username }}</div>
+                <div class="user-sub">注册于 <span id="profileCreated">—</span>　最近登录 <span id="profileLogin">—</span></div>
+            </div>
+            <div class="user-stats">
+                <div class="user-stat"><b id="statMessages">0</b><span>条消息</span></div>
+                <div class="user-stat"><b id="statSessions">0</b><span>在线会话</span></div>
+                <div class="user-stat"><b id="statFaces">0</b><span>人脸特征</span></div>
+            </div>
+        </section>
+
+        <!-- 编辑资料 -->
+        <section class="user-card">
+            <div class="user-card-head"><i class="fas fa-id-card"></i> 编辑资料</div>
+            <div class="layui-form-item">
+                <label class="user-label" for="nicknameInput">昵称</label>
+                <input type="text" id="nicknameInput" class="layui-input" maxlength="32" placeholder="32 字以内">
+            </div>
+            <div class="layui-form-item">
+                <label class="user-label">头像图标</label>
+                <div class="user-avatar-picker" id="avatarPicker"></div>
+            </div>
+            <button type="button" class="layui-btn" id="saveProfile">
+                <i class="fas fa-check"></i> 保存资料
+            </button>
+        </section>
+
+        <!-- 修改密码 -->
+        <section class="user-card">
+            <div class="user-card-head"><i class="fas fa-lock"></i> 修改密码</div>
+            <div class="layui-form-item">
+                <label class="user-label" for="oldPwd">原密码</label>
+                <input type="password" id="oldPwd" class="layui-input" autocomplete="current-password">
+            </div>
+            <div class="layui-form-item">
+                <label class="user-label" for="newPwd">新密码（≥6 位）</label>
+                <input type="password" id="newPwd" class="layui-input" autocomplete="new-password">
+            </div>
+            <div class="layui-form-item">
+                <label class="user-label" for="newPwd2">确认新密码</label>
+                <input type="password" id="newPwd2" class="layui-input" autocomplete="new-password">
+            </div>
+            <button type="button" class="layui-btn layui-btn-danger" id="savePwd">
+                <i class="fas fa-key"></i> 修改密码
+            </button>
+            <p class="user-note">修改成功后其他设备的登录态会全部失效，当前设备保持登录。</p>
+        </section>
+
+        <!-- 活跃会话 -->
+        <section class="user-card user-wide">
+            <div class="user-card-head"><i class="fas fa-shield-alt"></i> 我的活跃会话（多端登录自查）</div>
+            <table class="layui-table user-session-table">
+                <thead><tr><th>IP</th><th>设备 / 浏览器</th><th>登录时间</th><th>最近活动</th><th>过期时间</th></tr></thead>
+                <tbody id="sessionBody"><tr><td colspan="5">加载中…</td></tr></tbody>
+            </table>
+        </section>
+    </main>
+</div>
+{% end %}
+
+{% block scripts %}
+<script src="{{ static_url('js/user.js') }}"></script>
+{% end %}

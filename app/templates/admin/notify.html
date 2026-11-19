@@ -1,0 +1,126 @@
+{# 通知配置页（/admin/notify）：成员 E —— 邮件 SMTP / QQ 机器人在线配置。
+   表单字段由 notify.js 动态渲染，数据走 /api/admin/notify/config 读写 #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/notify.css'>
+{% end %}
+
+{% block admin_content %}
+<!-- 渠道可用性状态条 -->
+<div class="notify-status" id="notifyStatus">
+    <div class="notify-status-item">
+        <span class="k"><i class="fas fa-envelope"></i> 邮件通知</span>
+        <span class="v" id="statusEmail">加载中...</span>
+    </div>
+    <div class="notify-status-item">
+        <span class="k"><i class="fab fa-qq"></i> QQ 通知</span>
+        <span class="v" id="statusQQ">加载中...</span>
+    </div>
+</div>
+
+<!-- 邮件 SMTP 配置 -->
+<div class="layui-card notify-card">
+    <div class="layui-card-header"><i class="fas fa-mail-bulk"></i> 邮件 SMTP 配置</div>
+    <div class="layui-card-body">
+        <form class="layui-form" id="formEmail" lay-filter="formEmail">
+            <div class="layui-form-item">
+                <label class="layui-form-label">SMTP 服务器</label>
+                <div class="layui-input-block">
+                    <input type="text" name="notify_smtp_host" placeholder="如 smtp.qq.com" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">SMTP 端口</label>
+                <div class="layui-input-inline" style="width:120px;">
+                    <input type="text" name="notify_smtp_port" placeholder="465" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-input-inline" style="width:160px;">
+                    <select name="notify_smtp_ssl">
+                        <option value="1">SSL (465)</option>
+                        <option value="0">STARTTLS (587)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">SMTP 账号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="notify_smtp_user" placeholder="发件邮箱账号" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">密码/授权码</label>
+                <div class="layui-input-block">
+                    <input type="password" name="notify_smtp_password" placeholder="SMTP 授权码（非登录密码）" autocomplete="new-password" class="layui-input" id="smtpPwd">
+                    <div class="notify-hint">QQ 邮箱：设置 > 账户 > 开启 SMTP > 获取授权码</div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">发件人</label>
+                <div class="layui-input-block">
+                    <input type="text" name="notify_mail_from" placeholder="通常为 SMTP 账号" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">收件人</label>
+                <div class="layui-input-block">
+                    <input type="text" name="notify_mail_to" placeholder="多个逗号分隔" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- QQ 通知配置 -->
+<div class="layui-card notify-card">
+    <div class="layui-card-header"><i class="fab fa-qq"></i> QQ 消息通知配置</div>
+    <div class="layui-card-body">
+        <form class="layui-form" id="formQQ" lay-filter="formQQ">
+            <div class="layui-form-item">
+                <label class="layui-form-label">Webhook URL</label>
+                <div class="layui-input-block">
+                    <input type="text" name="notify_qq_webhook_url" placeholder="QQ 机器人 Webhook（优先使用）" autocomplete="off" class="layui-input">
+                    <div class="notify-hint">在 QQ 开放平台创建机器人后获取，配置此项则忽略下方 SMTP</div>
+                </div>
+            </div>
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top:20px;">
+                <legend>或 QQ 邮箱 SMTP（二选一）</legend>
+            </fieldset>
+            <div class="layui-form-item">
+                <label class="layui-form-label">QQ 邮箱</label>
+                <div class="layui-input-block">
+                    <input type="text" name="notify_qq_smtp_user" placeholder="your_qq@qq.com" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">授权码</label>
+                <div class="layui-input-block">
+                    <input type="password" name="notify_qq_smtp_password" placeholder="QQ 邮箱 SMTP 授权码" autocomplete="new-password" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">收件人</label>
+                <div class="layui-input-block">
+                    <input type="text" name="notify_qq_to" placeholder="目标 QQ 邮箱，逗号分隔" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 操作按钮 -->
+<div class="notify-actions">
+    <button type="button" class="layui-btn layui-btn-normal" id="btnSaveNotify">
+        <i class="fas fa-save"></i> 保存配置
+    </button>
+    <button type="button" class="layui-btn layui-btn-primary" id="btnTestNotify">
+        <i class="fas fa-paper-plane"></i> 测试发送
+    </button>
+</div>
+{% end %}
+
+{% block scripts %}
+<script src="/static/js/admin.js"></script>
+<script src="/static/js/notify.js"></script>
+{% end %}

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block styles %}
+<link rel="stylesheet" href="{{ static_url('css/chat.css') }}">
+<link rel="stylesheet" href="{{ static_url('css/face.css') }}">
+{% end %}
+{% block content %}
+<div class="chat-app" id="chatApp" data-username="{{ username }}" data-role="{{ role or 'user' }}">
+    <!-- 左侧：品牌 + 智能体人设 + 快捷门户 + 历史会话 + 用户信息 -->
+    <aside class="chat-side">
+        <div class="chat-side-brand">
+            <span class="chat-brand-crest" aria-hidden="true">
+                <i class="fas fa-university"></i>
+            </span>
+            <span class="chat-brand-text">西华师大 · 智慧校园</span>
+        </div>
+
+        <div class="chat-side-body">
+            <!-- 任务10：当前生效的数字助理由 chat.js 按 /api/assistants 渲染，不再是硬编码人设 -->
+            <div class="chat-agent-card">
+                <div class="chat-agent-avatar"><i class="fas fa-graduation-cap" id="sideAgentIcon"></i></div>
+                <div class="chat-agent-meta">
+                    <div class="chat-agent-name-row">
+                        <span class="chat-agent-name" id="sideAgentName">华师小助手</span>
+                        <span class="chat-agent-dot" title="在线服务中"></span>
+                    </div>
+                    <span class="chat-agent-tag">当前助手</span>
+                    <div class="chat-agent-desc" id="sideAgentDesc">正在加载可选助理…</div>
+                </div>
+            </div>
+
+            <div class="chat-portal-nav" aria-label="特色校园门户">
+                <a href="/avatar" class="chat-portal-btn is-primary">
+                    <span class="chat-portal-emoji" aria-hidden="true">🐼</span>
+                    <span>华小竹 3D 虚拟辅导员</span>
+                </a>
+                <a href="/qa" class="chat-portal-btn is-secondary">
+                    <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                    <span>校园智能问数</span>
+                </a>
+            </div>
+
+            <button type="button" id="clearBtn" class="layui-btn layui-btn-fluid chat-new-btn">
+                <i class="fas fa-plus"></i> 新建对话
+            </button>
+
+            <div class="chat-side-title chat-session-tabs" role="group" aria-label="会话列表">
+                <button type="button" id="chatHistoryTab" aria-pressed="true">历史会话</button>
+                <button type="button" id="chatArchiveTab" aria-pressed="false">已归档</button>
+            </div>
+            <div id="chatSessionStatus" class="chat-session-status" role="status" hidden></div>
+            <ul id="chatSessionList" class="chat-session-list" aria-label="历史会话"></ul>
+        </div>
+
+        <div class="chat-side-foot" id="chatSideFoot">
+            <!-- 向上弹出的账号与系统浮层菜单：避免顶起用户栏或与浏览器左下角链接提示重叠 -->
+            <nav class="chat-side-links" aria-label="账号与系统菜单">
+                <div class="chat-side-menu-label">账号与安全</div>
+                <a href="/user" class="chat-side-link" title="个人中心">
+                    <i class="fas fa-id-card"></i><span>个人中心</span><i class="fas fa-chevron-right chat-side-link-arrow"></i>
+                </a>
+                <!-- 任务18：登录后自助录入 / 管理人脸 -->
+                <button type="button" class="chat-side-link" id="faceEntry" title="录入 / 管理人脸">
+                    <i class="fas fa-camera"></i><span>人脸管理</span><i class="fas fa-chevron-right chat-side-link-arrow"></i>
+                </button>
+                {% if role == 'admin' %}
+                <div class="chat-side-menu-sep" role="separator"></div>
+                <a href="/admin" class="chat-side-link" title="返回后台管理">
+                    <i class="fas fa-sliders-h"></i><span>后台管理</span><i class="fas fa-chevron-right chat-side-link-arrow"></i>
+                </a>
+                {% end %}
+                <div class="chat-side-menu-sep" role="separator"></div>
+                <form action="/auth/logout" method="post" class="chat-logout-form">
+                    {% module xsrf_form_html() %}
+                    <button type="submit" class="chat-side-link is-danger" title="退出当前账号">
+                        <i class="fas fa-sign-out-alt"></i><span>退出登录</span>
+                    </button>
+                </form>
+            </nav>
+
+            <div class="chat-side-userrow" id="sideFootToggle" role="button" tabindex="0" aria-expanded="false" title="账号与系统菜单">
+                <span class="chat-side-avatar" aria-hidden="true">
+                    <i class="fas fa-user"></i>
+                </span>
+                <span class="chat-side-userinfo">
+                    <span class="chat-side-username">{{ username }}</span>
+                    <span class="badge-role">{{ role or "user" }}</span>
+                </span>
+                <span class="chat-side-caret-wrap" aria-hidden="true">
+                    <i class="fas fa-chevron-up chat-side-caret"></i>
+                </span>
+            </div>
+        </div>
+        <div class="chat-side-resizer" id="chatSideResizer" role="separator" aria-label="调整侧栏宽度"
+             aria-orientation="vertical" aria-valuemin="220" aria-valuemax="380" aria-valuenow="250"
+             tabindex="0" title="拖动调整侧栏宽度"></div>
+    </aside>
+
+    <!-- 右侧：对话主区 -->
+    <main class="chat-main">
+        <header class="chat-header">
+            <span class="chat-header-title"><i class="fas fa-graduation-cap"></i> 智慧校园对话大厅</span>
+            <span class="chat-header-tip">勤奋 · 求实 · 敬业 · 创新 ｜ 输入「@音乐 轻音乐」可点播校园曲库</span>
+            <!-- 成员 D（任务2）：导出当前会话为 PDF（后端 reportlab 真 PDF 附件下载） -->
+            <button type="button" class="chat-export-btn" id="exportPdfBtn" title="导出当前会话为 PDF">
+                <i class="fas fa-file-pdf"></i> 导出PDF
+            </button>
+        </header>
+
+        <div class="chat-scroll" id="chatScroll">
+            <div class="chat-messages" id="chatMessages"></div>
+        </div>
+
+        <div class="chat-composer">
+            <!-- 任务10：输入区数字助理选择器（仅登录用户可选，面板向上弹出） -->
+            <div class="chat-composer-inner" id="composerInner">
+                <div class="chat-asst" id="chatAsst">
+                    <button type="button" class="chat-asst-btn" id="chatAsstBtn"
+                            aria-haspopup="listbox" aria-expanded="false" title="选择本次对话的数字助理">
+                        <i class="fas fa-robot chat-asst-icon" id="chatAsstIcon"></i>
+                        <span class="chat-asst-name" id="chatAsstName">数字助理</span>
+                        <i class="fas fa-chevron-up chat-asst-caret"></i>
+                    </button>
+                    <span class="chat-asst-tip" id="chatAsstTip"></span>
+                    <div class="chat-asst-panel" id="chatAsstPanel" hidden role="listbox">
+                        <div class="chat-asst-panel-head">
+                            <span>选择数字助理</span>
+                            <span class="chat-asst-panel-count" id="chatAsstCount"></span>
+                        </div>
+                        <div class="chat-asst-list" id="chatAsstList"></div>
+                        <div class="chat-asst-panel-foot">切换后从下一条提问生效，选择会记住</div>
+                    </div>
+                </div>
+
+                <form id="composerForm" class="layui-form">
+                    {% module xsrf_form_html() %}
+                    <div class="chat-composer-box">
+                        <textarea id="chatInput" class="chat-textarea" rows="1" placeholder="请输入你想了解的校园问题..."></textarea>
+                        <button id="sendBtn" type="submit" class="layui-btn chat-send-btn" title="发送">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- 任务18：登录后自助人脸录入（人脸设置弹层） -->
+    <div class="face-mask" id="faceMask" hidden>
+        <div class="face-dialog" role="dialog" aria-modal="true" aria-labelledby="faceTitle">
+            <div class="face-dialog-head">
+                <span id="faceTitle"><i class="fas fa-camera"></i> 人脸设置</span>
+                <button type="button" class="face-close" id="faceClose" aria-label="关闭人脸设置">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="face-dialog-body">
+                <div class="face-engine" id="faceEngine">正在读取引擎状态…</div>
+                <div class="face-grid">
+                    <div class="face-left">
+                        <div class="face-stage" id="faceStage">
+                            <video id="faceVideo" autoplay playsinline muted></video>
+                            <img id="faceShot" alt="待录入的人脸照片">
+                            <div class="face-stage-tip">
+                                <i class="fas fa-camera-retro"></i>
+                                <span>点击「打开摄像头」拍照，或上传一张正面照</span>
+                            </div>
+                        </div>
+                        <div class="face-actions">
+                            <button type="button" class="layui-btn layui-btn-sm" id="faceStart">
+                                <i class="fas fa-video"></i> 打开摄像头
+                            </button>
+                            <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="faceCapture" disabled>
+                                <i class="fas fa-camera"></i> 拍照
+                            </button>
+                            <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" id="faceRetake" hidden>
+                                <i class="fas fa-redo"></i> 重拍
+                            </button>
+                            <label class="layui-btn layui-btn-sm layui-btn-primary face-upload">
+                                <i class="fas fa-upload"></i> 上传照片
+                                <input type="file" id="faceFile" accept="image/jpeg,image/png,image/webp" hidden>
+                            </label>
+                        </div>
+                        <div class="face-hint" id="faceHint"></div>
+                        <div class="face-submit">
+                            <input type="text" id="faceLabel" class="layui-input" maxlength="32"
+                                   placeholder="标签（可留空，默认 default）">
+                            <button type="button" class="layui-btn layui-btn-sm" id="faceEnroll" disabled>
+                                <i class="fas fa-check"></i> 录入人脸
+                            </button>
+                        </div>
+                    </div>
+                    <div class="face-right">
+                        <div class="face-right-head">
+                            <span>已录入人脸</span>
+                            <label class="face-switch"><input type="checkbox" id="faceEnabled"> 人脸登录</label>
+                        </div>
+                        <div class="face-list" id="faceList"></div>
+                        <p class="face-note">照片只在服务端内存中提取特征，不保存原图；特征加密入库，接口不会返回特征数据。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}
+
+{% block scripts %}
+<script src="{{ static_url('js/chat.js') }}"></script>
+<script src="{{ static_url('js/face-capture.js') }}"></script>
+<script src="{{ static_url('js/face.js') }}"></script>
+{% end %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block styles %}
+<link rel="stylesheet" href="{{ static_url('css/login.css') }}">
+{% end %}
+{% block content %}
+<div class="login-page">
+    <!-- 左：西华师大校园品牌视觉 -->
+    <section class="login-brand">
+        <div class="brand-grid"></div>
+        <div class="brand-scan"></div>
+        <span class="particle p1"></span>
+        <span class="particle p2"></span>
+        <span class="particle p3"></span>
+        <span class="particle p4"></span>
+        <span class="particle p5"></span>
+
+        <header class="brand-top">
+            <div class="brand-mark">
+                {% if site_logo %}<img src="{{ site_logo }}" alt="{{ site_name or '西华师范大学' }}">{% else %}<i class="fas fa-university"></i>{% end %}
+            </div>
+            <div class="brand-id">
+                <strong>{{ site_name or "西华师范大学 · 智慧校园" }}</strong>
+                <span>CWNU SMART CAMPUS AGENT OS</span>
+            </div>
+            <span class="brand-chip">CAMPUS ID</span>
+        </header>
+
+        <div class="brand-main">
+            <p class="brand-eyebrow">勤奋 · 求实 · 敬业 · 创新</p>
+            <h1>一卡通联<br><em>畅享华师</em></h1>
+            <p class="brand-sub">{{ site_subtitle or "西华师范大学智慧校园服务智能体平台" }}<br>注册后即可使用智能校园对话、华小竹 3D 辅导员、校园智能问数与个人会话归档</p>
+            <ul class="brand-points">
+                <li>
+                    <i class="fas fa-id-card"></i>
+                    <div><b>统一师生身份</b><span>同一账号贯通对话大厅、3D 虚拟辅导员与校园问数</span></div>
+                </li>
+                <li>
+                    <i class="fas fa-user-shield"></i>
+                    <div><b>角色自动分配</b><span>注册默认师生用户角色，教务/后台管理权限由管理员授予</span></div>
+                </li>
+                <li>
+                    <i class="fas fa-lock"></i>
+                    <div><b>隐私与会话隔离</b><span>对话记录、心理咨询问答与问数报告按账号独立加密隔离</span></div>
+                </li>
+            </ul>
+        </div>
+
+        <footer class="brand-foot">
+            <span>西华师范大学</span>
+            <span class="sep"></span>
+            <span>四川 · 南充（华凤校区 / 北湖校区）</span>
+        </footer>
+    </section>
+
+    <!-- 右：注册表单（字段与提交契约与旧版一致） -->
+    <section class="login-panel">
+        <div class="login-box">
+            <h2>注册</h2>
+            <p class="panel-sub">创建账号后默认普通用户（user）角色，可直接进入前台工作台。<br>如需后台管理权限，请由管理员在「用户管理」中授予。</p>
+
+            {% if error %}
+            <div class="auth-error"><i class="fas fa-circle-exclamation"></i><span>{% raw error %}</span></div>
+            {% end %}
+
+            <form action="/auth/register" method="post" autocomplete="on">
+                {% module xsrf_form_html() %}
+                <label class="field">
+                    <span class="field-label">用户名</span>
+                    <span class="field-ctrl">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="username" value="{{ username }}" placeholder="3-32 位字母、数字或中文"
+                               autocomplete="username" class="login-input" id="username" required>
+                    </span>
+                </label>
+                <label class="field">
+                    <span class="field-label">密码</span>
+                    <span class="field-ctrl">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password" placeholder="不少于 6 位"
+                               autocomplete="new-password" class="login-input" id="password" required>
+                    </span>
+                </label>
+                <label class="field">
+                    <span class="field-label">确认密码</span>
+                    <span class="field-ctrl">
+                        <i class="fas fa-shield-alt"></i>
+                        <input type="password" name="confirm" placeholder="再次输入密码"
+                               autocomplete="new-password" class="login-input" id="confirm" required>
+                    </span>
+                </label>
+                <button type="submit" class="login-submit">注 册</button>
+            </form>
+
+            <div class="login-foot">
+                <span>已有账号？<a href="/auth/login">返回登录</a></span>
+                <span>注册即表示同意内部使用规范</span>
+            </div>
+            <div class="panel-tip">
+                用户名支持中文、字母与数字组合，长度 3–32 位；密码不少于 6 位。
+                注册成功后跳转回登录页，用新账号登录即可进入前台工作台；管理员账号不会通过注册页产生。
+            </div>
+        </div>
+    </section>
+</div>
+{% end %}

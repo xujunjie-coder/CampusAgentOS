@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block styles %}
+<link rel="stylesheet" href="{{ static_url('css/avatar.css') }}">
+{% end %}
+{% block content %}
+<div class="avatar-app" data-username="{{ username }}">
+    <!-- XSRF：与 chat.js 同口径 -->
+    <span id="xsrfBox" hidden>{% module xsrf_form_html() %}</span>
+
+    <header class="avatar-top">
+        <a href="/" class="avatar-back"><i class="fas fa-arrow-left"></i> 返回对话大厅</a>
+        <span class="avatar-top-title"><i class="fas fa-graduation-cap"></i> 西华师大 · 虚拟辅导员</span>
+        <div class="avatar-switcher" id="avatarSwitcher" role="tablist" aria-label="切换数字人形象">
+            <button type="button" class="avatar-switch-btn is-active" data-avatar-model="cwnu-panda">
+                <span>🐼</span> 西华师大 · 华小竹
+            </button>
+            <button type="button" class="avatar-switch-btn" data-avatar-model="vrm">
+                <i class="fas fa-user"></i> 虚拟主播
+            </button>
+        </div>
+        <span class="avatar-assistant" id="avatarAssistant">数字助理加载中…</span>
+    </header>
+
+    <main class="avatar-stage-wrap">
+        <!-- three.js 渲染画布（WebGL 不可用时降级提示） -->
+        <div class="avatar-stage" id="avatarStage">
+            <div class="avatar-model-tag" id="avatarModelTag">西华师范大学 · 华小竹（按住左键可旋转视角，双击复位）</div>
+            <div class="avatar-loading" id="avatarLoading">
+                <i class="fas fa-spinner fa-spin"></i> 数字人模型加载中…
+            </div>
+            <div class="avatar-fallback" id="avatarFallback" hidden>
+                <i class="fas fa-cube"></i>
+                <p>当前浏览器不支持 WebGL，3D 数字人无法渲染；下方对话仍可正常使用。</p>
+            </div>
+        </div>
+
+        <!-- 字幕/对话浮动层 -->
+        <aside class="avatar-caption" id="avatarCaption">
+            <div class="avatar-caption-head"><i class="fas fa-closed-captioning"></i> 实时字幕</div>
+            <div class="avatar-caption-body" id="captionBody">
+                <div class="avatar-caption-empty">你好！我是华师虚拟辅导员，可以陪你聊聊校园生活、学习烦恼，或者问我任何关于西华师范大学的问题～</div>
+            </div>
+        </aside>
+    </main>
+
+    <footer class="avatar-composer-wrap">
+        <div class="avatar-quick-bar" id="avatarQuickBar" aria-label="快捷破冰提问">
+            <button type="button" class="avatar-quick-chip" data-q="你好华小竹！请自我介绍一下吧～">👋 你好华小竹</button>
+            <button type="button" class="avatar-quick-chip" data-q="西华师范大学奖学金怎么评定？">🎓 奖学金政策</button>
+            <button type="button" class="avatar-quick-chip" data-q="华凤校区和北湖校区日常生活与交通怎么安排？">🏫 双校区生活</button>
+            <button type="button" class="avatar-quick-chip" data-q="最近备考压力有点大，可以安慰并给我一点建议吗？">💚 考前减压</button>
+        </div>
+        <div class="avatar-composer">
+            <input type="text" id="avatarInput" class="layui-input" maxlength="500"
+                   placeholder="问问华小竹关于学业政策、就业考研、校园生活的问题…（Enter 发送）">
+            <button type="button" id="avatarTtsBtn" class="layui-btn layui-btn-primary avatar-tts-btn"
+                    title="语音朗读开关"><i class="fas fa-volume-up"></i></button>
+            <button type="button" id="avatarSend" class="layui-btn avatar-send-btn"><i class="fas fa-paper-plane"></i> 发送</button>
+        </div>
+    </footer>
+</div>
+{% end %}
+
+{% block scripts %}
+<script src="/static/vendor/three/three.min.js"></script>
+<script src="/static/vendor/three/GLTFLoader.js"></script>
+<script src="{{ static_url('js/avatar-cwnu-panda.js') }}"></script>
+<script src="{{ static_url('js/avatar.js') }}"></script>
+{% end %}

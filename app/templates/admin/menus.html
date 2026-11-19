@@ -1,0 +1,53 @@
+{# 菜单管理（/admin/menus）：任务4修正 —— 树形列表 + 拖拽排序，列包含图片/名称/路由/简介/状态，由 admin.js 走 /api/admin/menus 维护 #}
+{% extends "base.html" %}
+
+{% block admin_content %}
+<!-- 功能区 -->
+<div class="layui-form admin-toolbar">
+    <div class="layui-input-wrap admin-search">
+        <div class="layui-input-prefix"><i class="fas fa-search"></i></div>
+        <input type="text" id="menuKeyword" placeholder="按名称 / 简介 / 路由搜索" autocomplete="off" class="layui-input" lay-affix="clear">
+    </div>
+    <button type="button" class="layui-btn" id="menuSearch"><i class="fas fa-search"></i> 搜索</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="menuReset"><i class="fas fa-undo"></i> 重置</button>
+    <span class="admin-toolbar-split"></span>
+    <button type="button" class="layui-btn layui-btn-normal" id="menuAdd"><i class="fas fa-plus"></i> 新增菜单</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="menuExpandAll"><i class="fas fa-angle-double-down"></i> 展开/折叠</button>
+    <span class="admin-toolbar-count">共 <b id="menuCount">0</b> 个顶级菜单</span>
+</div>
+
+<!-- 列表区：树形表格，拖拽行可重新排序 / 改变层级（松手自动保存） -->
+<div class="layui-card admin-card">
+    <div class="layui-card-body admin-list">
+        <table class="layui-table admin-tree-table" lay-size="sm">
+            <colgroup>
+                <col width="70">
+                <col>
+                <col width="180">
+                <col width="220">
+                <col width="90">
+                <col width="170">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>图片</th>
+                    <th>菜单名称</th>
+                    <th>路由地址</th>
+                    <th>简介</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="menuBody">
+                <tr><td colspan="6" class="admin-empty">加载中…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 分页区 -->
+<div class="admin-pager">
+    <span class="admin-pager-tip"><i class="fas fa-info-circle"></i> 每页 {{ page_size }} 条</span>
+    <div class="admin-pager-box" id="menuPager"></div>
+</div>
+{% end %}

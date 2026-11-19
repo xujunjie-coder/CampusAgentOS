@@ -1,0 +1,46 @@
+{# 模型引擎管理（/admin/models）：任务8 —— OpenAI 范式大模型接入的增删改查 + 对话测试（含思维开关）；任务8.1 —— token 统计图形化 + 卡片反馈；橱窗一行 2 列、4 条/页，卡片由 models.js 走 /api/admin/models 渲染 #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/models.css'>
+{% end %}
+
+{% block admin_content %}
+<!-- 功能区 -->
+<div class="layui-form admin-toolbar model-toolbar">
+    <div class="layui-input-wrap admin-search">
+        <div class="layui-input-prefix"><i class="fas fa-search"></i></div>
+        <input type="text" id="modelKeyword" placeholder="按名称 / 模型标识 / 简介搜索" autocomplete="off" class="layui-input" lay-affix="clear">
+    </div>
+    <div class="layui-input-inline model-type-filter">
+        <select id="modelType" lay-filter="modelType">
+            <option value="">全部类型</option>
+            {% for t in model_types %}
+            <option value="{{ t['code'] }}">{{ t['label'] }}</option>
+            {% end %}
+        </select>
+    </div>
+    <button type="button" class="layui-btn" id="modelSearch"><i class="fas fa-search"></i> 搜索</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="modelReset"><i class="fas fa-undo"></i> 重置</button>
+    <span class="admin-toolbar-split"></span>
+    <button type="button" class="layui-btn layui-btn-normal" id="modelAdd"><i class="fas fa-plus"></i> 新增模型</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="modelStats"><i class="fas fa-chart-column"></i> Token 统计</button>
+    <span class="admin-toolbar-count">共 <b id="modelCount">0</b> 个模型</span>
+</div>
+
+<!-- 橱窗列表区：一行 2 列，卡片由 models.js 渲染 -->
+<div class="model-grid" id="modelGrid">
+    <div class="model-grid-empty"><i class="fas fa-spinner fa-spin"></i> 加载中…</div>
+</div>
+
+<!-- 分页区 -->
+<div class="admin-pager">
+    <span class="admin-pager-tip"><i class="fas fa-info-circle"></i> 橱窗模式 · 每页 {{ model_page_size }} 个模型</span>
+    <div class="admin-pager-box" id="modelPager"></div>
+</div>
+{% end %}
+
+{% block admin_scripts %}
+<script src="/static/js/models.js"></script>
+{% end %}

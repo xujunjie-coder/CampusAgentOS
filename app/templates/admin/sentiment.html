@@ -1,0 +1,139 @@
+{# 智能舆情预警台（/admin/sentiment）：任务二"智能舆情"——异常数据/行为预警 + 实时跟进采集分析结果
+   后端沿用 controllers/intelligence.py：GET 渲染首屏 reviews；POST 触发 review_pending 批量分析；
+   WS /ws/admin/sentiment 每 3 秒推送 {"reviews": [...]}（全量替换，前端按等级筛选并高亮新高风险）。
+   首屏服务端渲染，WS 断开时页面仍可读；JS 只做增强不接管初始数据。 #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/console.css?v=20261111b'>
+{% end %}
+
+{% block admin_content %}
+<div class="ck-report">
+    <!-- 功能区：分析 / 声音 / 桌面通知 / 实时状态 -->
+    <div class="layui-form admin-toolbar">
+        <form action="/admin/sentiment" method="post" id="reviewForm" style="display:inline;">
+            {% module xsrf_form_html() %}
+            <button type="submit" class="layui-btn" id="btnReview">
+                <i class="fas fa-robot"></i> 分析待处理条目
+            </button>
+        </form>
+        <span class="ck-live" id="wsFlag"><i></i><span id="wsText">连接中</span></span>
+        <span class="admin-toolbar-split"></span>
+        <span class="ck-sound-toggle" id="soundToggle" title="高风险出现时播放提示音">
+            <i class="fas fa-volume-mute"></i> 声音提醒
+        </span>
+        <span class="ck-sound-toggle" id="notifyToggle" title="使用浏览器桌面通知">
+            <i class="fas fa-bell-slash"></i> 桌面通知
+        </span>
+        <button type="button" class="layui-btn layui-btn-primary" id="btnReload"><i class="fas fa-sync-alt"></i> 重新连接</button>
+        <span class="admin-toolbar-count">命中 <b id="totalCount">0</b> 条风险线索</span>
+    </div>
+
+    <div id="reviewWarning" class="ck-note" role="status" hidden
+         style="border-left:3px solid #e5544b;background:#fff6f5;color:#8a2f28;margin-bottom:12px;"></div>
+
+    <!-- KPI：四个等级 -->
+    <div class="row g-3">
+        <div class="col-6 col-xl-3"><div class="ck-kpi" data-tone="risk"><div class="ck-kpi-k">高风险</div><div class="ck-kpi-v" id="kpiHigh">—<small>条</small></div><div class="ck-kpi-sub">命中问题 / 隐患 / 安全事故</div></div></div>
+        <div class="col-6 col-xl-3"><div class="ck-kpi" data-tone="warn"><div class="ck-kpi-k">关注</div><div class="ck-kpi-v" id="kpiWatch">—<small>条</small></div><div class="ck-kpi-sub">需持续跟踪的异常信号</div></div></div>
+        <div class="col-6 col-xl-3"><div class="ck-kpi" data-tone="ok"><div class="ck-kpi-k">常规</div><div class="ck-kpi-v" id="kpiNormal">—<small>条</small></div><div class="ck-kpi-sub">已分析，未发现风险</div></div></div>
+        <div class="col-6 col-xl-3"><div class="ck-kpi"><div class="ck-kpi-k">待重试</div><div class="ck-kpi-v" id="kpiError">—<small>条</small></div><div class="ck-kpi-sub">分析失败，需重新分析</div></div></div>
+    </div>
+
+    <div class="row g-3" style="margin-top:12px;">
+        <div class="col-xl-8">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-shield-alt"></i>
+                    <span class="ck-panel-title">实时风险流</span>
+                    <span class="ck-panel-sub">WebSocket 推送 · 3 秒刷新</span>
+                    <div class="ck-panel-tools">
+                        <span class="ck-seg" id="levelFilter">
+                            <button type="button" data-level="" class="is-active">全部</button>
+                            <button type="button" data-level="high">高风险</button>
+                            <button type="button" data-level="watch">关注</button>
+                            <button type="button" data-level="normal">常规</button>
+                            <button type="button" data-level="error">待重试</button>
+                        </span>
+                    </div>
+                </div>
+                <div class="ck-panel-body" style="padding:0;">
+                    <div class="ck-stream" id="riskStream">
+                        {% for r in reviews %}
+                        <div class="ck-stream-row {% if r['level'] == 'high' %}is-high{% end %}" data-level="{{ r['level'] }}" data-id="{{ r['id'] }}">
+                            <div class="ck-stream-main">
+                                <div class="ck-stream-title">
+                                    {% if r['url'] %}
+                                    <a href="{{ r['url'] }}" target="_blank" rel="noopener">{{ r['title'] }}</a>
+                                    {% else %}{{ r['title'] }}{% end %}
+                                </div>
+                                <div class="ck-stream-meta">
+                                    <span class="ck-badge {{ r['level'] }}">{% if r['level'] == 'high' %}高风险{% elif r['level'] == 'watch' %}关注{% elif r['level'] == 'normal' %}常规{% elif r['level'] == 'error' %}待重试{% else %}{{ r['level'] }}{% end %}</span>
+                                    <span><i class="fas fa-rss"></i> {{ r['source_name'] or '未知信源' }}</span>
+                                    <span><i class="fas fa-clock"></i> {{ (r['reviewed_at'] or '')[:16] }}</span>
+                                </div>
+                                {% if r['reason'] %}
+                                <div class="ck-stream-reason"><b>分析结论：</b>{{ r['reason'] }}
+                                    {% if r['evidence'] %}<br><b>证据片段：</b>{{ r['evidence'] }}{% end %}
+                                </div>
+                                {% end %}
+                            </div>
+                            <div class="ck-stream-side">
+                                <span class="ck-badge {{ r['level'] }}">#{{ r['id'] }}</span>
+                            </div>
+                        </div>
+                        {% end %}
+                        {% if not reviews %}
+                        <div style="padding:32px;text-align:center;color:#9aa4b2;">
+                            暂无风险分析记录：先到「采集管理」跑一轮采集，再点上方「分析待处理条目」。
+                        </div>
+                        {% end %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-wave-square"></i>
+                    <span class="ck-panel-title">近 7 日风险走势</span>
+                    <span class="ck-panel-sub">按等级堆叠</span>
+                </div>
+                <div class="ck-panel-body"><div class="ck-chart ck-chart-sm" id="chartRiskTrend"></div></div>
+            </div>
+
+            <div class="ck-panel" style="margin-top:12px;">
+                <div class="ck-panel-head">
+                    <i class="fas fa-circle-info"></i>
+                    <span class="ck-panel-title">预警口径与处置</span>
+                </div>
+                <div class="ck-panel-body">
+                    <ul style="margin:0;padding-left:16px;font-size:12px;color:#6b7789;line-height:2;">
+                        <li><b>高风险</b>：命中问题/隐患/安全事故，需人工复核并留痕；</li>
+                        <li><b>关注</b>：负面倾向但未定性，继续观察；</li>
+                        <li><b>待重试</b>：模型调用或结果校验失败，可重新分析；</li>
+                        <li>预警来源为采集条目，分析结论与证据原文均可在列表中追溯。</li>
+                    </ul>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" href="/collect"><i class="fas fa-satellite-dish"></i> 去采集</a>
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" href="/admin/warehouse"><i class="fas fa-warehouse"></i> 数据仓库</a>
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" href="/admin/dashboard"><i class="fas fa-tv"></i> 数智大屏</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% end %}
+
+{% block admin_scripts %}
+<script src="/static/vendor/echarts/echarts.min.js"></script>
+<script src="/static/js/chart-kit.js"></script>
+<script src="/static/js/console-common.js"></script>
+<script src="{{ static_url('js/sentiment.js') }}"></script>
+{% end %}

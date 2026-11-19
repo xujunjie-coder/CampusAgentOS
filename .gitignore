@@ -1,0 +1,19 @@
+venv/
+__pycache__/
+*.pyc
+dist/
+
+# 2026-11-10 人类决定：仓库内容以「除 dist/ 外全量入库」为准，.env 与 workspace/ 不再忽略。
+# 风险已知：.env 含真实 API_KEY，进入版本历史；本地临时覆盖请写 .env.local（仍不入库）。
+.env.local
+
+# 人脸 ONNX 模型与运行时产物（体积大、含个人生物特征，不入库）
+database/models/
+database/*.db-journal
+database/*.db-wal
+database/*.db-shm
+logs/
+
+.env
+database/*.db
+database/*.db-*

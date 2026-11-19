@@ -1,0 +1,141 @@
+{# 统计报表（/admin/reports）：任务二"统计报表"——分板块统计 + 自选图例 + 实时推送 + PNG 导出
+   数据：GET /api/stats/snapshot?days=N（首屏）/ GET /api/stats/stream?interval=15（实时开关）。
+   图表：ChartKit + ECharts，主题与后台亮色一致；每个分区可单独导出 PNG。 #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/console.css?v=20261111b'>
+{% end %}
+
+{% block admin_content %}
+<div class="ck-report">
+    <!-- 功能区 -->
+    <div class="layui-form admin-toolbar">
+        <span class="ck-seg" id="rangeSeg">
+            <button type="button" data-days="7">近 7 日</button>
+            <button type="button" data-days="14" class="is-active">近 14 日</button>
+            <button type="button" data-days="30">近 30 日</button>
+            <button type="button" data-days="90">近 90 日</button>
+        </span>
+        <button type="button" class="layui-btn layui-btn-primary" id="btnRefresh"><i class="fas fa-sync-alt"></i> 刷新</button>
+        <label class="ck-live" style="cursor:pointer;gap:8px;">
+            <input type="checkbox" id="liveSwitch" style="accent-color:#2f6feb;">
+            <span>实时推送（15 秒）</span>
+        </label>
+        <span class="ck-live" id="liveFlag"><i></i><span id="liveText">轮询模式</span></span>
+        <button type="button" class="layui-btn layui-btn-primary" id="btnExportAll"><i class="fas fa-download"></i> 导出全部 PNG</button>
+        <span class="admin-toolbar-count">数据生成 <b id="genTime">-</b></span>
+    </div>
+
+    <!-- KPI 区（bootstrap 栅格：大屏 6 列 / 中屏 3 列 / 手机 2 列） -->
+    <div class="row g-3">
+        <div class="col-6 col-md-4 col-xl-2"><div class="ck-kpi"><div class="ck-kpi-k">采集总量</div><div class="ck-kpi-v" id="kpiCollect">0<small>条</small></div><div class="ck-kpi-sub" id="kpiCollectSub">今日 0</div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="ck-kpi"><div class="ck-kpi-k">今日新增</div><div class="ck-kpi-v" id="kpiToday">0<small>条</small></div><div class="ck-kpi-sub">采集链路当日增量</div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="ck-kpi"><div class="ck-kpi-k">数仓正文</div><div class="ck-kpi-v" id="kpiWarehouse">0<small>篇</small></div><div class="ck-kpi-sub" id="kpiWarehouseSub">深采入库</div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="ck-kpi" data-tone="risk"><div class="ck-kpi-k">高风险线索</div><div class="ck-kpi-v" id="kpiRisk">0<small>条</small></div><div class="ck-kpi-sub" id="kpiRiskSub">关注 0</div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="ck-kpi" data-tone="info"><div class="ck-kpi-k">模型调用</div><div class="ck-kpi-v" id="kpiCalls">0<small>次</small></div><div class="ck-kpi-sub" id="kpiTokenSub">Token 0</div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="ck-kpi"><div class="ck-kpi-k">活跃会话</div><div class="ck-kpi-v" id="kpiActive">0<small>个</small></div><div class="ck-kpi-sub" id="kpiUserSub">用户 0</div></div></div>
+    </div>
+
+    <!-- 图表区 -->
+    <div class="row g-3" style="margin-top:12px;">
+        <div class="col-xl-8">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-chart-area"></i>
+                    <span class="ck-panel-title">采集 / 对话 / Token 趋势</span>
+                    <div class="ck-legend-picker" id="trendLegend"></div>
+                    <div class="ck-panel-tools">
+                        <button type="button" class="layui-btn layui-btn-primary layui-btn-xs" data-export="trend"><i class="fas fa-image"></i> PNG</button>
+                    </div>
+                </div>
+                <div class="ck-panel-body"><div class="ck-chart ck-chart-lg" id="chartTrend"></div></div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span class="ck-panel-title">风险等级构成</span>
+                    <div class="ck-panel-tools">
+                        <button type="button" class="layui-btn layui-btn-primary layui-btn-xs" data-export="risk"><i class="fas fa-image"></i> PNG</button>
+                    </div>
+                </div>
+                <div class="ck-panel-body"><div class="ck-chart ck-chart-lg" id="chartRisk"></div></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-rss"></i>
+                    <span class="ck-panel-title">信源采集分布</span>
+                    <div class="ck-panel-tools">
+                        <span class="ck-seg" id="sourceType">
+                            <button type="button" data-type="rank" class="is-active">排行</button>
+                            <button type="button" data-type="pie">占比</button>
+                        </span>
+                        <button type="button" class="layui-btn layui-btn-primary layui-btn-xs" data-export="source"><i class="fas fa-image"></i> PNG</button>
+                    </div>
+                </div>
+                <div class="ck-panel-body"><div class="ck-chart" id="chartSource"></div></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-wave-square"></i>
+                    <span class="ck-panel-title">近 7 日风险走势</span>
+                    <span class="ck-panel-sub">按等级堆叠</span>
+                    <div class="ck-panel-tools">
+                        <button type="button" class="layui-btn layui-btn-primary layui-btn-xs" data-export="risktrend"><i class="fas fa-image"></i> PNG</button>
+                    </div>
+                </div>
+                <div class="ck-panel-body"><div class="ck-chart" id="chartRiskTrend"></div></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-key"></i>
+                    <span class="ck-panel-title">采集热词 Top 16</span>
+                    <span class="ck-panel-sub">按采集关键词计数</span>
+                    <div class="ck-panel-tools">
+                        <button type="button" class="layui-btn layui-btn-primary layui-btn-xs" data-export="keywords"><i class="fas fa-image"></i> PNG</button>
+                    </div>
+                </div>
+                <div class="ck-panel-body"><div class="ck-chart" id="chartKeywords"></div></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="ck-panel">
+                <div class="ck-panel-head">
+                    <i class="fas fa-list-ul"></i>
+                    <span class="ck-panel-title">最新采集清单</span>
+                    <span class="ck-panel-sub">最近 10 条</span>
+                </div>
+                <div class="ck-panel-body" style="max-height:340px;overflow:auto;">
+                    <table class="ck-table">
+                        <thead><tr><th>标题</th><th>信源</th><th class="num">采集时间</th></tr></thead>
+                        <tbody id="latestBody"><tr><td colspan="3" style="color:#9aa4b2;">加载中…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ck-note">
+        数据口径：采集条目来自 <code>collect_items</code>，对话来自 <code>messages</code>，Token 来自模型调用日志，
+        风险等级来自 <code>risk_reviews</code>（high / watch / normal / error 四类）。
+        报表为只读聚合，不写业务表；"实时推送"通过 SSE 接收服务端快照，断开后自动回到轮询。
+    </div>
+</div>
+{% end %}
+
+{% block admin_scripts %}
+<script src="/static/vendor/echarts/echarts.min.js"></script>
+<script src="/static/js/chart-kit.js"></script>
+<script src="/static/js/console-common.js"></script>
+<script src="/static/js/reports.js"></script>
+{% end %}

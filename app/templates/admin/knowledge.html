@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block admin_content %}
+<div class="layui-card admin-card">
+    <div class="layui-card-header">文档向量入库</div>
+    <div class="layui-card-body">
+        <p>粘贴正文或上传文件（支持 TXT、Markdown、Word .docx / .doc，300 KB 以内）。未启用嵌入模型时使用本地词项向量。入库后在数字员工中填写文档编号。</p>
+        {% if error %}<p role="alert">{{ error }}</p>{% end %}
+        <form method="post" enctype="multipart/form-data" class="layui-form">
+            {% module xsrf_form_html() %}
+            <div class="layui-form-item"><input name="title" class="layui-input" maxlength="160" placeholder="文档标题"></div>
+            <div class="layui-form-item"><textarea name="content" class="layui-textarea" maxlength="40000" placeholder="文档正文"></textarea></div>
+            <div class="layui-form-item"><input type="file" name="document" accept=".txt,.md,.docx,.doc" id="doc-file-input"></div>
+            <button name="action" value="index" class="layui-btn">生成向量并入库</button>
+        </form>
+    </div>
+</div>
+<script>
+(function () {
+    var fileInput = document.getElementById('doc-file-input');
+    var titleInput = document.querySelector('input[name="title"]');
+    if (fileInput && titleInput) {
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files.length > 0 && !titleInput.value.trim()) {
+                // 去掉扩展名作为默认标题
+                var name = fileInput.files[0].name;
+                titleInput.value = name.replace(/\.[^.]+$/, '');
+            }
+        });
+    }
+}());
+</script>
+<table class="layui-table">
+    <thead><tr><th>文档编号</th><th>标题</th><th>入库时间（UTC）</th><th>操作</th></tr></thead>
+    <tbody>
+    {% for doc in documents %}
+    <tr><td>{{ doc["id"] }}</td><td>{{ doc["title"] }}</td><td>{{ doc["created_at"] }}</td>
+        <td><form method="post">
+            {% module xsrf_form_html() %}
+            <input type="hidden" name="doc_id" value="{{ doc['id'] }}">
+            <button name="action" value="remove" class="layui-btn layui-btn-danger layui-btn-xs">删除</button>
+        </form></td></tr>
+    {% end %}
+    </tbody>
+</table>
+{% end %}

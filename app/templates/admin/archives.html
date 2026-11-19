@@ -1,0 +1,99 @@
+{# 会话归档页（/admin/archives）：成员 E —— 追溯历史会话归档表 message_archives。
+   框架壳（功能区 | 列表区 | 分页区）由本模板出，列表 / 筛选由 static/js/archives.js 走 /api/admin/archives #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/archives.css'>
+{% end %}
+
+{% block admin_content %}
+<!-- 顶部统计条：归档总量 -->
+<div class="archive-status" id="archiveStatus">
+    <div class="archive-status-item">
+        <span class="k"><i class="fas fa-archive"></i> 归档总量</span>
+        <span class="v" id="archiveTotalAll">{{ total }}</span>
+    </div>
+    <div class="archive-status-item">
+        <span class="k"><i class="fas fa-filter"></i> 当前筛选</span>
+        <span class="v" id="archiveFiltered">共 {{ total }} 条</span>
+    </div>
+    <div class="archive-status-note">
+        <i class="fas fa-info-circle"></i>
+        归档由「每日会话归档」定时任务生成，把超过保留期的历史消息从 messages 主表迁移到 message_archives；origin_id 可追溯原主键。
+    </div>
+</div>
+
+<!-- 功能区：筛选条件 -->
+<div class="layui-form admin-toolbar archive-toolbar">
+    <div class="layui-input-inline" style="width:160px;">
+        <input type="text" id="arcUsername" placeholder="用户名（模糊）" autocomplete="off" class="layui-input">
+    </div>
+    <div class="layui-input-inline" style="width:180px;">
+        <input type="text" id="arcSessionId" placeholder="会话 ID（模糊）" autocomplete="off" class="layui-input">
+    </div>
+    <div class="layui-input-inline" style="width:120px;">
+        <select id="arcRole" lay-filter="arcRole">
+            <option value="">全部角色</option>
+            {% for r in roles %}
+            <option value="{{ r }}">{{ r }}</option>
+            {% end %}
+        </select>
+    </div>
+    <div class="layui-input-inline" style="width:170px;">
+        <input type="text" id="arcStart" placeholder="起始日期 YYYY-MM-DD" autocomplete="off" class="layui-input" onfocus="this.type='date'" onblur="if(!this.value)this.type='text'">
+    </div>
+    <div class="layui-input-inline" style="width:170px;">
+        <input type="text" id="arcEnd" placeholder="结束日期 YYYY-MM-DD" autocomplete="off" class="layui-input" onfocus="this.type='date'" onblur="if(!this.value)this.type='text'">
+    </div>
+    <div class="layui-input-inline" style="width:200px;">
+        <input type="text" id="arcKeyword" placeholder="正文关键词（content LIKE）" autocomplete="off" class="layui-input">
+    </div>
+    <button type="button" class="layui-btn" id="arcSearch"><i class="fas fa-search"></i> 搜索</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="arcReset"><i class="fas fa-undo"></i> 重置</button>
+    <span class="admin-toolbar-count">共 <b id="arcCount">0</b> 条</span>
+</div>
+
+<!-- 列表区 -->
+<div class="layui-card admin-card">
+    <div class="layui-card-body admin-list">
+        <table class="layui-table" lay-size="sm">
+            <colgroup>
+                <col width="70">
+                <col width="70">
+                <col width="120">
+                <col width="140">
+                <col width="90">
+                <col>
+                <col width="160">
+                <col width="160">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>归档 ID</th>
+                    <th>原 ID</th>
+                    <th>用户名</th>
+                    <th>会话 ID</th>
+                    <th>角色</th>
+                    <th>内容摘要</th>
+                    <th>原消息时间</th>
+                    <th>归档时间</th>
+                </tr>
+            </thead>
+            <tbody id="arcBody">
+                <tr><td colspan="8" class="admin-empty">加载中…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 分页区 -->
+<div class="admin-pager">
+    <span class="admin-pager-tip"><i class="fas fa-info-circle"></i> 每页 {{ page_size }} 条</span>
+    <div class="admin-pager-box" id="arcPager"></div>
+</div>
+{% end %}
+
+{% block admin_scripts %}
+<script src="/static/js/archives.js"></script>
+{% end %}

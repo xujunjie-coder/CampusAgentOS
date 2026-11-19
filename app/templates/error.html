@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="error-wrap">
+    <div class="layui-card error-card">
+        <div class="layui-card-header"><i class="fas fa-exclamation-triangle"></i> {{ status }} · 请求未能完成</div>
+        <div class="layui-card-body">
+            <p class="error-message">{{ message }}</p>
+            <p class="error-meta">请求编号：{{ request_id }}</p>
+            <div class="error-actions">
+                <a class="layui-btn layui-btn-sm" href="/"><i class="fas fa-home"></i> 返回首页</a>
+                <a class="layui-btn layui-btn-sm layui-btn-primary" href="javascript:history.back()">返回上一页</a>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.error-wrap{display:flex;align-items:center;justify-content:center;min-height:60vh;padding:24px}
+.error-card{width:min(560px,92vw)}
+.error-message{font-size:15px;margin:8px 0 12px}
+.error-meta{color:#8a8a8a;font-size:12px;margin-bottom:16px}
+.error-actions{display:flex;gap:12px}
+</style>
+{% end %}

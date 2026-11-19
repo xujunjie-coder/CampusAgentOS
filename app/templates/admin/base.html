@@ -1,0 +1,105 @@
+{#
+后台管理框架壳（任务3）：layui-layout-admin 经典五段式布局
+- layui-header  顶栏：Logo + 左侧工具导航（折叠/前台入口）+ 右侧用户导航（下拉退出登录）
+- layui-side    左侧导航树：由 controllers/admin.py 的 ADMIN_NAV 渲染，active/expanded 标记控制高亮与展开
+- layui-body    内容区：页面标题条 + 面包屑 + {% block admin_content %} 由各模块页填充
+- layui-footer  底栏
+子模板用法：{% extends "base.html" %}（同目录继承）+ {% block admin_content %} ... {% end %}
+#}
+{% extends "../base.html" %}
+
+{# 任务一技术栈：bootstrap（仅栅格 + flex/间距工具类，用官方 bootstrap-grid 构建，
+   不含 Reboot，避免与 layui 的按钮/表单样式互相覆盖；引入顺序必须晚于 layui、早于 admin.css #}
+{% block styles %}
+<link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
+<link rel='stylesheet' href='/static/css/admin.css?v=20261111b'>
+{% end %}
+
+{% block content %}
+<div class="layui-layout layui-layout-admin admin-layout" id="adminLayout" data-page="{{ active_nav }}">
+    <!-- 顶栏 -->
+    <div class="layui-header admin-header">
+        <div class="layui-logo admin-logo">
+            {% if site_logo %}<img src="{{ site_logo }}" alt="" class="admin-logo-img" width="26" height="26">{% else %}<i class="fas fa-cube"></i>{% end %}
+            {{ site_name or "数据瞭望" }} · 后台管理
+        </div>
+        <ul class="layui-nav layui-layout-left">
+            <li class="layui-nav-item">
+                <a href="javascript:;" id="navToggle" title="收起 / 展开菜单"><i class="fas fa-bars"></i></a>
+            </li>
+            <li class="layui-nav-item"><a href="/admin"><i class="fas fa-home"></i> 控制台</a></li>
+            <li class="layui-nav-item"><a href="/" target="_blank"><i class="fas fa-comments"></i> 前台工作台</a></li>
+        </ul>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;">
+                    <i class="fas fa-user-shield"></i> {{ username }}
+                    <span class="admin-role-badge">{{ role }}</span>
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a href="/admin"><i class="fas fa-tachometer-alt"></i> 工作台</a></dd>
+                    <dd><a href="javascript:;" id="logoutLink"><i class="fas fa-sign-out-alt"></i> 退出登录</a></dd>
+                </dl>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 左侧导航树 -->
+    <div class="layui-side layui-bg-black admin-side">
+        <div class="layui-side-scroll">
+            <ul class="layui-nav layui-nav-tree" lay-filter="adminNav">
+                {% for item in nav %}
+                    {% if item["has_children"] %}
+                    <li class="layui-nav-item {% if item["expanded"] %}layui-nav-itemed{% end %}">
+                        <a href="javascript:;"><i class="{{ item["icon"] }}"></i> {{ item["label"] }}</a>
+                        <dl class="layui-nav-child">
+                            {% for child in item["children"] %}
+                            <dd class="{% if child["active"] %}layui-this{% end %}">
+                                <a href="{{ child["url"] }}"><i class="{{ child["icon"] }}"></i> {{ child["label"] }}</a>
+                            </dd>
+                            {% end %}
+                        </dl>
+                    </li>
+                    {% else %}
+                    <li class="layui-nav-item {% if item["active"] %}layui-this{% end %}">
+                        <a href="{{ item["url"] }}"><i class="{{ item["icon"] }}"></i> {{ item["label"] }}</a>
+                    </li>
+                    {% end %}
+                {% end %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="layui-body admin-body">
+        <div class="admin-page-head">
+            <span class="admin-page-title"><i class="fas fa-cube"></i> {{ page_name }}</span>
+            <span class="layui-breadcrumb" lay-separator="/">
+                <a href="/admin">首页</a>
+                <a><cite>{{ page_name }}</cite></a>
+            </span>
+        </div>
+        <div class="admin-page-body">
+            {% block admin_content %}
+            {% end %}
+        </div>
+    </div>
+
+    <!-- 底栏 -->
+    <div class="layui-footer admin-footer">
+        © 2026 {{ site_name or "GovCheckDataAgentOS" }} · 后台管理 · Tornado + layui v2.13.9 + Bootstrap 5.3.3 + ECharts 5.5.1
+    </div>
+
+    <!-- 退出登录：由顶栏下拉里的链接触发提交，携带 xsrf -->
+    <form action="/auth/logout" method="post" id="adminLogoutForm" class="admin-hidden-form">
+        {% module xsrf_form_html() %}
+    </form>
+</div>
+{% end %}
+
+{% block scripts %}
+<script src="{{ static_url('js/face-capture.js') }}"></script>
+<script src="{{ static_url('js/admin.js') }}"></script>
+{% block admin_scripts %}
+{% end %}
+{% end %}

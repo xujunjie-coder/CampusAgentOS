@@ -1,0 +1,52 @@
+{# 角色管理（/admin/roles）：任务4修正 —— 列表可分配菜单权限；默认管理员不可修改/不可删，由 admin.js 走 /api/admin/roles #}
+{% extends "base.html" %}
+
+{% block admin_content %}
+<!-- 功能区 -->
+<div class="layui-form admin-toolbar">
+    <div class="layui-input-wrap admin-search">
+        <div class="layui-input-prefix"><i class="fas fa-search"></i></div>
+        <input type="text" id="roleKeyword" placeholder="按编码 / 名称搜索" autocomplete="off" class="layui-input" lay-affix="clear">
+    </div>
+    <button type="button" class="layui-btn" id="roleSearch"><i class="fas fa-search"></i> 搜索</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="roleReset"><i class="fas fa-undo"></i> 重置</button>
+    <span class="admin-toolbar-split"></span>
+    <button type="button" class="layui-btn layui-btn-normal" id="roleAdd"><i class="fas fa-plus"></i> 新增角色</button>
+    <span class="admin-toolbar-count">共 <b id="roleCount">0</b> 条</span>
+</div>
+
+<!-- 列表区 -->
+<div class="layui-card admin-card">
+    <div class="layui-card-body admin-list">
+        <table class="layui-table" lay-size="sm">
+            <colgroup>
+                <col width="120">
+                <col width="150">
+                <col>
+                <col width="130">
+                <col width="110">
+                <col width="280">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>角色编码</th>
+                    <th>角色名称</th>
+                    <th>权限说明</th>
+                    <th>默认入口</th>
+                    <th>类型</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="roleBody">
+                <tr><td colspan="6" class="admin-empty">加载中…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 分页区 -->
+<div class="admin-pager">
+    <span class="admin-pager-tip"><i class="fas fa-info-circle"></i> 每页 {{ page_size }} 条</span>
+    <div class="admin-pager-box" id="rolePager"></div>
+</div>
+{% end %}

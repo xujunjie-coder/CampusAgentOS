@@ -1,0 +1,105 @@
+{# 临时会话查询页（/admin/sessions）：成员 E —— 查看 user_sessions 表登录会话，支持撤销 / 清理。
+   框架壳（功能区 | 列表区 | 分页区）由本模板出，列表 / 撤销 由 static/js/sessions.js 走 /api/admin/sessions #}
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel='stylesheet' href='/static/css/admin.css'>
+<link rel='stylesheet' href='/static/css/sessions.css'>
+{% end %}
+
+{% block admin_content %}
+<!-- 顶部统计条：会话概况 -->
+<div class="sess-status" id="sessStatus">
+    <div class="sess-status-item active">
+        <span class="k"><i class="fas fa-plug"></i> 活跃会话</span>
+        <span class="v" id="statActive">{{ stats["active"] }}</span>
+    </div>
+    <div class="sess-status-item revoked">
+        <span class="k"><i class="fas fa-ban"></i> 已撤销</span>
+        <span class="v" id="statRevoked">{{ stats["revoked"] }}</span>
+    </div>
+    <div class="sess-status-item expired">
+        <span class="k"><i class="fas fa-hourglass-end"></i> 已过期</span>
+        <span class="v" id="statExpired">{{ stats["expired"] }}</span>
+    </div>
+    <div class="sess-status-note">
+        <i class="fas fa-info-circle"></i>
+        登录会话（token 会话）：撤销后该设备立即失效；「每日日志清理」任务会回收已撤销/过期的记录。
+    </div>
+</div>
+
+<!-- 功能区 -->
+<div class="layui-form admin-toolbar sess-toolbar">
+    <div class="layui-input-inline" style="width:150px;">
+        <input type="text" id="sessUsername" placeholder="用户名（模糊）" autocomplete="off" class="layui-input">
+    </div>
+    <div class="layui-input-inline" style="width:150px;">
+        <input type="text" id="sessIp" placeholder="客户端 IP（模糊）" autocomplete="off" class="layui-input">
+    </div>
+    <div class="layui-input-inline" style="width:140px;">
+        <select id="sessState" lay-filter="sessState">
+            <option value="active">活跃会话</option>
+            <option value="revoked">已撤销</option>
+            <option value="expired">已过期</option>
+            <option value="all">全部</option>
+        </select>
+    </div>
+    <button type="button" class="layui-btn" id="sessSearch"><i class="fas fa-search"></i> 搜索</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="sessReset"><i class="fas fa-undo"></i> 重置</button>
+    <span class="admin-toolbar-split"></span>
+    <button type="button" class="layui-btn layui-btn-danger" id="sessRevokeUser">
+        <i class="fas fa-user-slash"></i> 按用户下线
+    </button>
+    <button type="button" class="layui-btn layui-btn-warm" id="sessPurge">
+        <i class="fas fa-broom"></i> 清理已撤销/过期
+    </button>
+    <span class="admin-toolbar-count">共 <b id="sessCount">0</b> 条</span>
+</div>
+
+<!-- 列表区 -->
+<div class="layui-card admin-card">
+    <div class="layui-card-body admin-list">
+        <table class="layui-table" lay-size="sm">
+            <colgroup>
+                <col width="70">
+                <col width="120">
+                <col width="90">
+                <col width="130">
+                <col>
+                <col width="160">
+                <col width="160">
+                <col width="160">
+                <col width="90">
+                <col width="120">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>角色</th>
+                    <th>客户端 IP</th>
+                    <th>User-Agent</th>
+                    <th>创建时间</th>
+                    <th>最近活跃</th>
+                    <th>过期时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="sessBody">
+                <tr><td colspan="10" class="admin-empty">加载中…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 分页区 -->
+<div class="admin-pager">
+    <span class="admin-pager-tip"><i class="fas fa-info-circle"></i> 每页 {{ page_size }} 条</span>
+    <div class="admin-pager-box" id="sessPager"></div>
+</div>
+{% end %}
+
+{% block admin_scripts %}
+<script src="/static/js/sessions.js"></script>
+{% end %}
