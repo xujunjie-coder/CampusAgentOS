@@ -36,7 +36,13 @@
 
         <!-- 字幕/对话浮动层 -->
         <aside class="avatar-caption" id="avatarCaption">
-            <div class="avatar-caption-head"><i class="fas fa-closed-captioning"></i> 实时字幕</div>
+            <div class="avatar-caption-head">
+                <span><i class="fas fa-closed-captioning"></i> 实时字幕</span>
+                <div class="avatar-playback-controls" role="group" aria-label="当前回答朗读控制">
+                    <button type="button" id="avatarPlaybackBtn" disabled><i class="fas fa-play" aria-hidden="true"></i><span>从头播放</span></button>
+                    <button type="button" id="avatarRestartBtn" hidden>从头播放</button>
+                </div>
+            </div>
             <div class="avatar-caption-body" id="captionBody">
                 <div class="avatar-caption-empty">你好！我是华师虚拟辅导员，可以陪你聊聊校园生活、学习烦恼，或者问我任何关于西华师范大学的问题～</div>
             </div>
@@ -53,8 +59,19 @@
         <div class="avatar-composer">
             <input type="text" id="avatarInput" class="layui-input" maxlength="500"
                    placeholder="问问华小竹关于学业政策、就业考研、校园生活的问题…（Enter 发送）">
-            <button type="button" id="avatarTtsBtn" class="layui-btn layui-btn-primary avatar-tts-btn"
-                    title="语音朗读开关"><i class="fas fa-volume-up"></i></button>
+            <div class="avatar-agent-picker" id="avatarAgentPicker">
+                <button type="button" class="avatar-agent-trigger" id="avatarAgentTrigger"
+                        aria-haspopup="listbox" aria-expanded="false" aria-controls="avatarAgentMenu" disabled>
+                    <span class="avatar-agent-icon"><i class="fas fa-robot" aria-hidden="true"></i></span>
+                    <span class="avatar-agent-label">当前 Agent</span>
+                    <span class="avatar-agent-current" id="avatarAgentCurrent">加载中…</span>
+                    <i class="fas fa-chevron-down avatar-agent-chevron" aria-hidden="true"></i>
+                </button>
+                <select id="avatarAgentSelect" hidden tabindex="-1" aria-hidden="true" disabled>
+                    <option value="">加载中…</option>
+                </select>
+                <div class="avatar-agent-menu" id="avatarAgentMenu" role="listbox" aria-label="选择对话 Agent" hidden></div>
+            </div>
             <button type="button" id="avatarSend" class="layui-btn avatar-send-btn"><i class="fas fa-paper-plane"></i> 发送</button>
         </div>
     </footer>

@@ -9,7 +9,7 @@
  *      持久化「用户 ↔ 数字助理」关联；发送时带 employee_id，SSE assistant 事件回填本轮实际应答的助理身份，
  *      历史气泡按 messages.employee_name 署名
  *   6. 成员 D（任务2）：「@音乐 关键词」前缀拦截 → /api/music/search 检索内置曲库，气泡内渲染 HTML5
- *      音频卡片自动播放首曲；头部「导出PDF」按钮 → /api/chat/export?session_id= 下载真 PDF；
+ *      场景曲库与统一播放器；头部「导出PDF」按钮 → /api/chat/export?session_id= 下载真 PDF；
  *      侧栏底部功能入口为手风琴式，点用户行展开/收起
  * 与后端 SSE 约定保持一致：delta 的 data 为纯文本字符串；tool/reasoning/error/assistant 的 data 为对象。
  */
@@ -612,106 +612,16 @@
         });
     }
 
-    // ---------- @音乐 点歌（成员 D，任务2） ----------
-    // 同一时刻只允许一路播放：新曲目开始时停掉旧音频
-    var currentAudio = null;
-
-    function stopCurrentAudio() {
-        if (currentAudio) {
-            try { currentAudio.pause(); } catch (e) { /* 已销毁则忽略 */ }
-            currentAudio = null;
-        }
-    }
-
-    function musicCardEl() {
+    // ---------- @音乐：场景选曲与统一播放器 ----------
+    function playMusic(keyword) {
         var row = document.createElement("div");
         row.className = "chat-msg chat-msg-assistant";
-        row.innerHTML =
-            '<div class="chat-avatar chat-avatar-bot"><i class="fas fa-music"></i></div>' +
-            '<div class="chat-body"><div class="chat-bubble chat-bubble-assistant">' +
-            '<div class="chat-music"><div class="chat-music-loading"><i class="fas fa-spinner fa-spin"></i> 正在检索曲库…</div></div>' +
-            '</div></div>';
+        row.innerHTML = '<div class="chat-avatar chat-avatar-bot"><i class="fas fa-music"></i></div>' +
+            '<div class="chat-body"><div class="chat-bubble chat-bubble-assistant chat-music-bubble">' +
+            '<div class="chat-music"></div></div></div>';
         messagesEl.appendChild(row);
+        window.CampusMusic.mount(row.querySelector(".chat-music"), {keyword:keyword, xsrf:xsrf});
         scrollToBottom();
-        return row.querySelector(".chat-music");
-    }
-
-    function renderMusicCard(cardEl, keyword, list) {
-        if (!list.length) {
-            cardEl.innerHTML = '<span class="chat-muted">曲库里没有找到与「' + escHtml(keyword) +
-                '」匹配的曲目，试试「@音乐 轻音乐」「@音乐 电子」，或直接发「@音乐」看热门推荐。</span>';
-            return;
-        }
-        // 「正在播放」徽标动态跟随实际播放的曲目行
-        function markNow(au) {
-            Array.prototype.forEach.call(cardEl.querySelectorAll(".chat-music-now"), function (tag) {
-                if (tag.parentNode) tag.parentNode.removeChild(tag);
-            });
-            var item = au.closest ? au.closest(".chat-music-item") : null;
-            var head = item ? item.querySelector(".chat-music-head") : null;
-            if (!head) return;
-            var tag = document.createElement("span");
-            tag.className = "chat-music-now";
-            tag.textContent = "正在播放";
-            head.appendChild(tag);
-        }
-        // 只摘自己行的徽标：旧音频滞后到达的 pause 事件不能误删新曲目刚挂上的徽标
-        function clearOwnNow(au) {
-            var item = au.closest ? au.closest(".chat-music-item") : null;
-            var tag = item ? item.querySelector(".chat-music-now") : null;
-            if (tag && tag.parentNode) tag.parentNode.removeChild(tag);
-        }
-        cardEl.innerHTML = list.map(function (t, i) {
-            return '<div class="chat-music-item' + (i === 0 ? " is-main" : "") + '">' +
-                '<div class="chat-music-head"><i class="fas fa-compact-disc"></i>' +
-                '<b>' + escHtml(t.title) + "</b>" +
-                '<span class="chat-music-artist">' + escHtml(t.artist) + "・" + escHtml(t.style) + "</span>" +
-                (i === 0 ? '<span class="chat-music-now">正在播放</span>' : "") + "</div>" +
-                '<audio class="chat-music-audio" controls' + (i === 0 ? " autoplay" : "") +
-                ' src="' + escHtml(t.file) + '">当前浏览器不支持 audio 标签。</audio></div>';
-        }).join("");
-        // 曲目互斥：给卡片内每路音频挂 play 回调，开播时只暂停「旧音频」而非自身
-        // （修复：此前只给首曲挂回调且回调里先 pause 当前——currentAudio 正是首曲自己，
-        // 导致热门首位曲目如「静谧晨光」autoplay 一开播就被暂停，表现为「放不了」）
-        Array.prototype.forEach.call(cardEl.querySelectorAll("audio"), function (au) {
-            au.addEventListener("play", function () {
-                if (currentAudio && currentAudio !== au) {
-                    try { currentAudio.pause(); } catch (e) { /* 已销毁则忽略 */ }
-                }
-                currentAudio = au;
-                markNow(au);
-            });
-            // 暂停/播完：摘掉自己行的徽标（若正在播的是新主曲，它的 play 会重新挂上）
-            au.addEventListener("pause", function () { clearOwnNow(au); });
-            au.addEventListener("ended", function () { clearOwnNow(au); });
-        });
-        // 新卡片出现时先停掉上一张卡片的主曲，并把本卡首曲记为当前播放
-        var first = cardEl.querySelector("audio");
-        if (first) {
-            stopCurrentAudio();
-            currentAudio = first;
-        }
-        // 播放计数上报（失败静默，不影响听歌主链路）
-        fetch("/api/music/play", {
-            method: "POST",
-            headers: { "X-Xsrftoken": xsrf, "Content-Type": "application/json" },
-            body: JSON.stringify({ id: list[0].id }),
-        }).catch(function () {});
-    }
-
-    async function playMusic(keyword) {
-        var cardEl = musicCardEl();
-        try {
-            var resp = await fetch("/api/music/search?q=" + encodeURIComponent(keyword || ""));
-            var d = await resp.json().catch(function () { return {}; });
-            if (!resp.ok || !d.ok) {
-                cardEl.innerHTML = '<span class="chat-muted">曲库检索失败（' + escHtml((d && d.error) || resp.status) + "）</span>";
-                return;
-            }
-            renderMusicCard(cardEl, keyword, d.list || []);
-        } catch (e) {
-            cardEl.innerHTML = '<span class="chat-muted">曲库检索出错：' + escHtml(e.message) + "</span>";
-        }
     }
 
     // ---------- 发送消息并消费流 ----------

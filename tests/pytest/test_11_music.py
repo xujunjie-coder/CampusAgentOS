@@ -5,6 +5,7 @@ import json
 import urllib.parse
 
 from conftest import ApiCase
+from unittest.mock import patch
 
 
 def q(text):
@@ -14,6 +15,9 @@ def q(text):
 class TestMusic(ApiCase):
     def setUp(self):
         super().setUp()
+        self.client_id_patch = patch("app.config.JAMENDO_CLIENT_ID", "")
+        self.client_id_patch.start()
+        self.addCleanup(self.client_id_patch.stop)
         self.login()
 
     def test_search_requires_login(self):

@@ -20,7 +20,9 @@ class TestAvatarVtuber(ApiCase):
         assert "3D 数字人" in html
         # 虚拟主播改造后必须挂 GLTFLoader 和语音开关
         assert "/static/vendor/three/GLTFLoader.js" in html
-        assert "avatarTtsBtn" in html
+        assert "avatarTtsBtn" not in html
+        assert "avatarPlaybackBtn" in html
+        assert "avatarAgentSelect" in html
 
     def test_avatar_requires_login(self):
         self.post_form("/auth/logout", {}, follow=False)
