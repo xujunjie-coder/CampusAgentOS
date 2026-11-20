@@ -81,6 +81,8 @@ python -c "import secrets;print(secrets.token_urlsafe(48))"
 
 ### 必需配置（`.env`）
 
+在线音乐：在 `.env` 填写 `JAMENDO_CLIENT_ID=你的应用client_id` 并重启后端，`@音乐` 将优先搜索 Jamendo；未配置或上游故障时提示并回退本地示例。注册及使用说明见 [Jamendo 在线音乐配置](docs/jamendo-setup.md)。
+
 | 键 | 说明 |
 | --- | --- |
 | `COOKIE_SECRET` | 必填，≥32 位随机串；缺省或示例值会拒绝启动 |

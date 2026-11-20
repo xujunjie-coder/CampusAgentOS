@@ -25,6 +25,158 @@
         });
     }
 
+    // 与对话大厅保持一致的 Markdown 子集；先转义原始 HTML。
+    // 占位符使用不可见控制字符包裹，避免与正文内容冲突
+    var PH_CODE = "\u0000CODE", PH_ICODE = "\u0000ICODE", PH_TABLE = "\u0000TABLE";
+
+    function formatInline(src) {
+        return src
+            .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+            .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+            .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+                '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    }
+
+    function splitTableRow(line, escaped) {
+        var row = line.trim().replace(/\|\\$/, "|");
+        if (escaped) row = row.replace(/\\\|/g, "|");
+        var cells = row.split(/(?<!\\)\|/);
+        if (cells.length === 1) return null;
+        if (cells[0] === "") cells.shift();
+        if (cells[cells.length - 1] === "") cells.pop();
+        return cells.map(function (cell) { return cell.trim().replace(/\\\|/g, "|"); });
+    }
+
+    function extractTables(src, tables) {
+        var lines = src.split("\n");
+        var out = [];
+        for (var i = 0; i < lines.length; i++) {
+            var escaped = /^\s*\\\|/.test(lines[i]);
+            var headers = splitTableRow(lines[i], escaped);
+            var rules = i + 1 < lines.length ? splitTableRow(lines[i + 1], escaped) : null;
+            if (!headers || !headers.length || !rules || headers.length !== rules.length ||
+                !rules.every(function (rule) { return /^:?-{3,}:?$/.test(rule); })) {
+                out.push(lines[i]);
+                continue;
+            }
+            var align = rules.map(function (rule) {
+                if (!rule.endsWith(":")) return "";
+                return rule.startsWith(":") ? ' class="is-center"' : ' class="is-right"';
+            });
+            var head = headers.map(function (cell, column) {
+                return '<th scope="col"' + align[column] + ">" + formatInline(cell) + "</th>";
+            }).join("");
+            var body = [];
+            i += 1;
+            while (i + 1 < lines.length) {
+                var cells = splitTableRow(lines[i + 1], escaped);
+                if (!cells || cells.length !== headers.length) break;
+                body.push("<tr>" + cells.map(function (cell, column) {
+                    return "<td" + align[column] + ">" + formatInline(cell) + "</td>";
+                }).join("") + "</tr>");
+                i += 1;
+            }
+            tables.push('<div class="chat-table-scroll"><table><thead><tr>' + head +
+                "</tr></thead><tbody>" + body.join("") + "</tbody></table></div>");
+            out.push("", PH_TABLE + (tables.length - 1) + "\u0000", "");
+        }
+        return out.join("\n");
+    }
+
+    // ---------- 轻量 Markdown 渲染 ----------
+    function renderMarkdown(src) {
+        if (src == null) return "";
+        src = String(src).replace(/\r\n?/g, "\n").replace(/\u0000/g, "");
+        var codeBlocks = [], inlineCodes = [], tables = [];
+
+        // 1. 先抽出围栏代码块 ```lang\n...\n```
+        src = String(src).replace(/```(\w*)\r?\n?([\s\S]*?)```/g, function (m, lang, code) {
+            codeBlocks.push(
+                '<pre class="chat-code"><code>' +
+                esc(code.replace(/\s+$/, "")) +
+                "</code></pre>"
+            );
+            return PH_CODE + (codeBlocks.length - 1) + "\u0000";
+        });
+
+        // 2. 其余正文统一转义
+        src = esc(src);
+
+        // 3. 抽出行内代码 `code`
+        src = src.replace(/`([^`\n]+)`/g, function (m, c) {
+            inlineCodes.push('<code class="chat-icode">' + c + "</code>");
+            return PH_ICODE + (inlineCodes.length - 1) + "\u0000";
+        });
+
+        src = extractTables(src, tables);
+
+        // 4. 标题与引用各自成块，保留前后正文的段落结构。
+        src = src
+            .replace(/^(?:[ \t]{0,3}\\?&gt;[^\n]*(?:\n|$))+/gm, function (quote) {
+                var lines = quote.replace(/\n$/, "").split("\n").map(function (line) {
+                    return line.replace(/^[ \t]{0,3}\\?&gt;[ \t]?/, "");
+                });
+                var paragraphs = lines.join("\n").split(/\n{2,}/).map(function (part) {
+                    return part ? "<p>" + part.replace(/\n/g, "<br>") + "</p>" : "";
+                });
+                return "\n\n<blockquote>" + paragraphs.join("") + "</blockquote>\n\n";
+            })
+            .replace(/^[ \t]{0,3}(#{1,6})[ \t]+(.+)$/gm, function (line, hashes, title) {
+                var level = Math.min(6, hashes.length + 1);
+                return "\n\n<h" + level + ">" + title + "</h" + level + ">\n\n";
+            });
+
+        // 5. 行内样式：加粗、斜体、链接
+        src = formatInline(src);
+
+        // 6. 列表
+        src = processLists(src);
+
+        // 6.5 分隔线：整行 --- / *** / ___
+        src = src.replace(/^[ \t]{0,3}(?:-{3,}|\*{3,}|_{3,})[ \t]*$/gm, "\n\n<hr>\n\n");
+
+        // 7. 段落：按空行分段，段内换行转 <br>
+        src = src.split(/\n{2,}/).map(function (block) {
+            var t = block.trim();
+            if (!t) return "";
+            if (t.indexOf(PH_TABLE) === 0) return t;
+            if (/^<(h[2-6]|hr|ul|ol|pre|blockquote)\b/.test(t)) return t;
+            if (t.indexOf(PH_CODE) !== -1) return block;
+            return "<p>" + block.replace(/\n/g, "<br>") + "</p>";
+        }).join("");
+
+        // 8. 还原占位符
+        src = src.replace(new RegExp(PH_TABLE + "(\\d+)\\u0000", "g"), function (m, i) { return tables[+i]; });
+        src = src.replace(new RegExp(PH_ICODE + "(\\d+)\\u0000", "g"), function (m, i) { return inlineCodes[+i]; });
+        src = src.replace(new RegExp(PH_CODE + "(\\d+)\\u0000", "g"), function (m, i) { return codeBlocks[+i]; });
+        return src;
+    }
+
+    function processLists(src) {
+        var lines = src.split("\n");
+        var out = [], listType = null;
+        function closeList() {
+            if (listType) { out.push(listType === "ul" ? "</ul>" : "</ol>", ""); listType = null; }
+        }
+        for (var i = 0; i < lines.length; i++) {
+            var ln = lines[i];
+            var ul = ln.match(/^\s*[-*]\s+(.*)$/);
+            var ol = ln.match(/^\s*\d+\.\s+(.*)$/);
+            if (ul) {
+                if (listType !== "ul") { closeList(); out.push("", "<ul>"); listType = "ul"; }
+                out.push("<li>" + ul[1] + "</li>");
+            } else if (ol) {
+                if (listType !== "ol") { closeList(); out.push("", "<ol>"); listType = "ol"; }
+                out.push("<li>" + ol[1] + "</li>");
+            } else {
+                closeList();
+                out.push(ln);
+            }
+        }
+        closeList();
+        return out.join("\n");
+    }
+
     function xsrfToken() {
         var hidden = document.querySelector('#xsrfBox input[name="_xsrf"]');
         if (hidden) return hidden.value;
@@ -44,6 +196,21 @@
     }
 
     // ---------- 字幕 ----------
+    var captionFollowLatest = true;
+
+    function bindCaptionScroll() {
+        var body = $("captionBody");
+        body.addEventListener("scroll", function () {
+            captionFollowLatest = body.scrollHeight - body.clientHeight - body.scrollTop <= 8;
+        }, { passive: true });
+    }
+
+    function scrollCaptionToLatest() {
+        if (!captionFollowLatest) return;
+        var body = $("captionBody");
+        body.scrollTop = body.scrollHeight;
+    }
+
     function clearCaptionEmpty() {
         var empty = $("captionBody").querySelector(".avatar-caption-empty");
         if (empty) $("captionBody").innerHTML = "";
@@ -53,11 +220,16 @@
         clearCaptionEmpty();
         var row = document.createElement("div");
         row.className = "avatar-cap-line " + (cls || "");
-        row.innerHTML = '<b>' + esc(who) + "</b><span></span>";
-        row.querySelector("span").textContent = text;
+        var label = document.createElement("b");
+        label.textContent = who;
+        var content = document.createElement("div");
+        content.className = "avatar-cap-content";
+        content.textContent = text;
+        row.appendChild(label);
+        row.appendChild(content);
         $("captionBody").appendChild(row);
-        $("captionBody").scrollTop = $("captionBody").scrollHeight;
-        return row.querySelector("span");
+        scrollCaptionToLatest();
+        return content;
     }
 
     // ---------- three.js 场景 ----------
@@ -299,7 +471,7 @@
     var last = 0, visemeTick = 0;
 
     function voiceActive() {
-        return tts.speaking || mouthPulse > 0.02;
+        return !tts.paused && (tts.speaking || mouthPulse > 0.02);
     }
 
     function setMorph(list, idx, v) {
@@ -535,104 +707,392 @@
 
     // ---------- 语音朗读（Web Speech API，离线零依赖） ----------
     var tts = {
-        on: localStorage.getItem("avatarTtsOn") !== "0",
+        on: true,
         supported: typeof window.speechSynthesis !== "undefined",
         speaking: false,
+        paused: false,
+        current: null,
+        generation: 0,
         queue: [],
         buf: "",
         voice: null
     };
 
+    // 固定华小竹音色，不读取此前声音选择缓存。
     function pickVoice() {
         if (!tts.supported) return;
         var vs = window.speechSynthesis.getVoices();
-        if (!vs.length) return;
-        var pref = ["Xiaoxiao", "XiaoYi", "Huihui", "Yaoyao", "Kangkang", "Google 普通话"];
-        for (var i = 0; i < pref.length; i++) {
-            for (var j = 0; j < vs.length; j++) {
-                if (vs[j].name.indexOf(pref[i]) !== -1) { tts.voice = vs[j]; return; }
-            }
-        }
-        tts.voice = vs.filter(function (v) { return (v.lang || "").toLowerCase().indexOf("zh") === 0; })[0] || null;
+        tts.voice = vs.find(function (v) {
+            return /yunyang/i.test(v.name) && /^zh/i.test(v.lang || "");
+        }) || vs.find(function (v) {
+            return /^zh-CN$/i.test(v.lang || "");
+        }) || null;
     }
     if (tts.supported) {
-        pickVoice();
-        window.speechSynthesis.onvoiceschanged = pickVoice;
+        window.speechSynthesis.addEventListener("voiceschanged", pickVoice);
     }
 
     function cleanSentence(s) {
         return String(s).replace(/[#*`>_~\[\]()]/g, " ").replace(/\s+/g, " ").trim();
     }
 
-    function ttsPump() {
-        if (!tts.on || !tts.supported || tts.speaking || !tts.queue.length) return;
-        var text = tts.queue.shift();
-        var u = new SpeechSynthesisUtterance(text);
-        u.lang = "zh-CN";
-        u.rate = 1.08;
-        u.pitch = 1.15;
-        if (tts.voice) u.voice = tts.voice;
-        u.onstart = function () { tts.speaking = true; };
-        u.onend = u.onerror = function () {
-            tts.speaking = false;
-            setTimeout(ttsPump, 120);
-        };
-        window.speechSynthesis.speak(u);
+    function renderPlaybackControls() {
+        var btn = $("avatarPlaybackBtn");
+        if (!btn) return;
+        var hasText = !!(answerText && answerText.trim());
+        var active = tts.on && (tts.current || tts.queue.length || (streaming && hasText));
+        var label = tts.paused ? "继续播放" : (active ? "暂停" : "从头播放");
+        var icon = !tts.paused && active ? "pause" : "play";
+        btn.innerHTML = '<i class="fas fa-' + icon + '" aria-hidden="true"></i><span>' + label + '</span>';
+        btn.disabled = !tts.supported || !hasText;
+        btn.setAttribute("aria-label", label + "当前回答");
+        btn.title = tts.supported ? label + "当前回答" : "当前浏览器不支持语音朗读";
+        var restart = $("avatarRestartBtn");
+        if (restart) {
+            restart.hidden = !tts.paused;
+            restart.disabled = !tts.supported || !hasText;
+        }
     }
 
-    // 流式增量按句切分入队（。！？；\n 断句）
+    function ttsPump() {
+        if (!tts.on || !tts.supported || tts.paused || tts.speaking || !tts.queue.length) {
+            renderPlaybackControls();
+            return;
+        }
+        var text = tts.queue.shift();
+        var u = new SpeechSynthesisUtterance(text);
+        var generation = tts.generation;
+        u.lang = tts.voice ? tts.voice.lang : "zh-CN";
+        u.rate = 1.0;
+        u.pitch = 1.0;
+        if (tts.voice) u.voice = tts.voice;
+        // Reserve the utterance before onstart, so streaming chunks cannot enqueue duplicates.
+        tts.current = u;
+        tts.speaking = true;
+        u.onstart = function () {
+            if (generation !== tts.generation) return;
+            if (tts.paused) window.speechSynthesis.pause();
+            renderPlaybackControls();
+        };
+        u.onend = u.onerror = function () {
+            if (generation !== tts.generation) return;
+            tts.current = null;
+            tts.speaking = false;
+            renderPlaybackControls();
+            setTimeout(function () {
+                if (generation === tts.generation) ttsPump();
+            }, 120);
+        };
+        window.speechSynthesis.speak(u);
+        renderPlaybackControls();
+    }
+
+    // Keep receiving text while paused; only audio playback is suspended.
     function ttsFeed(chunk) {
-        if (!tts.on) return;
+        if (!tts.on || !tts.supported) return;
         tts.buf += chunk;
-        var parts = tts.buf.split(/(?=[。！？!?；;\n])/);
-        tts.buf = parts.pop() || "";
-        parts.forEach(function (p) {
-            var c = cleanSentence(p);
-            if (c.length >= 2 && c.length <= 220) tts.queue.push(c);
-            else if (c.length > 220) tts.queue.push(c.slice(0, 220));
-        });
+        var parts = tts.buf.split(/(?<=[。！？!?；;\n])/);
+        tts.buf = /[。！？!?；;\n]$/.test(tts.buf) ? "" : (parts.pop() || "");
+        parts.forEach(queueSentence);
         ttsPump();
     }
 
+    function queueSentence(text) {
+        var cleaned = cleanSentence(text);
+        // Long paragraphs are split instead of silently dropping their tail.
+        while (cleaned.length) {
+            tts.queue.push(cleaned.slice(0, 220));
+            cleaned = cleaned.slice(220);
+        }
+    }
+
     function ttsFlush() {
-        var c = cleanSentence(tts.buf);
+        if (!tts.on || !tts.supported) return;
+        queueSentence(tts.buf);
         tts.buf = "";
-        if (c.length >= 2) { tts.queue.push(c); ttsPump(); }
+        ttsPump();
     }
 
     function ttsStopAll() {
+        tts.generation += 1;
         tts.queue = [];
         tts.buf = "";
-        if (tts.supported) window.speechSynthesis.cancel();
+        tts.current = null;
+        tts.paused = false;
         tts.speaking = false;
+        if (tts.supported) {
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.resume();
+        }
+        renderPlaybackControls();
     }
 
-    function renderTtsBtn() {
-        var btn = $("avatarTtsBtn");
-        if (!btn) return;
-        var icon = btn.querySelector("i");
-        // 仓内 FontAwesome 为 v5：fa-volume-high/xmark 是 v6 类名会渲染空白
-        icon.className = tts.on ? "fas fa-volume-up" : "fas fa-volume-mute";
-        btn.title = tts.on ? "语音朗读：开（点击关闭）" : "语音朗读：关（点击开启）";
-        btn.setAttribute("aria-label", btn.title);
+    function replayAnswer() {
+        if (!tts.supported || !answerText) return;
+        ttsStopAll();
+        tts.on = true;
+        ttsFeed(answerText);
+        ttsFlush();
     }
 
-    function bindTtsToggle() {
-        var btn = $("avatarTtsBtn");
+    function bindPlaybackControls() {
+        var btn = $("avatarPlaybackBtn");
         if (!btn) return;
-        if (!tts.supported) { btn.disabled = true; btn.title = "当前浏览器不支持语音朗读"; renderTtsBtn(); return; }
-        renderTtsBtn();
         btn.addEventListener("click", function () {
-            tts.on = !tts.on;
-            localStorage.setItem("avatarTtsOn", tts.on ? "1" : "0");
-            if (!tts.on) ttsStopAll(); else ttsPump();
-            renderTtsBtn();
+            if (tts.paused) {
+                tts.paused = false;
+                window.speechSynthesis.resume();
+                ttsPump();
+            } else if (tts.on && (tts.current || tts.queue.length || (streaming && answerText))) {
+                tts.paused = true;
+                window.speechSynthesis.pause();
+            } else {
+                replayAnswer();
+            }
+            renderPlaybackControls();
         });
+        $("avatarRestartBtn").addEventListener("click", replayAnswer);
+        renderPlaybackControls();
+    }
+
+    // Agent selection shares the chat hall's enabled-employee API and saved preference.
+    var agentList = [];
+    var selectedAgent = null;
+    var agentBusy = false;
+
+    function renderAgentSelect(message) {
+        var select = $("avatarAgentSelect");
+        if (!select) return;
+        select.replaceChildren();
+        if (!agentList.length) {
+            var empty = document.createElement("option");
+            empty.value = "";
+            empty.textContent = message || "暂无可用 Agent";
+            select.appendChild(empty);
+        }
+        agentList.forEach(function (agent) {
+            var option = document.createElement("option");
+            option.value = String(agent.id);
+            option.textContent = agent.name;
+            select.appendChild(option);
+        });
+        if (selectedAgent) select.value = String(selectedAgent.id);
+        select.title = selectedAgent ? (selectedAgent.description || selectedAgent.name) : "选择对话 Agent";
+        select.disabled = streaming || agentBusy || !agentList.length;
+        $("avatarSend").disabled = streaming || agentBusy;
+        renderAgentMenu(message);
+    }
+
+    function closeAgentMenu() {
+        var menu = $("avatarAgentMenu"), trigger = $("avatarAgentTrigger");
+        if (menu) menu.hidden = true;
+        if (trigger) trigger.setAttribute("aria-expanded", "false");
+    }
+
+    function renderAgentMenu(message) {
+        var menu = $("avatarAgentMenu"), trigger = $("avatarAgentTrigger");
+        if (!menu || !trigger) return;
+        trigger.disabled = streaming || agentBusy || !agentList.length;
+        $("avatarAgentCurrent").textContent = selectedAgent ? selectedAgent.name : (message || "选择 Agent");
+        trigger.title = selectedAgent ? (selectedAgent.description || selectedAgent.name) : (message || "选择 Agent");
+        if (trigger.disabled) closeAgentMenu();
+        menu.replaceChildren();
+        agentList.forEach(function (agent) {
+            var active = !!selectedAgent && Number(selectedAgent.id) === Number(agent.id);
+            var option = document.createElement("button");
+            option.type = "button";
+            option.className = "avatar-agent-option" + (active ? " is-selected" : "");
+            option.setAttribute("role", "option");
+            option.setAttribute("aria-selected", active ? "true" : "false");
+            option.tabIndex = -1;
+            var icon = document.createElement("span");
+            icon.className = "avatar-agent-option-icon";
+            icon.innerHTML = '<i class="fas fa-robot" aria-hidden="true"></i>';
+            var info = document.createElement("span");
+            info.className = "avatar-agent-option-info";
+            var name = document.createElement("strong");
+            name.textContent = agent.name;
+            var description = document.createElement("span");
+            description.textContent = agent.description || "切换到此 Agent 对话";
+            info.appendChild(name);
+            info.appendChild(description);
+            option.appendChild(icon);
+            option.appendChild(info);
+            var check = document.createElement("span");
+            check.className = "avatar-agent-option-check";
+            check.innerHTML = active ? '<i class="fas fa-check" aria-hidden="true"></i>' : "";
+            option.appendChild(check);
+            option.addEventListener("click", function () {
+                closeAgentMenu();
+                trigger.focus();
+                if (!active) selectAgent(agent.id);
+            });
+            menu.appendChild(option);
+        });
+    }
+
+    function openAgentMenu(focusOption) {
+        var trigger = $("avatarAgentTrigger"), menu = $("avatarAgentMenu");
+        if (!trigger || trigger.disabled) return;
+        menu.hidden = false;
+        trigger.setAttribute("aria-expanded", "true");
+        if (focusOption) {
+            var option = menu.querySelector('[aria-selected="true"]') || menu.querySelector('[role="option"]');
+            if (option) option.focus();
+        }
+    }
+
+    async function agentRequest(url, options) {
+        var response = await fetch(url, Object.assign({ credentials: "same-origin" }, options));
+        if (response.status === 401) {
+            location.href = "/auth/login";
+            throw new Error("请先登录");
+        }
+        var data = await response.json();
+        if (!response.ok || data.ok === false) throw new Error(data.detail || data.error || "Agent 操作失败");
+        return data;
+    }
+
+    async function loadAgents() {
+        agentBusy = true;
+        renderAgentSelect("加载中…");
+        var errorMessage = "";
+        try {
+            var data = await agentRequest("/api/assistants");
+            agentList = data.list || [];
+            selectedAgent = data.selected && data.selected.id ? data.selected : null;
+            if (selectedAgent) {
+                assistantName = selectedAgent.name;
+                $("avatarAssistant").textContent = assistantName + " · 数字人";
+            }
+        } catch (err) {
+            errorMessage = "加载失败，请刷新重试";
+        } finally {
+            agentBusy = false;
+            renderAgentSelect(errorMessage);
+        }
+    }
+
+    async function selectAgent(id) {
+        if (streaming || agentBusy) { renderAgentSelect(); return; }
+        agentBusy = true;
+        renderAgentSelect();
+        try {
+            var data = await agentRequest("/api/assistants/select", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Xsrftoken": xsrfToken() },
+                body: JSON.stringify({ employee_id: Number(id) })
+            });
+            selectedAgent = data.selected && data.selected.id ? data.selected : null;
+            assistantName = selectedAgent ? selectedAgent.name : "数字助理";
+            $("avatarAssistant").textContent = assistantName + " · 数字人";
+        } catch (err) {
+            appendCaption("系统", "切换 Agent 失败：" + err.message, "is-error");
+        } finally {
+            agentBusy = false;
+            renderAgentSelect();
+        }
+    }
+
+    function bindAgentSelect() {
+        var select = $("avatarAgentSelect");
+        if (!select) return;
+        select.addEventListener("change", function () { selectAgent(select.value); });
+        var trigger = $("avatarAgentTrigger"), menu = $("avatarAgentMenu"), picker = $("avatarAgentPicker");
+        if (trigger && menu) {
+            trigger.addEventListener("click", function () {
+                if (menu.hidden) openAgentMenu(false); else closeAgentMenu();
+            });
+            trigger.addEventListener("keydown", function (event) {
+                if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                    event.preventDefault(); openAgentMenu(true);
+                }
+            });
+            menu.addEventListener("keydown", function (event) {
+                var options = Array.from(menu.querySelectorAll('[role="option"]'));
+                var index = options.indexOf(document.activeElement);
+                var next = index;
+                if (event.key === "ArrowDown") next = (index + 1) % options.length;
+                else if (event.key === "ArrowUp") next = (index - 1 + options.length) % options.length;
+                else if (event.key === "Home") next = 0;
+                else if (event.key === "End") next = options.length - 1;
+                else return;
+                event.preventDefault();
+                if (options[next]) options[next].focus();
+            });
+            document.addEventListener("click", function (event) {
+                if (!picker.contains(event.target)) closeAgentMenu();
+            });
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape" && !menu.hidden) {
+                    closeAgentMenu(); trigger.focus();
+                } else if (event.key === "Tab") closeAgentMenu();
+            });
+        }
+        loadAgents();
     }
 
     // ---------- 对话（复用 /api/chat SSE 契约） ----------
     var captionEl = null;
-    var reasonEl = null;   // 推理流合并到同一行，避免每个增量碎片刷一行
+    var processPanel = null;
+    var answerText = "";
+    var assistantName = "华小竹";
+
+    function ensureProcessPanel() {
+        if (processPanel) return processPanel;
+        clearCaptionEmpty();
+        var drawer = document.createElement("details");
+        drawer.className = "avatar-process";
+        drawer.open = !gotDelta;
+        var summary = document.createElement("summary");
+        var body = document.createElement("div");
+        body.className = "avatar-process-body";
+        drawer.appendChild(summary);
+        drawer.appendChild(body);
+        // Late tool events still belong to this answer's process drawer.
+        if (captionEl && captionEl.parentNode) {
+            $("captionBody").insertBefore(drawer, captionEl.parentNode);
+        } else {
+            $("captionBody").appendChild(drawer);
+        }
+        processPanel = { drawer: drawer, summary: summary, body: body,
+            reason: null, tools: 0, finished: gotDelta };
+        updateProcessSummary();
+        return processPanel;
+    }
+
+    function updateProcessSummary() {
+        if (!processPanel) return;
+        var parts = [processPanel.finished ? "执行过程" : "正在思考 / 调用工具"];
+        if (processPanel.reason) parts.push("思考记录");
+        if (processPanel.tools) parts.push(processPanel.tools + " 次工具调用");
+        processPanel.summary.textContent = parts.join(" · ");
+    }
+
+    function appendProcessItem(label, text, cls) {
+        var panel = ensureProcessPanel();
+        var item = document.createElement("div");
+        item.className = "avatar-process-item " + cls;
+        var heading = document.createElement("b");
+        heading.textContent = label;
+        var content = document.createElement("div");
+        content.className = "avatar-process-text";
+        content.textContent = text;
+        item.appendChild(heading);
+        item.appendChild(content);
+        panel.body.appendChild(item);
+        return content;
+    }
+
+    function finishProcess() {
+        // Collapse once, so users can reopen it while the answer is streaming.
+        if (processPanel && !processPanel.finished) {
+            processPanel.finished = true;
+            processPanel.drawer.open = false;
+            updateProcessSummary();
+        }
+        thinking = false;
+    }
 
     // SSE 事件 data 形态兼容：旧纯串/新对象（{text}/{message}/{name}）统一抽成可读串
     function frameText(data, key) {
@@ -650,42 +1110,61 @@
         if (event === "notice") {
             appendCaption("系统", frameText(data), "");
         } else if (event === "tool") {
-            appendCaption("工具", frameText(data, "name"), "");
+            var panel = ensureProcessPanel();
+            var args = data && typeof data === "object" ? data.arguments : null;
+            var detail = args == null ? "" : (typeof args === "string" ? args : JSON.stringify(args, null, 2));
+            appendProcessItem("工具：" + frameText(data, "name"), detail, "is-tool");
+            panel.tools += 1;
+            updateProcessSummary();
+            scrollCaptionToLatest();
         } else if (event === "reasoning") {
-            if (!reasonEl || !reasonEl.parentNode) reasonEl = appendCaption("思考", "", "");
-            reasonEl.textContent += frameText(data);
-            $("captionBody").scrollTop = $("captionBody").scrollHeight;
-            thinking = true;
+            var process = ensureProcessPanel();
+            if (!process.reason) process.reason = appendProcessItem("思考过程", "", "is-reasoning");
+            process.reason.textContent += frameText(data);
+            updateProcessSummary();
+            scrollCaptionToLatest();
+            thinking = !process.finished;
         } else if (event === "assistant") {
-            reasonEl = null;
             var nm = (data && typeof data === "object" && data.name) ? data.name : "数字助理";
+            assistantName = nm;
+            if (data && data.id) {
+                selectedAgent = data;
+                renderAgentSelect();
+            }
             $("avatarAssistant").textContent = nm + " · 数字人";
-            thinking = false;
         } else if (event === "delta") {
-            reasonEl = null;
-            var text = typeof data === "string" ? data : (data && data.text != null ? String(data.text) : String(data));
+            finishProcess();
+            var text = frameText(data);
             gotDelta = true;
-            if (!captionEl || !captionEl.parentNode) captionEl = appendCaption("助手", "", "is-assistant");
-            captionEl.textContent += text;
-            $("captionBody").scrollTop = $("captionBody").scrollHeight;
+            if (!captionEl || !captionEl.parentNode) captionEl = appendCaption(assistantName, "", "is-assistant");
+            answerText += text;
+            captionEl.innerHTML = renderMarkdown(answerText);
+            scrollCaptionToLatest();
             mouthPulse = 1;               // 文字节奏兜底驱动口型（TTS 关闭时也张嘴）
             ttsFeed(text);                // 语音：按句排队朗读
         } else if (event === "error") {
-            thinking = false;
+            finishProcess();
             appendCaption("错误", frameText(data, "message"), "is-error");
         } else if (event === "done") {
-            thinking = false;
+            finishProcess();
             captionEl = null;
-            reasonEl = null;
         }
     }
 
     function sendMessage(text) {
-        if (streaming) return;
+        if (streaming || agentBusy) return;
+        ttsStopAll();
         streaming = true;
+        finishProcess();
+        processPanel = null;
         gotDelta = false;
-        captionEl = appendCaption("我", text, "is-user");
+        answerText = "";
+        captionEl = null;
+        renderPlaybackControls();
+        appendCaption("我", text, "is-user");
+        thinking = true;
         $("avatarSend").disabled = true;
+        renderAgentSelect();
 
         // /api/chat 基线契约：JSON 请求体（与 chat.js 同口径），form 编码会被 400 拒收
         fetch("/api/chat", {
@@ -694,7 +1173,7 @@
                 "Content-Type": "application/json",
                 "X-Xsrftoken": xsrfToken()
             },
-            body: JSON.stringify({ message: text, session_id: SESSION_ID }),
+            body: JSON.stringify({ message: text, session_id: SESSION_ID, employee_id: selectedAgent ? selectedAgent.id : null }),
             credentials: "same-origin"
         }).then(function (resp) {
             if (resp.status === 401) { location.href = "/auth/login"; return null; }
@@ -712,7 +1191,12 @@
             var reader = resp.body.getReader(), td = new TextDecoder(), bufStr = "";
             function step() {
                 return reader.read().then(function (r) {
-                    if (r.done) return;
+                    if (r.done) {
+                        bufStr += td.decode();
+                        var tail = parseSseBlock(bufStr);
+                        if (tail) handleFrame(tail);
+                        return;
+                    }
                     bufStr += td.decode(r.value, { stream: true });
                     var blocks = bufStr.split("\n\n");
                     bufStr = blocks.pop();
@@ -727,16 +1211,20 @@
         }).catch(function (err) {
             appendCaption("错误", String(err), "is-error");
         }).then(function () {
-            if (!gotDelta) captionEl = null;
-            ttsFlush();
-            $("avatarInput").focus();
+            finishProcess();
+            captionEl = null;
             streaming = false;
+            ttsFlush();
+            renderPlaybackControls();
+            $("avatarInput").focus();
             $("avatarSend").disabled = false;
+            renderAgentSelect();
         });
     }
 
     // ---------- 事件绑定 ----------
     function bindEvents() {
+        bindCaptionScroll();
         $("avatarSend").addEventListener("click", function () {
             var text = $("avatarInput").value.trim();
             if (!text) { $("avatarInput").focus(); return; }
@@ -749,7 +1237,9 @@
                 $("avatarSend").click();
             }
         });
-        bindTtsToggle();
+        bindAgentSelect();
+        bindPlaybackControls();
+        pickVoice();
         var switcher = $("avatarSwitcher");
         if (switcher) {
             switcher.addEventListener("click", function (e) {

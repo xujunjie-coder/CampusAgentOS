@@ -1099,21 +1099,57 @@
     background: #fff5f6;
 }
 
-/* @音乐 点歌卡片 */
-.chat-music-loading { color: #64748b; font-size: 12.5px; }
-.chat-music-item {
-    border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 12px; margin: 6px 0;
-    background: #ffffff;
+/* @音乐：场景曲库与统一播放器 */
+.chat-music-bubble { width: min(620px, 100%); box-sizing: border-box; padding: 22px !important; }
+.chat-music { min-width: 0; color: #25364b; }
+.music-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.music-eyebrow { color: #708176; font-size: 10px; letter-spacing: 1.8px; font-weight: 700; }
+.music-top h3 { margin: 5px 0 0; font-size: 20px; line-height: 1.5; color: #203c34; }
+.music-local { flex-shrink: 0; background: #edf5ee; color: #4a6c56; font-size: 11px; border-radius: 6px; padding: 4px 8px; }
+.music-scenes { display: flex; flex-wrap: wrap; gap: 7px; margin: 18px 0 12px; }
+.chat-music button { cursor: pointer; font: inherit; }
+.music-scenes button, .music-controls button, .music-search button { border: 1px solid #dce5e0; border-radius: 8px; background: #fff; color: #435a4d; padding: 6px 10px; font-size: 12px; }
+.music-scenes button[aria-pressed="true"] { background: #294e3e; border-color: #294e3e; color: #fff; }
+.chat-music button:hover { border-color: #668d79; }
+.chat-music button:focus-visible, .chat-music input:focus-visible, .chat-music select:focus-visible { outline: 2px solid #638e77; outline-offset: 3px; }
+.chat-music button:disabled, .chat-music select:disabled { opacity: .45; cursor: default; }
+.music-search { display: flex; gap: 8px; margin-bottom: 16px; }
+.music-search input { flex: 1; min-width: 0; border: 1px solid #dce5e0; background: #fbfcfb; border-radius: 8px; padding: 8px 11px; color: #30473a; font: inherit; font-size: 12px; }
+.music-hero { display: flex; align-items: center; gap: 17px; padding: 18px; border-radius: 12px; background: linear-gradient(115deg, #eaf1e8, #f6f4ea); }
+.music-disc { width: 64px; height: 64px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: repeating-radial-gradient(circle, #2b493e 0, #2b493e 2px, #39594b 3px, #2b493e 4px); color: #e8e5ca; font-size: 24px; border: 4px solid #d6dfd2; }
+.music-info { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.music-cover { width: 72px; height: 72px; object-fit: cover; border-radius: 9px; flex-shrink: 0; }
+.music-cover[hidden], .music-disc[hidden] { display: none; }
+.music-source { display: block; font-size: 11px; color: #647567; margin: 0 0 10px; }
+.music-source select { border: 1px solid #dce5e0; border-radius: 6px; background: #fff; padding: 4px; color: #435a4d; }
+.music-attribution { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; }
+.music-attribution a { color: #35634c; text-decoration: underline; text-underline-offset: 3px; }
+.music-title { font-size: 18px; overflow-wrap: anywhere; }
+.music-meta { color: #66786c; font-size: 11px; }
+.music-audio { display: block; width: 100%; height: 38px; margin: 14px 0 10px; }
+.music-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.music-controls button:nth-child(2) { background: #294e3e; color: #fff; min-width: 54px; }
+.music-timer { margin-left: auto; font-size: 11px; color: #647567; }
+.music-timer select { border: 1px solid #dce5e0; background: #fff; border-radius: 6px; padding: 5px 2px; color: #435a4d; }
+.music-status { min-height: 18px; color: #6d7a70; font-size: 11px; margin: 12px 0; }
+.music-list { display: grid; gap: 4px; }
+.music-track { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; background: transparent; border: 1px solid transparent; border-radius: 9px; padding: 10px 9px; color: #34473d; }
+.music-track.is-selected { background: #eef4ee; border-color: #d4e3d6; }
+.music-track-number { font-size: 11px; color: #89958c; font-variant-numeric: tabular-nums; }
+.music-track-detail { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.music-track-detail b { font-size: 13px; font-weight: 600; }
+.music-track-detail small { color: #7c897f; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.music-duration { font-size: 11px; color: #7c897f; }
+.music-track-state { min-width: 36px; color: #53765c; font-size: 11px; text-align: right; }
+.music-note { font-size: 10px; color: #8a938c; border-top: 1px solid #eef1ed; padding-top: 12px; margin: 14px 0 0; line-height: 1.7; }
+@media (max-width: 720px) {
+    .chat-music-bubble { padding: 14px !important; }
+    .music-top { flex-wrap: wrap; gap: 5px; }
+    .music-top h3 { font-size: 18px; }
+    .music-timer { margin-left: 0; }
+    .music-hero { padding: 13px; gap: 12px; }
+    .music-disc { width: 48px; height: 48px; }
 }
-.chat-music-item.is-main { border-color: #bfd4f2; background: linear-gradient(135deg, #eef3fb, #ffffff); }
-.chat-music-head { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #1e293b; font-weight: 500; }
-.chat-music-head i { color: var(--cwnu-navy); }
-.chat-music-artist { color: #64748b; font-size: 12px; font-weight: 400; }
-.chat-music-now {
-    margin-left: auto; font-size: 11px; color: #0d9488; background: #ccfbf1;
-    padding: 2px 8px; border-radius: 10px; font-weight: 600;
-}
-.chat-music-audio { width: 100%; margin-top: 6px; height: 36px; }
 
 /* 响应式适配 */
 @media (max-width: 960px) {

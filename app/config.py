@@ -80,6 +80,7 @@ class Settings:
     model_base_url: str
     model_api_key: str
     model_id: str
+    jamendo_client_id: str
     # 成员 E：定时任务 + 消息通知（凭据全部可选，缺失时通知显式降级，不静默失败）
     scheduler_enabled: bool
     smtp_host: str
@@ -253,6 +254,7 @@ def _read(strict: bool) -> Settings:
         model_base_url=_str("BASE_URL", ""),
         model_api_key=_str("API_KEY", ""),
         model_id=_str("MODEL_ID", ""),
+        jamendo_client_id=_str("JAMENDO_CLIENT_ID", ""),
         # ---- 定时任务与消息通知（成员 E）：均为非必填，缺失只影响通知渠道可用性 ----
         scheduler_enabled=_bool("SCHEDULER_ENABLED", True),
         smtp_host=_str("SMTP_HOST", ""),
@@ -304,6 +306,7 @@ def _publish(settings: Settings) -> None:
         "MODEL_BASE_URL": settings.model_base_url,
         "MODEL_API_KEY": settings.model_api_key,
         "MODEL_ID": settings.model_id,
+        "JAMENDO_CLIENT_ID": settings.jamendo_client_id,
         "SCHEDULER_ENABLED": settings.scheduler_enabled,
         "SMTP_HOST": settings.smtp_host,
         "SMTP_PORT": settings.smtp_port,
