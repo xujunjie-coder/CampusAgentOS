@@ -1,8 +1,20 @@
-{# 工作台（/admin）：任务3框架首页，只读概览 + 模块快捷入口 #}
+{# 工作台（/admin）：概览卡片 + 最近注册 + 系统信息 + 常用管理入口 #}
 {% extends "base.html" %}
 
 {% block admin_content %}
-<!-- 指标卡片：layui 栅格 -->
+<!-- 欢迎概览条 -->
+<div class="admin-welcome-banner">
+    <div>
+        <h2 class="admin-welcome-title">欢迎回来，{{ username }}</h2>
+        <p class="admin-welcome-sub">当前以「{{ role }}」身份登录智慧校园管理台，可在此统筹信源采集、知识库入库、数字员工编排与运维监控。</p>
+    </div>
+    <div class="admin-welcome-actions">
+        <a class="layui-btn layui-btn-primary layui-btn-sm" href="/admin/dashboard"><i class="fas fa-tv"></i> 数智大屏</a>
+        <a class="layui-btn layui-btn-sm" href="/" target="_blank"><i class="fas fa-comments"></i> 前台对话大厅</a>
+    </div>
+</div>
+
+<!-- 核心指标卡片 -->
 <div class="layui-row layui-col-space15 admin-stats">
     <div class="layui-col-md3 layui-col-sm6 layui-col-xs12">
         <div class="admin-stat is-blue">
@@ -42,7 +54,7 @@
     </div>
 </div>
 
-<div class="layui-row layui-col-space15">
+<div class="layui-row layui-col-space15" style="margin-top:4px;">
     <!-- 最近注册 -->
     <div class="layui-col-md8">
         <div class="layui-card admin-card">
@@ -51,30 +63,32 @@
                 <a class="admin-card-more" href="/admin/users">进入用户管理 <i class="fas fa-angle-right"></i></a>
             </div>
             <div class="layui-card-body">
-                <table class="layui-table" lay-size="sm">
-                    <thead>
-                        <tr><th>ID</th><th>用户名</th><th>角色</th><th>创建时间</th></tr>
-                    </thead>
-                    <tbody>
-                        {% for u in recent_users %}
-                        <tr>
-                            <td>{{ u["id"] }}</td>
-                            <td>{{ u["username"] }}</td>
-                            <td>
-                                {% if u["role"] == "admin" %}
-                                <span class="layui-bg-orange admin-tag">admin</span>
-                                {% else %}
-                                <span class="layui-bg-blue admin-tag">user</span>
-                                {% end %}
-                            </td>
-                            <td>{{ u["created_at"] }}</td>
-                        </tr>
-                        {% end %}
-                        {% if not recent_users %}
-                        <tr><td colspan="4" class="admin-empty">暂无用户数据</td></tr>
-                        {% end %}
-                    </tbody>
-                </table>
+                <div class="admin-table-wrap">
+                    <table class="layui-table" lay-size="sm">
+                        <thead>
+                            <tr><th>ID</th><th>用户名</th><th>角色</th><th>创建时间</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for u in recent_users %}
+                            <tr>
+                                <td>#{{ u["id"] }}</td>
+                                <td><b>{{ u["username"] }}</b></td>
+                                <td>
+                                    {% if u["role"] == "admin" %}
+                                    <span class="layui-bg-orange admin-tag">admin</span>
+                                    {% else %}
+                                    <span class="layui-bg-blue admin-tag">user</span>
+                                    {% end %}
+                                </td>
+                                <td>{{ u["created_at"] }}</td>
+                            </tr>
+                            {% end %}
+                            {% if not recent_users %}
+                            <tr><td colspan="4" class="admin-empty">暂无用户数据</td></tr>
+                            {% end %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -87,33 +101,48 @@
                 <ul class="admin-desc">
                     <li><span>当前账号</span><b>{{ username }}</b></li>
                     <li><span>登录角色</span><b>{{ role }}</b></li>
-                    <li><span>后端</span><b>Tornado 6.6</b></li>
-                    <li><span>前端组件</span><b>layui 2.13.9</b></li>
-                    <li><span>数据库</span><b>SQLite（users / messages）</b></li>
+                    <li><span>Web 框架</span><b>Tornado 6.6</b></li>
+                    <li><span>智能体引擎</span><b>Agentica + MCP</b></li>
+                    <li><span>存储架构</span><b>SQLite / MySQL 双驱</b></li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 模块快捷入口 -->
-<div class="layui-card admin-card">
-    <div class="layui-card-header"><i class="fas fa-grip-horizontal"></i> 管理模块</div>
+<!-- 常用管理模块 -->
+<div class="layui-card admin-card" style="margin-top:15px;">
+    <div class="layui-card-header"><i class="fas fa-th-large"></i> 常用管理模块</div>
     <div class="layui-card-body admin-entries">
         <a class="admin-entry" href="/admin/users">
             <i class="fas fa-users"></i>
             <span class="admin-entry-name">用户管理</span>
-            <span class="admin-entry-desc">列表 / 搜索 / 增删改（任务4）</span>
+            <span class="admin-entry-desc">账号检索、角色分配、人脸代录与会话管理</span>
         </a>
         <a class="admin-entry" href="/admin/roles">
             <i class="fas fa-user-shield"></i>
             <span class="admin-entry-name">角色管理</span>
-            <span class="admin-entry-desc">admin / user 角色维护（任务4）</span>
+            <span class="admin-entry-desc">精细化后台菜单权限与角色默认入口配置</span>
         </a>
         <a class="admin-entry" href="/admin/menus">
-            <i class="fas fa-bars"></i>
+            <i class="fas fa-sitemap"></i>
             <span class="admin-entry-name">菜单管理</span>
-            <span class="admin-entry-desc">后台导航菜单维护（任务4）</span>
+            <span class="admin-entry-desc">树形目录结构维护与拖拽重新排序</span>
+        </a>
+        <a class="admin-entry" href="/admin/knowledge">
+            <i class="fas fa-book-open"></i>
+            <span class="admin-entry-name">知识仓库</span>
+            <span class="admin-entry-desc">TXT / Markdown / Word 文档分块向量入库</span>
+        </a>
+        <a class="admin-entry" href="/admin/employees">
+            <i class="fas fa-robot"></i>
+            <span class="admin-entry-name">数字员工</span>
+            <span class="admin-entry-desc">配置提示词、工具链路、知识库与工作空间</span>
+        </a>
+        <a class="admin-entry" href="/collect">
+            <i class="fas fa-satellite-dish"></i>
+            <span class="admin-entry-name">采集中心</span>
+            <span class="admin-entry-desc">多信源关键词批量采集与智能正文抽取</span>
         </a>
     </div>
 </div>

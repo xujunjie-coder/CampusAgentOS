@@ -18,29 +18,31 @@
 <!-- 列表区 -->
 <div class="layui-card admin-card">
     <div class="layui-card-body admin-list">
-        <table class="layui-table" lay-size="sm">
-            <colgroup>
-                <col width="120">
-                <col width="150">
-                <col>
-                <col width="130">
-                <col width="110">
-                <col width="280">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th>角色编码</th>
-                    <th>角色名称</th>
-                    <th>权限说明</th>
-                    <th>默认入口</th>
-                    <th>类型</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="roleBody">
-                <tr><td colspan="6" class="admin-empty">加载中…</td></tr>
-            </tbody>
-        </table>
+        <div class="admin-table-wrap">
+            <table class="layui-table" lay-size="sm">
+                <colgroup>
+                    <col width="120">
+                    <col width="150">
+                    <col>
+                    <col width="130">
+                    <col width="110">
+                    <col width="280">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>角色编码</th>
+                        <th>角色名称</th>
+                        <th>权限说明</th>
+                        <th>默认入口</th>
+                        <th>类型</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="roleBody">
+                    <tr><td colspan="6" class="admin-empty">加载中…</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

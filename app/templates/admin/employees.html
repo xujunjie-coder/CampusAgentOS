@@ -1,9 +1,8 @@
-{# 数字员工管理（/admin/employees）：任务9 —— agentica 智能体配置入库（instructions/tools/workspace），增删改查+启停+设默认；橱窗一行 4 列、12 条/页，卡片/MD编辑器/文件浏览由 employees.js 走 /api/admin/employees 渲染 #}
+{# 数字员工管理（/admin/employees）：智能体配置入库（instructions / tools / workspace / RAG），橱窗一行 4 列、12 条/页 #}
 {% extends "base.html" %}
 
-{% block styles %}
-<link rel='stylesheet' href='/static/css/admin.css'>
-<link rel='stylesheet' href='/static/css/employees.css'>
+{% block admin_styles %}
+<link rel='stylesheet' href='/static/css/employees.css?v=20261119a'>
 {% end %}
 
 {% block admin_content %}
@@ -28,7 +27,7 @@
     <span class="admin-toolbar-count">共 <b id="empCount">0</b> 位数字员工</span>
 </div>
 
-<!-- 橱窗列表区：一行 4 列，卡片由 employees.js 渲染 -->
+<!-- 橱窗列表区：一行 4 列 -->
 <div class="emp-grid" id="empGrid">
     <div class="emp-grid-empty"><i class="fas fa-spinner fa-spin"></i> 加载中…</div>
 </div>

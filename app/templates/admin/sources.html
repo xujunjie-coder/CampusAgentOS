@@ -18,29 +18,31 @@
 <!-- 列表区 -->
 <div class="layui-card admin-card">
     <div class="layui-card-body admin-list">
-        <table class="layui-table" lay-size="sm">
-            <colgroup>
-                <col width="160">
-                <col>
-                <col width="110">
-                <col width="200">
-                <col width="90">
-                <col width="300">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th>信源名称</th>
-                    <th>URL 规格</th>
-                    <th>请求头</th>
-                    <th>简介</th>
-                    <th>状态</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="sourceBody">
-                <tr><td colspan="6" class="admin-empty">加载中…</td></tr>
-            </tbody>
-        </table>
+        <div class="admin-table-wrap">
+            <table class="layui-table" lay-size="sm">
+                <colgroup>
+                    <col width="160">
+                    <col>
+                    <col width="110">
+                    <col width="200">
+                    <col width="90">
+                    <col width="300">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>信源名称</th>
+                        <th>URL 规格</th>
+                        <th>请求头</th>
+                        <th>简介</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="sourceBody">
+                    <tr><td colspan="6" class="admin-empty">加载中…</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

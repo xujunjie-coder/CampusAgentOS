@@ -6,10 +6,8 @@
    仅超级管理员可访问（后端 role_code == admin 强校验）；表单统一用 layui，密码不落库、只写 .env。 #}
 {% extends "base.html" %}
 
-{% block styles %}
-<link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
-<link rel='stylesheet' href='/static/css/admin.css'>
-<link rel='stylesheet' href='/static/css/console.css?v=20261111b'>
+{% block admin_styles %}
+<link rel='stylesheet' href='/static/css/console.css?v=20261119a'>
 {% end %}
 
 {% block admin_content %}
@@ -17,7 +15,7 @@
     <div class="row g-3">
         <!-- 系统标识 -->
         <div class="col-xl-6">
-            <div class="ck-panel">
+            <div class="ck-panel h-100">
                 <div class="ck-panel-head">
                     <i class="fas fa-fingerprint"></i>
                     <span class="ck-panel-title">系统标识</span>
@@ -103,7 +101,7 @@
 
         <!-- 数据库 -->
         <div class="col-xl-6">
-            <div class="ck-panel">
+            <div class="ck-panel h-100">
                 <div class="ck-panel-head">
                     <i class="fas fa-database"></i>
                     <span class="ck-panel-title">数据库连接</span>
@@ -189,7 +187,7 @@
 
         <!-- 语音与人脸 -->
         <div class="col-xl-6">
-            <div class="ck-panel">
+            <div class="ck-panel h-100">
                 <div class="ck-panel-head">
                     <i class="fas fa-microphone"></i>
                     <span class="ck-panel-title">语音与人脸模型</span>
@@ -256,7 +254,7 @@
 
         <!-- 安全参数 -->
         <div class="col-xl-6">
-            <div class="ck-panel">
+            <div class="ck-panel h-100">
                 <div class="ck-panel-head">
                     <i class="fas fa-shield-alt"></i>
                     <span class="ck-panel-title">安全与会话</span>

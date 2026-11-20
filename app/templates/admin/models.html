@@ -1,9 +1,8 @@
-{# 模型引擎管理（/admin/models）：任务8 —— OpenAI 范式大模型接入的增删改查 + 对话测试（含思维开关）；任务8.1 —— token 统计图形化 + 卡片反馈；橱窗一行 2 列、4 条/页，卡片由 models.js 走 /api/admin/models 渲染 #}
+{# 模型引擎管理（/admin/models）：OpenAI 范式接入 + Token 统计，橱窗一行 2 列、4 条/页 #}
 {% extends "base.html" %}
 
-{% block styles %}
-<link rel='stylesheet' href='/static/css/admin.css'>
-<link rel='stylesheet' href='/static/css/models.css'>
+{% block admin_styles %}
+<link rel='stylesheet' href='/static/css/models.css?v=20261119a'>
 {% end %}
 
 {% block admin_content %}
@@ -25,11 +24,11 @@
     <button type="button" class="layui-btn layui-btn-primary" id="modelReset"><i class="fas fa-undo"></i> 重置</button>
     <span class="admin-toolbar-split"></span>
     <button type="button" class="layui-btn layui-btn-normal" id="modelAdd"><i class="fas fa-plus"></i> 新增模型</button>
-    <button type="button" class="layui-btn layui-btn-primary" id="modelStats"><i class="fas fa-chart-column"></i> Token 统计</button>
+    <button type="button" class="layui-btn layui-btn-primary" id="modelStats"><i class="fas fa-chart-bar"></i> Token 统计</button>
     <span class="admin-toolbar-count">共 <b id="modelCount">0</b> 个模型</span>
 </div>
 
-<!-- 橱窗列表区：一行 2 列，卡片由 models.js 渲染 -->
+<!-- 橱窗列表区：一行 2 列 -->
 <div class="model-grid" id="modelGrid">
     <div class="model-grid-empty"><i class="fas fa-spinner fa-spin"></i> 加载中…</div>
 </div>

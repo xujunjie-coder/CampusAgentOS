@@ -3,10 +3,8 @@
    图表：ChartKit + ECharts，主题与后台亮色一致；每个分区可单独导出 PNG。 #}
 {% extends "base.html" %}
 
-{% block styles %}
-<link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
-<link rel='stylesheet' href='/static/css/admin.css'>
-<link rel='stylesheet' href='/static/css/console.css?v=20261111b'>
+{% block admin_styles %}
+<link rel='stylesheet' href='/static/css/console.css?v=20261119a'>
 {% end %}
 
 {% block admin_content %}
@@ -21,7 +19,7 @@
         </span>
         <button type="button" class="layui-btn layui-btn-primary" id="btnRefresh"><i class="fas fa-sync-alt"></i> 刷新</button>
         <label class="ck-live" style="cursor:pointer;gap:8px;">
-            <input type="checkbox" id="liveSwitch" style="accent-color:#2f6feb;">
+            <input type="checkbox" id="liveSwitch" style="accent-color:#003087;">
             <span>实时推送（15 秒）</span>
         </label>
         <span class="ck-live" id="liveFlag"><i></i><span id="liveText">轮询模式</span></span>

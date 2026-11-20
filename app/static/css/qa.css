@@ -203,6 +203,40 @@
 }
 .qa-toast.is-error { background: rgba(196, 18, 48, .94); }
 
+/* ---------- 克制动态与统计数字对齐 ---------- */
+@keyframes qaReveal {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.qa-report > * {
+    animation: qaReveal 220ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+.qa-metric {
+    font-variant-numeric: tabular-nums;
+    transition: transform 160ms var(--ease-out, ease), border-color 160ms var(--ease-out, ease), box-shadow 160ms var(--ease-out, ease);
+}
+.qa-metric:hover {
+    transform: translateY(-2px);
+    border-color: var(--cwnu-navy-border, #ccdcf5);
+    box-shadow: 0 6px 16px rgba(0, 48, 135, 0.06);
+}
+
+#qaAskBtn,
+.qa-quick-item,
+.qa-history-item,
+.qa-back {
+    transition: background-color 140ms var(--ease-out, ease), border-color 140ms var(--ease-out, ease), color 140ms var(--ease-out, ease), transform 140ms var(--ease-out, ease);
+}
+
+#qaAskBtn:active:not(:disabled),
+.qa-quick-item:active,
+.qa-history-item:active,
+.qa-back:active {
+    transform: scale(0.985);
+}
+
 @media (max-width: 900px) {
     .qa-layout { grid-template-columns: 1fr; }
     .qa-top-tip { display: none; }

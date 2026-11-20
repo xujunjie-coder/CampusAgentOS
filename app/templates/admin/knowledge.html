@@ -1,45 +1,132 @@
+{# 知识仓库（/admin/knowledge）：左栏文档向量入库 + 右栏已入库文档清单，保留完整表单提交契约 #}
 {% extends "base.html" %}
+
 {% block admin_content %}
-<div class="layui-card admin-card">
-    <div class="layui-card-header">文档向量入库</div>
-    <div class="layui-card-body">
-        <p>粘贴正文或上传文件（支持 TXT、Markdown、Word .docx / .doc，300 KB 以内）。未启用嵌入模型时使用本地词项向量。入库后在数字员工中填写文档编号。</p>
-        {% if error %}<p role="alert">{{ error }}</p>{% end %}
-        <form method="post" enctype="multipart/form-data" class="layui-form">
-            {% module xsrf_form_html() %}
-            <div class="layui-form-item"><input name="title" class="layui-input" maxlength="160" placeholder="文档标题"></div>
-            <div class="layui-form-item"><textarea name="content" class="layui-textarea" maxlength="40000" placeholder="文档正文"></textarea></div>
-            <div class="layui-form-item"><input type="file" name="document" accept=".txt,.md,.docx,.doc" id="doc-file-input"></div>
-            <button name="action" value="index" class="layui-btn">生成向量并入库</button>
-        </form>
+<div class="row g-3">
+    <!-- 左栏：文档向量入库 -->
+    <div class="col-xl-5">
+        <div class="layui-card admin-card h-100">
+            <div class="layui-card-header"><i class="fas fa-cloud-upload-alt"></i> 文档向量入库</div>
+            <div class="layui-card-body" style="padding:18px 20px;">
+                <p class="kb-desc">
+                    粘贴正文或上传文件（支持 TXT、Markdown、Word <code>.docx</code> / <code>.doc</code>，300 KB 以内）。
+                    未启用嵌入模型时将自动使用本地词项向量，入库后可在「数字员工」中关联对应文档编号。
+                </p>
+
+                {% if error %}
+                <div class="kb-alert" role="alert">
+                    <i class="fas fa-exclamation-circle" style="margin-top:3px;"></i>
+                    <span>{{ error }}</span>
+                </div>
+                {% end %}
+
+                <form method="post" enctype="multipart/form-data" class="layui-form">
+                    {% module xsrf_form_html() %}
+                    <div class="layui-form-item">
+                        <label class="kb-label" for="kbTitleInput">文档标题</label>
+                        <input type="text" id="kbTitleInput" name="title" class="layui-input" maxlength="160" placeholder="输入文档标题（上传文件可自动填充）">
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="kb-label">上传本地文档</label>
+                        <div class="kb-dropzone" id="kbDropzone">
+                            <i class="fas fa-file-alt"></i>
+                            <span class="kb-dropzone-name" id="kbFileName">点击或拖拽文件到此处上传</span>
+                            <span class="kb-dropzone-sub">支持 .txt / .md / .docx / .doc（≤ 300 KB）</span>
+                            <input type="file" name="document" accept=".txt,.md,.docx,.doc" id="doc-file-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="kb-label" for="kbContentInput">或直接粘贴文档正文</label>
+                        <textarea id="kbContentInput" name="content" class="layui-textarea" rows="7" maxlength="40000" placeholder="粘贴政策文本、学生手册或指南内容（最多 40,000 字）"></textarea>
+                    </div>
+
+                    <button type="submit" name="action" value="index" class="layui-btn layui-btn-fluid">
+                        <i class="fas fa-database"></i> 生成向量并入库
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右栏：已入库知识文档清单 -->
+    <div class="col-xl-7">
+        <div class="layui-card admin-card h-100">
+            <div class="layui-card-header">
+                <i class="fas fa-book"></i> 已入库知识文档
+                <span class="kb-count-pill">共 {{ len(documents) }} 篇</span>
+            </div>
+            <div class="layui-card-body admin-list">
+                <div class="admin-table-wrap">
+                    <table class="layui-table" lay-size="sm">
+                        <colgroup>
+                            <col width="88">
+                            <col>
+                            <col width="170">
+                            <col width="90">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>文档编号</th>
+                                <th>文档标题</th>
+                                <th>入库时间（UTC）</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in documents %}
+                            <tr>
+                                <td><span class="admin-tag layui-bg-blue">#{{ doc["id"] }}</span></td>
+                                <td><b>{{ doc["title"] }}</b></td>
+                                <td>{{ doc["created_at"] }}</td>
+                                <td>
+                                    <form method="post" style="display:inline;">
+                                        {% module xsrf_form_html() %}
+                                        <input type="hidden" name="doc_id" value="{{ doc['id'] }}">
+                                        <button type="submit" name="action" value="remove" class="layui-btn layui-btn-danger layui-btn-xs">
+                                            <i class="fas fa-trash-alt"></i> 删除
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% end %}
+                            {% if not documents %}
+                            <tr>
+                                <td colspan="4" class="admin-empty">
+                                    暂无知识文档，请在左侧上传文件或粘贴正文入库
+                                </td>
+                            </tr>
+                            {% end %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
 <script>
 (function () {
     var fileInput = document.getElementById('doc-file-input');
     var titleInput = document.querySelector('input[name="title"]');
-    if (fileInput && titleInput) {
+    var fileNameEl = document.getElementById('kbFileName');
+    if (fileInput) {
         fileInput.addEventListener('change', function () {
-            if (fileInput.files.length > 0 && !titleInput.value.trim()) {
-                // 去掉扩展名作为默认标题
-                var name = fileInput.files[0].name;
-                titleInput.value = name.replace(/\.[^.]+$/, '');
+            if (fileInput.files.length > 0) {
+                var f = fileInput.files[0];
+                if (fileNameEl) {
+                    var kb = (f.size / 1024).toFixed(1);
+                    fileNameEl.textContent = '已选择：' + f.name + '（' + kb + ' KB）';
+                }
+                if (titleInput && !titleInput.value.trim()) {
+                    titleInput.value = f.name.replace(/\.[^.]+$/, '');
+                }
+            } else if (fileNameEl) {
+                fileNameEl.textContent = '点击或拖拽文件到此处上传';
             }
         });
     }
 }());
 </script>
-<table class="layui-table">
-    <thead><tr><th>文档编号</th><th>标题</th><th>入库时间（UTC）</th><th>操作</th></tr></thead>
-    <tbody>
-    {% for doc in documents %}
-    <tr><td>{{ doc["id"] }}</td><td>{{ doc["title"] }}</td><td>{{ doc["created_at"] }}</td>
-        <td><form method="post">
-            {% module xsrf_form_html() %}
-            <input type="hidden" name="doc_id" value="{{ doc['id'] }}">
-            <button name="action" value="remove" class="layui-btn layui-btn-danger layui-btn-xs">删除</button>
-        </form></td></tr>
-    {% end %}
-    </tbody>
-</table>
 {% end %}

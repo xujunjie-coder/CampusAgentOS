@@ -1,15 +1,12 @@
-{# 定时任务管理（/admin/tasks）：成员 E —— 周期任务调度 / 自动归档 / 日志清理 / 结果通知。
-   框架壳（功能区 | 列表区 | 分页区）由本模板出，任务与执行流水的增删改查 / 手动触发 / 通知测试
-   由 static/js/tasks.js 走 /api/admin/tasks、/api/admin/task-logs、/api/admin/scheduler、/api/admin/notify/test 渲染 #}
+{# 定时任务管理（/admin/tasks）：周期任务调度 / 自动归档 / 日志清理 / 结果通知 #}
 {% extends "base.html" %}
 
-{% block styles %}
-<link rel='stylesheet' href='/static/css/admin.css'>
-<link rel='stylesheet' href='/static/css/tasks.css'>
+{% block admin_styles %}
+<link rel='stylesheet' href='/static/css/tasks.css?v=20261119a'>
 {% end %}
 
 {% block admin_content %}
-<!-- 调度器状态条：引擎、降级说明、通知渠道可用性，数据来自 scheduler_service.status() -->
+<!-- 调度器状态条 -->
 <div class="task-status" id="taskStatus"
      data-options="{{ json_encode({
          'task_types': task_types,
@@ -62,33 +59,35 @@
 <!-- 列表区 -->
 <div class="layui-card admin-card">
     <div class="layui-card-body admin-list">
-        <table class="layui-table" lay-size="sm">
-            <colgroup>
-                <col width="150">
-                <col width="100">
-                <col width="140">
-                <col width="150">
-                <col width="150">
-                <col width="90">
-                <col width="90">
-                <col width="230">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th>任务名称</th>
-                    <th>类型</th>
-                    <th>调度方式</th>
-                    <th>上次运行</th>
-                    <th>下次运行</th>
-                    <th>上次结果</th>
-                    <th>启停</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="taskBody">
-                <tr><td colspan="8" class="admin-empty">加载中…</td></tr>
-            </tbody>
-        </table>
+        <div class="admin-table-wrap">
+            <table class="layui-table" lay-size="sm">
+                <colgroup>
+                    <col width="150">
+                    <col width="100">
+                    <col width="140">
+                    <col width="150">
+                    <col width="150">
+                    <col width="90">
+                    <col width="90">
+                    <col width="230">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>任务名称</th>
+                        <th>类型</th>
+                        <th>调度方式</th>
+                        <th>上次运行</th>
+                        <th>下次运行</th>
+                        <th>上次结果</th>
+                        <th>启停</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="taskBody">
+                    <tr><td colspan="8" class="admin-empty">加载中…</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

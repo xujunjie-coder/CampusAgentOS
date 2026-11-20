@@ -8,15 +8,19 @@
         <div class="layui-input-prefix"><i class="fas fa-search"></i></div>
         <input type="text" id="whKeyword" placeholder="按标题 / 关键词 / AI摘要搜索" autocomplete="off" class="layui-input" lay-affix="clear">
     </div>
-    <select id="whSourceFilter" class="layui-select" lay-filter="whSource" style="width:150px;">
-        <option value="">全部信源</option>
-    </select>
-    <select id="whStatusFilter" class="layui-select" lay-filter="whStatus" style="width:130px;">
-        <option value="">全部状态</option>
-        <option value="done">深采成功</option>
-        <option value="failed">深采失败</option>
-        <option value="pending">未深采</option>
-    </select>
+    <div class="layui-input-inline" style="width:150px;">
+        <select id="whSourceFilter" class="layui-select" lay-filter="whSource">
+            <option value="">全部信源</option>
+        </select>
+    </div>
+    <div class="layui-input-inline" style="width:130px;">
+        <select id="whStatusFilter" class="layui-select" lay-filter="whStatus">
+            <option value="">全部状态</option>
+            <option value="done">深采成功</option>
+            <option value="failed">深采失败</option>
+            <option value="pending">未深采</option>
+        </select>
+    </div>
     <button type="button" class="layui-btn" id="whSearch"><i class="fas fa-search"></i> 搜索</button>
     <button type="button" class="layui-btn layui-btn-primary" id="whReset"><i class="fas fa-undo"></i> 重置</button>
     <span class="admin-toolbar-split"></span>
@@ -28,33 +32,35 @@
 <!-- 列表区 -->
 <div class="layui-card admin-card">
     <div class="layui-card-body admin-list">
-        <table class="layui-table" lay-size="sm">
-            <colgroup>
-                <col width="40">
-                <col>
-                <col width="130">
-                <col width="100">
-                <col width="90">
-                <col width="100">
-                <col width="150">
-                <col width="280">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th><input type="checkbox" id="whCheckAll" title="全选本页"></th>
-                    <th>标题</th>
-                    <th>信源</th>
-                    <th>关键词</th>
-                    <th>正文字数</th>
-                    <th>深采状态</th>
-                    <th>更新时间</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="whBody">
-                <tr><td colspan="8" class="admin-empty">加载中…</td></tr>
-            </tbody>
-        </table>
+        <div class="admin-table-wrap">
+            <table class="layui-table" lay-size="sm">
+                <colgroup>
+                    <col width="40">
+                    <col>
+                    <col width="130">
+                    <col width="100">
+                    <col width="90">
+                    <col width="100">
+                    <col width="150">
+                    <col width="280">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="whCheckAll" class="admin-check-all" title="全选本页"></th>
+                        <th>标题</th>
+                        <th>信源</th>
+                        <th>关键词</th>
+                        <th>正文字数</th>
+                        <th>深采状态</th>
+                        <th>更新时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="whBody">
+                    <tr><td colspan="8" class="admin-empty">加载中…</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

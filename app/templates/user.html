@@ -69,10 +69,12 @@
         <!-- 活跃会话 -->
         <section class="user-card user-wide">
             <div class="user-card-head"><i class="fas fa-shield-alt"></i> 我的活跃会话（多端登录自查）</div>
-            <table class="layui-table user-session-table">
-                <thead><tr><th>IP</th><th>设备 / 浏览器</th><th>登录时间</th><th>最近活动</th><th>过期时间</th></tr></thead>
-                <tbody id="sessionBody"><tr><td colspan="5">加载中…</td></tr></tbody>
-            </table>
+            <div class="user-table-wrap">
+                <table class="layui-table user-session-table">
+                    <thead><tr><th>IP</th><th>设备 / 浏览器</th><th>登录时间</th><th>最近活动</th><th>过期时间</th></tr></thead>
+                    <tbody id="sessionBody"><tr><td colspan="5">加载中…</td></tr></tbody>
+                </table>
+            </div>
         </section>
     </main>
 </div>
