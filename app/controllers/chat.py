@@ -106,6 +106,8 @@ class ChatHandler(BaseHandler):
                             await self.send_event("reasoning", {"text": event["text"]})
                         elif etype == "notice":
                             await self.send_event("notice", {"text": event["text"]})
+                        elif etype == "sources":
+                            await self.send_event("sources", {"items": event.get("items") or []})
                         elif etype == "done":
                             answer = event.get("answer", "")
                             if answer:

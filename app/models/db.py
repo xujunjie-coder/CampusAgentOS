@@ -683,28 +683,25 @@ def _seed_employee_menu(conn: sqlite3.Connection) -> None:
         (group_id,))
 
 def _seed_default_employee(conn: sqlite3.Connection) -> None:
-    """任务9：幂等预置数字员工——把 agent_service.py 硬编码的「旅行规划师」抽离入库。
+    """幂等预置默认校园数字员工「华师小助手」：
     仅当 digital_employees 表为空时种子，用户删掉后不会被反复回填。"""
     if conn.execute("SELECT COUNT(*) AS c FROM digital_employees").fetchone()["c"] > 0:
         return
     instructions = "\n\n".join([
-        "你是一个资深的旅行规划师，服务同一个用户。复杂的请求先用 builtin_todo_tool 拆解任务清单，再逐项完成。"
-        "先给出可执行的初步方案。只有缺少关键资料时才委派一个子任务，调用 task 时将 timeout 设为 25 秒。子任务超时或无结果时直接整理现有信息，注明待核实的内容。",
-        "每个智能体负责一个主题，独立完成任务，最后由你汇总结果。",
-        "查询目的地天气用 weather 工具。",
-        "主动记录用户出行偏好（如：喜欢的景点类型、不喜欢的景点类型、喜欢的美食类型、不喜欢的美食类型、"
-        "喜欢的交通方式、不喜欢的交通方式），下次规划直接复用记忆中的偏好。",
-        "输出用条理清晰的 Markdown 格式。",
-        "用中文回答。",
+        "你是西华师范大学智慧校园平台的官方综合智能助手「华师小助手」，服务全校师生。",
+        "解答校规校纪、教务选课、奖学金评定、华凤/北湖两校区通勤校车与校园生活等问题时，优先调用知识仓库与校园工具（campus_shuttle、campus_calendar、campus_gpa、campus_directory、warehouse），不编造具体政策与数据；遇到无法核实的细节提示「请以西华师范大学官网及职能部门最新公告为准」。",
+        "需要查询实时资讯或天气时按需调用对应工具，并合理利用长期记忆记住用户的校区（华凤/北湖）、学院与常用偏好。",
+        "输出使用条理清晰的 Markdown 格式，用中文回答。",
     ])
     conn.execute(
         "INSERT INTO digital_employees (name, description, avatar, instructions, link_files, tools, "
         "workspace_path, model_binding, rag_kb_ids, enabled, is_default, "
         "enable_long_term_memory, enable_experience_capture) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        ("旅行规划师", "来自数据瞭望的旅行规划助手，支持行程编排、预算测算、天气查询、景点美食筛选与偏好记忆。",
-         "fas fa-compass", instructions, "[]",
-         '["weather", "todo", "task", "memory"]', "workspace", "", "[]", 1, 1, 1, 1))
+        ("华师小助手", "西华师范大学智慧校园综合助手，覆盖校规政策、双校区校车日历、绩点测算与校内办事黄页。",
+         "fas fa-graduation-cap", instructions, "[]",
+         '["campus_shuttle", "campus_calendar", "campus_gpa", "campus_directory", "warehouse", "weather", "memory"]',
+         "workspace", "", "[]", 1, 1, 1, 1))
 
 def _seed_model_menu(conn: sqlite3.Connection) -> None:
     """任务8：幂等预置「模型服务 / 模型引擎」菜单。存量库 menus 已有数据，全量种子不会触发，

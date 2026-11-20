@@ -235,7 +235,8 @@
     // ---------- three.js 场景 ----------
     var scene, camera, renderer, gridHelper, ambientLight, keyLight;
     var MODE = "none";              // panda | vrm | procedural
-    var MODEL_CHOICE_KEY = "govcheck.avatar.model";
+    var MODEL_CHOICE_KEY = "campusagent.avatar.model";
+    var LEGACY_MODEL_CHOICE_KEY = "govcheck.avatar.model";
     var wantedModel = "cwnu-panda";
     var pandaAvatar = null;
     var vrmLoading = false;
@@ -293,23 +294,45 @@
             camera.updateProjectionMatrix();
             renderer.setSize(w, h);
         });
-        stage.addEventListener("mousemove", function (e) {
+        function updateStageDrag(clientX, clientY) {
             var r = stage.getBoundingClientRect();
-            pointerNX = ((e.clientX - r.left) / r.width - 0.5) * 2;
-            pointerNY = ((e.clientY - r.top) / r.height - 0.5) * 2;
+            pointerNX = ((clientX - r.left) / r.width - 0.5) * 2;
+            pointerNY = ((clientY - r.top) / r.height - 0.5) * 2;
             if (dragging && MODE === "panda" && pandaAvatar) {
-                var dx = e.clientX - dragLastX;
-                dragLastX = e.clientX;
+                var dx = clientX - dragLastX;
+                dragLastX = clientX;
                 pandaAvatar.addYaw(dx * 0.008);
             }
-        });
-        stage.addEventListener("mousedown", function (e) {
-            if (e.button === 0) {
+        }
+        function stopStageDrag() { dragging = false; }
+
+        if (window.PointerEvent) {
+            stage.addEventListener("pointermove", function (e) {
+                updateStageDrag(e.clientX, e.clientY);
+            });
+            stage.addEventListener("pointerdown", function (e) {
+                if (e.pointerType === "mouse" && e.button !== 0) return;
+                if (e.target && e.target.closest && e.target.closest(".avatar-stage-actions")) return;
                 dragging = true;
                 dragLastX = e.clientX;
-            }
-        });
-        window.addEventListener("mouseup", function () { dragging = false; });
+                if (stage.setPointerCapture) {
+                    try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+                }
+            });
+            window.addEventListener("pointerup", stopStageDrag);
+            window.addEventListener("pointercancel", stopStageDrag);
+        } else {
+            stage.addEventListener("mousemove", function (e) {
+                updateStageDrag(e.clientX, e.clientY);
+            });
+            stage.addEventListener("mousedown", function (e) {
+                if (e.button !== 0) return;
+                if (e.target && e.target.closest && e.target.closest(".avatar-stage-actions")) return;
+                dragging = true;
+                dragLastX = e.clientX;
+            });
+            window.addEventListener("mouseup", stopStageDrag);
+        }
         stage.addEventListener("dblclick", function () {
             if (MODE === "panda" && pandaAvatar) pandaAvatar.resetYaw();
         });
@@ -569,8 +592,10 @@
         var tag = $("avatarModelTag");
         if (!tag) return;
         tag.textContent = kind === "cwnu-panda"
-            ? "西华师范大学 · 华小竹（按住左键可旋转视角，双击复位）"
+            ? "西华师范大学 · 华小竹（拖拽旋转视角，双击复位）"
             : "虚拟主播 · VRM 实时驱动";
+        var bar = $("avatarGestureBar");
+        if (bar) bar.hidden = kind !== "cwnu-panda";
     }
 
     function renderSwitcherUI(kind) {
@@ -607,6 +632,7 @@
             pandaAvatar = window.buildCwnuPandaAvatar(THREE, renderer);
             scene.add(pandaAvatar.root);
         }
+        syncPandaPersona(selectedAgent);
         hideAllAvatars();
         applyLightingMode(true);
         pandaAvatar.root.visible = true;
@@ -773,6 +799,10 @@
             if (generation !== tts.generation) return;
             if (tts.paused) window.speechSynthesis.pause();
             renderPlaybackControls();
+        };
+        u.onboundary = function () {
+            if (generation !== tts.generation) return;
+            mouthPulse = Math.max(mouthPulse, 0.92);
         };
         u.onend = u.onerror = function () {
             if (generation !== tts.generation) return;
@@ -953,6 +983,21 @@
         return data;
     }
 
+    function syncPandaPersona(agent) {
+        if (!pandaAvatar || !pandaAvatar.setPersona) return;
+        var name = (agent && agent.name) ? String(agent.name) : "";
+        var key = "default";
+        if (name.indexOf("心理") !== -1) key = "mental";
+        else if (name.indexOf("就业") !== -1) key = "career";
+        pandaAvatar.setPersona(key);
+    }
+
+    function triggerPandaAction(kind, duration) {
+        if (MODE === "panda" && pandaAvatar && pandaAvatar.triggerGesture) {
+            pandaAvatar.triggerGesture(kind, duration);
+        }
+    }
+
     async function loadAgents() {
         agentBusy = true;
         renderAgentSelect("加载中…");
@@ -964,6 +1009,7 @@
             if (selectedAgent) {
                 assistantName = selectedAgent.name;
                 $("avatarAssistant").textContent = assistantName + " · 数字人";
+                syncPandaPersona(selectedAgent);
             }
         } catch (err) {
             errorMessage = "加载失败，请刷新重试";
@@ -986,6 +1032,8 @@
             selectedAgent = data.selected && data.selected.id ? data.selected : null;
             assistantName = selectedAgent ? selectedAgent.name : "数字助理";
             $("avatarAssistant").textContent = assistantName + " · 数字人";
+            syncPandaPersona(selectedAgent);
+            triggerPandaAction("wave", 1.5);
         } catch (err) {
             appendCaption("系统", "切换 Agent 失败：" + err.message, "is-error");
         } finally {
@@ -1105,10 +1153,45 @@
         return String(data);
     }
 
+    function renderSourcesDrawer(items) {
+        if (!Array.isArray(items) || !items.length) return;
+        clearCaptionEmpty();
+        var drawer = document.createElement("details");
+        drawer.className = "avatar-sources";
+        var summary = document.createElement("summary");
+        summary.textContent = "参考来源 · " + items.length + " 篇知识库文档";
+        var body = document.createElement("div");
+        body.className = "avatar-sources-body";
+        items.forEach(function (src) {
+            if (!src) return;
+            var item = document.createElement("div");
+            item.className = "avatar-source-item";
+            var title = document.createElement("b");
+            var scoreTxt = (typeof src.score === "number" && src.score > 0)
+                ? ("（相关度 " + Math.min(99, Math.round(src.score * 100)) + "%）") : "";
+            title.textContent = (src.title || "知识库文档") + scoreTxt;
+            item.appendChild(title);
+            if (src.excerpt) {
+                var excerpt = document.createElement("div");
+                excerpt.className = "avatar-source-excerpt";
+                excerpt.textContent = src.excerpt;
+                item.appendChild(excerpt);
+            }
+            body.appendChild(item);
+        });
+        drawer.appendChild(summary);
+        drawer.appendChild(body);
+        $("captionBody").appendChild(drawer);
+        scrollCaptionToLatest();
+    }
+
     function handleFrame(frame) {
         var event = frame.event, data = frame.data;
         if (event === "notice") {
             appendCaption("系统", frameText(data), "");
+        } else if (event === "sources") {
+            renderSourcesDrawer((data && data.items) || []);
+            triggerPandaAction("book", 2.0);
         } else if (event === "tool") {
             var panel = ensureProcessPanel();
             var args = data && typeof data === "object" ? data.arguments : null;
@@ -1117,6 +1200,7 @@
             panel.tools += 1;
             updateProcessSummary();
             scrollCaptionToLatest();
+            triggerPandaAction("book", 1.8);
         } else if (event === "reasoning") {
             var process = ensureProcessPanel();
             if (!process.reason) process.reason = appendProcessItem("思考过程", "", "is-reasoning");
@@ -1132,6 +1216,7 @@
                 renderAgentSelect();
             }
             $("avatarAssistant").textContent = nm + " · 数字人";
+            syncPandaPersona(data && typeof data === "object" ? data : { name: nm });
         } else if (event === "delta") {
             finishProcess();
             var text = frameText(data);
@@ -1148,6 +1233,11 @@
         } else if (event === "done") {
             finishProcess();
             captionEl = null;
+            if (/奖学金|恭喜|祝贺|太棒|加油/.test(answerText)) {
+                triggerPandaAction("celebrate", 1.9);
+            } else if (answerText) {
+                triggerPandaAction("nod", 1.2);
+            }
         }
     }
 
@@ -1162,6 +1252,9 @@
         captionEl = null;
         renderPlaybackControls();
         appendCaption("我", text, "is-user");
+        if (/你好|嗨|hi|hello|介绍|早安|晚上好/i.test(text)) {
+            triggerPandaAction("wave", 1.7);
+        }
         thinking = true;
         $("avatarSend").disabled = true;
         renderAgentSelect();
@@ -1222,6 +1315,71 @@
         });
     }
 
+    // ---------- 语音提问（Web Speech ASR）与舞台互动 ----------
+    function setupAvatarAsr() {
+        var btn = $("avatarMicBtn");
+        if (!btn) return;
+        var Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Ctor) {
+            btn.addEventListener("click", function () {
+                appendCaption("系统", "当前浏览器暂不支持语音识别（请使用新版 Chrome / Edge，或直接输入文字提问）。", "");
+            });
+            return;
+        }
+        var rec = new Ctor();
+        rec.lang = "zh-CN";
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
+        var listening = false;
+        function setListening(on) {
+            listening = !!on;
+            if (btn.classList) btn.classList.toggle("is-listening", listening);
+            btn.title = listening ? "正在聆听…点击停止" : "语音提问（点击开始/停止）";
+        }
+        rec.onstart = function () { setListening(true); };
+        rec.onend = function () { setListening(false); };
+        rec.onerror = function (e) {
+            setListening(false);
+            appendCaption("系统", "语音识别未成功（" + (e && e.error ? e.error : "unknown") + "），请尝试打字输入。", "");
+        };
+        rec.onresult = function (e) {
+            var text = (e.results && e.results[0] && e.results[0][0] && e.results[0][0].transcript) || "";
+            text = text.trim();
+            if (text && $("avatarInput")) {
+                $("avatarInput").value = text;
+                if (!streaming && !agentBusy) {
+                    $("avatarInput").value = "";
+                    sendMessage(text);
+                }
+            }
+        };
+        btn.addEventListener("click", function () {
+            if (streaming || agentBusy) return;
+            if (listening) { rec.stop(); return; }
+            ttsStopAll();
+            try { rec.start(); } catch (err) {
+                appendCaption("系统", "无法启动语音输入：" + err.message, "");
+            }
+        });
+    }
+
+    function bindGestureBar() {
+        var bar = $("avatarGestureBar");
+        if (!bar) return;
+        bar.addEventListener("click", function (e) {
+            var btn = e.target.closest ? e.target.closest("[data-gesture]") : null;
+            if (!btn || MODE !== "panda" || !pandaAvatar) return;
+            var g = btn.getAttribute("data-gesture");
+            if (g === "reset") {
+                pandaAvatar.resetYaw();
+                return;
+            }
+            if (pandaAvatar.triggerGesture) {
+                pandaAvatar.triggerGesture(g);
+            }
+        });
+    }
+
     // ---------- 事件绑定 ----------
     function bindEvents() {
         bindCaptionScroll();
@@ -1239,6 +1397,8 @@
         });
         bindAgentSelect();
         bindPlaybackControls();
+        setupAvatarAsr();
+        bindGestureBar();
         pickVoice();
         var switcher = $("avatarSwitcher");
         if (switcher) {
@@ -1270,7 +1430,7 @@
         }
         var initialModel = "cwnu-panda";
         try {
-            var saved = localStorage.getItem(MODEL_CHOICE_KEY);
+            var saved = localStorage.getItem(MODEL_CHOICE_KEY) || localStorage.getItem(LEGACY_MODEL_CHOICE_KEY);
             if (saved === "vrm" || saved === "cwnu-panda") initialModel = saved;
         } catch (e) {}
         switchAvatarModel(initialModel);

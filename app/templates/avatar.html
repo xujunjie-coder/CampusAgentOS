@@ -24,7 +24,13 @@
     <main class="avatar-stage-wrap">
         <!-- three.js 渲染画布（WebGL 不可用时降级提示） -->
         <div class="avatar-stage" id="avatarStage">
-            <div class="avatar-model-tag" id="avatarModelTag">西华师范大学 · 华小竹（按住左键可旋转视角，双击复位）</div>
+            <div class="avatar-model-tag" id="avatarModelTag">西华师范大学 · 华小竹（拖拽旋转视角，双击复位）</div>
+            <div class="avatar-stage-actions" id="avatarGestureBar" role="group" aria-label="华小竹互动动作">
+                <button type="button" class="avatar-stage-btn" data-gesture="wave" title="挥手问好">👋 挥手</button>
+                <button type="button" class="avatar-stage-btn" data-gesture="nod" title="温和点头">😊 点头</button>
+                <button type="button" class="avatar-stage-btn" data-gesture="book" title="翻阅校园手册">📖 托书</button>
+                <button type="button" class="avatar-stage-btn" data-gesture="reset" title="视角回正">↺ 复位</button>
+            </div>
             <div class="avatar-loading" id="avatarLoading">
                 <i class="fas fa-spinner fa-spin"></i> 数字人模型加载中…
             </div>
@@ -59,6 +65,9 @@
         <div class="avatar-composer">
             <input type="text" id="avatarInput" class="layui-input" maxlength="500"
                    placeholder="问问华小竹关于学业政策、就业考研、校园生活的问题…（Enter 发送）">
+            <button type="button" id="avatarMicBtn" class="avatar-mic-btn" title="语音提问（点击开始/停止）" aria-label="语音提问">
+                <i class="fas fa-microphone" aria-hidden="true"></i>
+            </button>
             <div class="avatar-agent-picker" id="avatarAgentPicker">
                 <button type="button" class="avatar-agent-trigger" id="avatarAgentTrigger"
                         aria-haspopup="listbox" aria-expanded="false" aria-controls="avatarAgentMenu" disabled>

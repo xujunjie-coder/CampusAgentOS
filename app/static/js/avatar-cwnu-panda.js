@@ -11,6 +11,51 @@
 
     var EMBLEM_URL = "/static/vendor/three/models/cwnu-emblem.png";
 
+    function srgbColor(THREE, hex) {
+        return new THREE.Color(hex).convertSRGBToLinear();
+    }
+
+    function createFurBumpTexture(THREE) {
+        var S = 512;
+        var c = document.createElement("canvas");
+        c.width = c.height = S;
+        var ctx = c.getContext("2d");
+        ctx.fillStyle = "#808080";
+        ctx.fillRect(0, 0, S, S);
+
+        var seed = 1337;
+        function rand() {
+            seed = (seed * 16807) % 2147483647;
+            return (seed - 1) / 2147483646;
+        }
+        ctx.lineCap = "round";
+        for (var i = 0; i < 4200; i++) {
+            var x = rand() * S;
+            var y = rand() * S;
+            var len = 4 + rand() * 8;
+            var ang = (rand() - 0.5) * 0.45;
+            var shade = Math.floor(96 + rand() * 68);
+            ctx.strokeStyle = "rgba(" + shade + "," + shade + "," + shade + ",0.32)";
+            ctx.lineWidth = 0.9 + rand() * 1.1;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + Math.sin(ang) * len, y + Math.cos(ang) * len);
+            ctx.stroke();
+            if (x + len > S) {
+                ctx.beginPath();
+                ctx.moveTo(x - S, y);
+                ctx.lineTo(x - S + Math.sin(ang) * len, y + Math.cos(ang) * len);
+                ctx.stroke();
+            }
+        }
+        var tex = new THREE.CanvasTexture(c);
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(5, 3);
+        tex.needsUpdate = true;
+        return tex;
+    }
+
     function srgbTex(THREE, tex, renderer) {
         if (THREE.sRGBEncoding !== undefined) tex.encoding = THREE.sRGBEncoding;
         if (renderer && renderer.capabilities) {
@@ -88,7 +133,7 @@
         return mat;
     }
 
-    // ---------- 3. 2048×1024 头部等距球面烘焙贴图（八字水滴黑眼圈 + 腮红 + 帽下 AO + 吻部柔影） ----------
+    // ---------- 3. 2048×1024 头部等距球面烘焙贴图（奶白柔绒毛色 + 倾斜梨豆形黑眼圈 + 腮红 + 帽下 AO） ----------
     function createHeadTexture(THREE, renderer) {
         var W = 2048, H = 1024;
         var c = document.createElement("canvas");
@@ -96,106 +141,145 @@
         c.height = H;
         var ctx = c.getContext("2d");
 
-        // 柔和暖白至冷灰蓝顶底微渐变底色（还原设计图柔光球体明暗体积）
+        // 奶白至暖象牙灰白柔渐变底色（自然大熊猫温暖绒毛，告别冰蓝假白）
         var baseGrad = ctx.createLinearGradient(0, 0, 0, H);
-        baseGrad.addColorStop(0.00, "#dce4f2");
-        baseGrad.addColorStop(0.18, "#eef3fa");
-        baseGrad.addColorStop(0.58, "#f4f7fc");
-        baseGrad.addColorStop(0.84, "#dde6f4");
-        baseGrad.addColorStop(1.00, "#b8c6de");
+        baseGrad.addColorStop(0.00, "#ebe4d8");
+        baseGrad.addColorStop(0.18, "#f8f4ec");
+        baseGrad.addColorStop(0.58, "#fcf9f3");
+        baseGrad.addColorStop(0.84, "#e5ddd0");
+        baseGrad.addColorStop(1.00, "#c8bfb2");
         ctx.fillStyle = baseGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // 两侧脸颊与脑后柔和立体冷调环境暗部（u=0.5 为正前脸）
+        // 两侧脸颊与脑后柔和暖灰褐立体暗部（u=0.5 为正前脸）
         var sideLeft = ctx.createLinearGradient(0, 0, W * 0.40, 0);
-        sideLeft.addColorStop(0.0, "rgba(156, 176, 208, 0.38)");
-        sideLeft.addColorStop(0.72, "rgba(175, 194, 222, 0.14)");
+        sideLeft.addColorStop(0.0, "rgba(178, 168, 154, 0.36)");
+        sideLeft.addColorStop(0.72, "rgba(196, 186, 174, 0.14)");
         sideLeft.addColorStop(1.0, "rgba(255, 255, 255, 0)");
         ctx.fillStyle = sideLeft;
         ctx.fillRect(0, 0, W * 0.42, H);
 
         var sideRight = ctx.createLinearGradient(W, 0, W * 0.60, 0);
-        sideRight.addColorStop(0.0, "rgba(148, 168, 204, 0.42)");
-        sideRight.addColorStop(0.72, "rgba(170, 190, 220, 0.16)");
+        sideRight.addColorStop(0.0, "rgba(174, 164, 150, 0.40)");
+        sideRight.addColorStop(0.72, "rgba(194, 184, 172, 0.16)");
         sideRight.addColorStop(1.0, "rgba(255, 255, 255, 0)");
         ctx.fillStyle = sideRight;
         ctx.fillRect(W * 0.58, 0, W * 0.42, H);
 
         // 额头上方学士帽帽圈接触环境光遮蔽（Contact AO）
         var capAO = ctx.createLinearGradient(0, H * 0.11, 0, H * 0.25);
-        capAO.addColorStop(0.0, "rgba(24, 34, 58, 0.46)");
-        capAO.addColorStop(0.55, "rgba(52, 68, 102, 0.16)");
-        capAO.addColorStop(1.0, "rgba(52, 68, 102, 0)");
+        capAO.addColorStop(0.0, "rgba(38, 28, 30, 0.42)");
+        capAO.addColorStop(0.55, "rgba(68, 56, 54, 0.14)");
+        capAO.addColorStop(1.0, "rgba(68, 56, 54, 0)");
         ctx.fillStyle = capAO;
         ctx.fillRect(0, 0, W, H * 0.26);
 
-        // 下颌与颈部交界接触阴影（让下巴与白衬衫领自然分离）
+        // 下颌与颈部交界接触阴影
         var neckAO = ctx.createLinearGradient(0, H * 0.82, 0, H);
-        neckAO.addColorStop(0.0, "rgba(120, 138, 172, 0)");
-        neckAO.addColorStop(0.55, "rgba(96, 114, 148, 0.32)");
-        neckAO.addColorStop(1.0, "rgba(62, 78, 110, 0.58)");
+        neckAO.addColorStop(0.0, "rgba(136, 126, 114, 0)");
+        neckAO.addColorStop(0.55, "rgba(112, 102, 92, 0.28)");
+        neckAO.addColorStop(1.0, "rgba(78, 70, 64, 0.52)");
         ctx.fillStyle = neckAO;
         ctx.fillRect(0, H * 0.82, W, H * 0.18);
 
-        // 吻部下方与微笑唇下缘柔和立体凹陷暗影
-        var chinShade = ctx.createRadialGradient(W * 0.5, H * 0.695, 10, W * 0.5, H * 0.695, 145);
-        chinShade.addColorStop(0.0, "rgba(128, 146, 178, 0.30)");
-        chinShade.addColorStop(0.65, "rgba(148, 166, 196, 0.12)");
-        chinShade.addColorStop(1.0, "rgba(148, 166, 196, 0)");
+        // 额头、双颊与下巴细密短绒毛顺向笔触
+        var hSeed = 2026;
+        function hRand() {
+            hSeed = (hSeed * 16807) % 2147483647;
+            return (hSeed - 1) / 2147483646;
+        }
+        ctx.lineCap = "round";
+        for (var fi = 0; fi < 1400; fi++) {
+            var fx = W * (0.28 + hRand() * 0.44);
+            var fy = H * (0.20 + hRand() * 0.62);
+            var dx = fx - W * 0.5;
+            var dy = fy - H * 0.55;
+            var dist = Math.max(12, Math.sqrt(dx * dx + dy * dy));
+            var flen = 8 + hRand() * 14;
+            ctx.strokeStyle = hRand() > 0.45 ? "rgba(255, 252, 246, 0.16)" : "rgba(186, 174, 158, 0.11)";
+            ctx.lineWidth = 1.2 + hRand() * 1.4;
+            ctx.beginPath();
+            ctx.moveTo(fx, fy);
+            ctx.lineTo(fx + (dx / dist) * flen, fy + (dy / dist) * flen);
+            ctx.stroke();
+        }
+
+        // 吻部下方柔和立体凹陷暗影
+        var chinShade = ctx.createRadialGradient(W * 0.5, H * 0.70, 10, W * 0.5, H * 0.70, 140);
+        chinShade.addColorStop(0.0, "rgba(148, 138, 126, 0.24)");
+        chinShade.addColorStop(0.65, "rgba(166, 156, 144, 0.10)");
+        chinShade.addColorStop(1.0, "rgba(166, 156, 144, 0)");
         ctx.fillStyle = chinShade;
         ctx.beginPath();
-        ctx.ellipse(W * 0.5, H * 0.695, 160, 75, 0, 0, Math.PI * 2);
+        ctx.ellipse(W * 0.5, H * 0.70, 155, 72, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // 柔和蜜桃粉腮红（无缝融于脸颊绒毛，绝不穿模）
-        [-1, 1].forEach(function (sx) {
-            var bx = W * (0.5 + sx * 0.106);
-            var by = H * 0.585;
-            var bg = ctx.createRadialGradient(bx, by, 6, bx, by, 86);
-            bg.addColorStop(0.0, "rgba(255, 152, 172, 0.22)");
-            bg.addColorStop(0.55, "rgba(255, 164, 182, 0.10)");
-            bg.addColorStop(1.0, "rgba(255, 164, 182, 0)");
-            ctx.fillStyle = bg;
-            ctx.beginPath();
-            ctx.arc(bx, by, 88, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // 经典幼年大熊猫「上窄内收、下宽外垂」八字水滴形黑眼圈（带细腻绒毛柔化边缘）
-        function drawTeardropPatch(sx, blurPx, fillCol, scaleMul) {
+        // 经典大熊猫「上收内倾、下圆外垂」倾斜梨豆形黑眼圈（八字垂感 + 绒毛柔羽化边界）
+        function drawTeardropPatch(sx, blurPx, fillCol, scaleMul, withWisps) {
             ctx.save();
-            ctx.translate(W * (0.5 + sx * 0.080), H * 0.492);
-            ctx.rotate(sx * 0.44);
+            ctx.translate(W * (0.5 + sx * 0.076), H * 0.502);
+            ctx.rotate(-sx * 0.44);
             ctx.scale(sx * scaleMul, scaleMul);
             if (blurPx > 0 && typeof ctx.filter === "string") {
                 ctx.filter = "blur(" + blurPx + "px)";
             }
             ctx.beginPath();
-            // 顶部内侧圆润收窄，外下侧饱满垂落如水滴/梨形
-            ctx.moveTo(-8, -98);
-            ctx.bezierCurveTo(48, -102, 92, -42, 96, 36);
-            ctx.bezierCurveTo(98, 96, 48, 126, -6, 118);
-            ctx.bezierCurveTo(-58, 110, -84, 64, -78, -4);
-            ctx.bezierCurveTo(-74, -64, -48, -95, -8, -98);
+            ctx.moveTo(0, -116);
+            ctx.bezierCurveTo(64, -116, 102, -52, 102, 22);
+            ctx.bezierCurveTo(102, 94, 56, 132, 0, 128);
+            ctx.bezierCurveTo(-58, 124, -100, 74, -98, 4);
+            ctx.bezierCurveTo(-96, -64, -66, -116, 0, -116);
             ctx.closePath();
             ctx.fillStyle = fillCol;
             ctx.fill();
+
+            if (withWisps) {
+                ctx.lineCap = "round";
+                for (var wi = 0; wi < 120; wi++) {
+                    var ang = (wi / 120) * Math.PI * 2;
+                    var rx = 96 + Math.sin(ang * 2) * 4;
+                    var ry = 120 + (Math.sin(ang) > 0 ? 10 : -4);
+                    var sx0 = Math.cos(ang) * (rx - 4);
+                    var sy0 = Math.sin(ang) * (ry - 4);
+                    var wLen = 7 + (wi % 5) * 2.2;
+                    var jitter = ((wi % 3) - 1) * 0.12;
+                    ctx.strokeStyle = wi % 2 === 0 ? "rgba(18, 19, 24, 0.65)" : "rgba(38, 36, 40, 0.35)";
+                    ctx.lineWidth = 2.0;
+                    ctx.beginPath();
+                    ctx.moveTo(sx0, sy0);
+                    ctx.lineTo(sx0 + Math.cos(ang + jitter) * wLen, sy0 + Math.sin(ang + jitter) * wLen);
+                    ctx.stroke();
+                }
+            }
             ctx.restore();
         }
         [-1, 1].forEach(function (sx) {
-            // 外层微绒过渡羽化边 + 内层深炭黑绒毛主体
-            drawTeardropPatch(sx, 5, "rgba(32, 37, 47, 0.55)", 1.03);
-            drawTeardropPatch(sx, 0, "#0c0e12", 1.00);
+            drawTeardropPatch(sx, 7, "rgba(28, 25, 28, 0.55)", 0.95, false);
+            drawTeardropPatch(sx, 0, "#0e0f13", 0.91, true);
         });
 
-        // 吻部鼻梁高光柔白提亮
-        var muzzleGlow = ctx.createRadialGradient(W * 0.5, H * 0.575, 8, W * 0.5, H * 0.585, 118);
-        muzzleGlow.addColorStop(0.0, "rgba(255, 255, 255, 0.55)");
-        muzzleGlow.addColorStop(0.7, "rgba(248, 251, 255, 0.22)");
-        muzzleGlow.addColorStop(1.0, "rgba(248, 251, 255, 0)");
+        // 柔暖蜜桃腮红自然衔接于黑眼圈外下侧
+        [-1, 1].forEach(function (sx) {
+            var bx = W * (0.5 + sx * 0.118);
+            var by = H * 0.602;
+            var bg = ctx.createRadialGradient(bx, by, 6, bx, by, 82);
+            bg.addColorStop(0.0, "rgba(252, 142, 152, 0.24)");
+            bg.addColorStop(0.55, "rgba(252, 160, 168, 0.10)");
+            bg.addColorStop(1.0, "rgba(252, 160, 168, 0)");
+            ctx.fillStyle = bg;
+            ctx.beginPath();
+            ctx.arc(bx, by, 84, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // 饱满奶白吻部柔光提亮
+        var muzzleGlow = ctx.createRadialGradient(W * 0.5, H * 0.578, 8, W * 0.5, H * 0.588, 126);
+        muzzleGlow.addColorStop(0.0, "rgba(255, 253, 248, 0.62)");
+        muzzleGlow.addColorStop(0.7, "rgba(252, 248, 240, 0.24)");
+        muzzleGlow.addColorStop(1.0, "rgba(252, 248, 240, 0)");
         ctx.fillStyle = muzzleGlow;
         ctx.beginPath();
-        ctx.ellipse(W * 0.5, H * 0.585, 122, 86, 0, 0, Math.PI * 2);
+        ctx.ellipse(W * 0.5, H * 0.588, 128, 88, 0, 0, Math.PI * 2);
         ctx.fill();
 
         return srgbTex(THREE, new THREE.CanvasTexture(c), renderer);
@@ -385,7 +469,7 @@
         return srgbTex(THREE, new THREE.CanvasTexture(canvas), renderer);
     }
 
-    // ---------- 5. 深邃黑曜石晶莹瞳仁贴图（告别橙棕圆环，精准还原设计图清澈黑亮大眼） ----------
+    // ---------- 5. 深邃暖棕黑大熊猫晶莹瞳仁贴图（乌溜饱满大眼 + 暖琥珀青微反光 + 双高光） ----------
     function createIrisTexture(THREE, renderer) {
         var S = 512;
         var c = document.createElement("canvas");
@@ -393,41 +477,56 @@
         var ctx = c.getContext("2d");
         var r = S * 0.5;
 
-        // 外缘深冷灰黑虹膜 -> 中央纯黑深邃瞳孔
-        var g = ctx.createRadialGradient(r, r * 1.08, S * 0.05, r, r, r * 0.98);
-        g.addColorStop(0.00, "#07090e");
-        g.addColorStop(0.54, "#0d111a");
-        g.addColorStop(0.80, "#232a38");
-        g.addColorStop(0.93, "#141821");
-        g.addColorStop(1.00, "#090b10");
+        // 熊猫标志性深邃浓咖啡黑虹膜（中央纯黑 -> 暖深栗棕过渡 -> 深黑瞳缘）
+        var g = ctx.createRadialGradient(r, r * 1.06, S * 0.04, r, r, r * 0.98);
+        g.addColorStop(0.00, "#050406");
+        g.addColorStop(0.56, "#150f0d");
+        g.addColorStop(0.79, "#2c1d16");
+        g.addColorStop(0.92, "#181210");
+        g.addColorStop(1.00, "#080607");
         ctx.fillStyle = g;
         ctx.beginPath();
         ctx.arc(r, r, r - 2, 0, Math.PI * 2);
         ctx.fill();
 
-        // 底部通透玻璃体冷灰蓝微弱月牙反光（正是设计图中眼底那抹灵动水光！）
-        ctx.strokeStyle = "rgba(142, 168, 206, 0.18)";
-        ctx.lineWidth = 11;
+        // 上眼睑柔和投落暗影，增加眼神深邃水润感
+        var lidGrad = ctx.createLinearGradient(0, 0, 0, S * 0.52);
+        lidGrad.addColorStop(0.0, "rgba(4, 3, 5, 0.55)");
+        lidGrad.addColorStop(1.0, "rgba(4, 3, 5, 0)");
+        ctx.fillStyle = lidGrad;
+        ctx.beginPath();
+        ctx.arc(r, r, r - 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 底部通透暖琥珀与冷天光双层微弱月牙反光
+        ctx.strokeStyle = "rgba(200, 154, 106, 0.24)";
+        ctx.lineWidth = 13;
         ctx.lineCap = "round";
         ctx.beginPath();
         ctx.arc(r, r * 1.01, r * 0.72, Math.PI * 0.18, Math.PI * 0.82);
         ctx.stroke();
 
-        // 中央大纯黑瞳仁
-        ctx.fillStyle = "#05070b";
+        ctx.strokeStyle = "rgba(156, 180, 200, 0.16)";
+        ctx.lineWidth = 7;
         ctx.beginPath();
-        ctx.arc(r, r * 0.98, r * 0.56, 0, Math.PI * 2);
+        ctx.arc(r, r * 1.01, r * 0.66, Math.PI * 0.24, Math.PI * 0.76);
+        ctx.stroke();
+
+        // 中央饱满乌黑瞳仁
+        ctx.fillStyle = "#040305";
+        ctx.beginPath();
+        ctx.arc(r, r * 0.98, r * 0.58, 0, Math.PI * 2);
         ctx.fill();
 
         // 左上 10:30 方向主圆润亮白高光 + 右下 4:30 微星副高光
         ctx.fillStyle = "#ffffff";
         ctx.beginPath();
-        ctx.arc(r * 0.62, r * 0.62, r * 0.15, 0, Math.PI * 2);
+        ctx.arc(r * 0.60, r * 0.60, r * 0.165, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = "rgba(255, 255, 255, 0.86)";
+        ctx.fillStyle = "rgba(255, 252, 246, 0.88)";
         ctx.beginPath();
-        ctx.arc(r * 1.32, r * 1.30, r * 0.075, 0, Math.PI * 2);
+        ctx.arc(r * 1.32, r * 1.28, r * 0.072, 0, Math.PI * 2);
         ctx.fill();
 
         return srgbTex(THREE, new THREE.CanvasTexture(c), renderer);
@@ -650,7 +749,7 @@
         return geo;
     }
 
-    // ---------- 8. 解析式连续顶点雕刻：婴儿肥梨形圆脸 + 一体式柔和吻部 ----------
+    // ---------- 8. 解析式连续顶点雕刻：奶胖婴儿肥大熊猫圆脸 + 饱满一体式熊吻 + 双上唇肉垫 ----------
     function createSculptedPandaHeadGeometry(THREE) {
         // phiStart = -PI/2 保证 u=0.5 精确落在 +Z 正脸中央，接缝隐藏在 -Z 后脑勺
         var geo = new THREE.SphereGeometry(1.0, 128, 96, -Math.PI * 0.5, Math.PI * 2);
@@ -661,42 +760,48 @@
             var ny = pos.getY(i);
             var nz = pos.getZ(i);
 
-            // 基础椭球尺度（严格对照设计图：总宽 ~1.28，总高 ~1.12，前后深 ~1.10）
-            var sx = 0.615;
-            var sy = 0.575;
-            var sz = 0.548;
+            // 圆润饱满的大熊猫球形萌脸基尺度（宽高比 ~1.09:1，饱满不扁）
+            var sx = 0.610;
+            var sy = 0.595;
+            var sz = 0.585;
 
-            // 1) 头顶帽圈区域自然微收、两腮向下圆润饱满外扩（幼年熊猫标志性梨形婴儿肥轮廓！）
-            var crownTaper = ny > 0.15 ? Math.pow((ny - 0.15) / 0.85, 1.45) * 0.088 : 0.0;
-            var cheekBand = Math.exp(-Math.pow((ny + 0.22) / 0.40, 2.0));
-            var sideCheek = cheekBand * (0.070 + 0.023 * Math.max(0, nz));
+            // 1) 额角保持圆润饱满、两腮柔和圆弧微丰
+            var crownTaper = ny > 0.15 ? Math.pow((ny - 0.15) / 0.85, 1.45) * 0.036 : 0.0;
+            var cheekBand = Math.exp(-Math.pow((ny + 0.24) / 0.37, 2.0));
+            var sideCheek = cheekBand * (0.038 + 0.016 * Math.max(0, nz));
             sx = sx - crownTaper + sideCheek;
-            sz = sz - crownTaper * 0.55 + cheekBand * 0.024;
+            sz = sz - crownTaper * 0.55 + cheekBand * 0.022;
 
             var x = nx * sx;
             var y = ny * sy;
             var z = nz * sz;
 
-            // 2) 下巴底部柔和托平微圆（避免尖下巴，贴合衬衫领口）
+            // 2) 下巴底部柔和托平微圆
             if (ny < -0.45) {
                 var chinFlatten = Math.pow((-ny - 0.45) / 0.55, 1.7);
-                y += chinFlatten * 0.018;
+                y += chinFlatten * 0.016;
             }
 
-            // 3) 眼窝微平缓凹槽（让大眼睛自然嵌合在脸颊曲面上，而非凸出眼球）
+            // 3) 眼窝微平缓凹槽 + 饱满圆润熊吻部 + 上唇双侧小肉垫与微弱人中沟
             if (nz > 0.25) {
-                var eyeDistL = Math.pow((nx + 0.44) / 0.28, 2.0) + Math.pow((ny - 0.05) / 0.28, 2.0);
-                var eyeDistR = Math.pow((nx - 0.44) / 0.28, 2.0) + Math.pow((ny - 0.05) / 0.28, 2.0);
+                var eyeDistL = Math.pow((nx + 0.40) / 0.28, 2.0) + Math.pow((ny - 0.06) / 0.28, 2.0);
+                var eyeDistR = Math.pow((nx - 0.40) / 0.28, 2.0) + Math.pow((ny - 0.06) / 0.28, 2.0);
                 var socket = (Math.exp(-eyeDistL) + Math.exp(-eyeDistR)) * 0.018;
                 z -= socket;
 
-                // 4) 一体式无接缝柔和吻部隆起（彻底消除球体拼贴折痕！）
-                var muzR2 = Math.pow(nx / 0.39, 2.0) + Math.pow((ny + 0.29) / 0.31, 2.0);
+                // 一体式饱满小熊吻部隆起
+                var muzR2 = Math.pow(nx / 0.36, 2.0) + Math.pow((ny + 0.27) / 0.28, 2.0);
                 var muzSwelling = Math.exp(-muzR2 * 1.15) * Math.max(0, nz);
-                z += muzSwelling * 0.096;
+                z += muzSwelling * 0.112;
                 y -= muzSwelling * 0.012;
 
-                // 下唇下方微收颌沟，让微笑唇更立体饱满
+                // 左右上唇肉垫 + 正中人中微凹
+                var puffL = Math.exp(-(Math.pow((nx + 0.13) / 0.14, 2.0) + Math.pow((ny + 0.36) / 0.13, 2.0)));
+                var puffR = Math.exp(-(Math.pow((nx - 0.13) / 0.14, 2.0) + Math.pow((ny + 0.36) / 0.13, 2.0)));
+                var philtrum = Math.exp(-(Math.pow(nx / 0.055, 2.0) + Math.pow((ny + 0.36) / 0.14, 2.0))) * 0.007;
+                z += ((puffL + puffR) * 0.017 - philtrum) * Math.max(0, nz);
+
+                // 下唇下方微收颌沟
                 var underLipR2 = Math.pow(nx / 0.30, 2.0) + Math.pow((ny + 0.56) / 0.14, 2.0);
                 z -= Math.exp(-underLipR2) * 0.014;
             }
@@ -707,18 +812,18 @@
         return geo;
     }
 
-    // 雕刻带真实凹陷耳窝的圆润熊猫耳
+    // 雕刻毛茸茸圆球耳窝的大熊猫绒球圆耳
     function createSculptedEarGeometry(THREE) {
-        var geo = new THREE.SphereGeometry(0.215, 40, 32);
+        var geo = new THREE.SphereGeometry(0.218, 40, 32);
         var pos = geo.attributes.position;
         for (var i = 0; i < pos.count; i++) {
-            var x = pos.getX(i) * 1.04;
-            var y = pos.getY(i) * 1.00;
-            var z = pos.getZ(i) * 0.66;
+            var x = pos.getX(i) * 1.03;
+            var y = pos.getY(i) * 0.99;
+            var z = pos.getZ(i) * 0.80;
             if (z > 0) {
                 var r2 = (x * x + (y + 0.015) * (y + 0.015)) / (0.145 * 0.145);
                 if (r2 < 1.35) {
-                    z -= Math.exp(-r2 * 1.4) * 0.048;
+                    z -= Math.exp(-r2 * 1.4) * 0.036;
                 }
             }
             pos.setXYZ(i, x, y, z);
@@ -727,28 +832,28 @@
         return geo;
     }
 
-    // 圆润倒三角心形熊猫鼻几何
+    // 饱满宽阔倒圆角熊仔鼻几何
     function createPandaNoseGeometry(THREE) {
         var shape = new THREE.Shape();
-        shape.moveTo(0, 0.036);
-        shape.bezierCurveTo(0.056, 0.040, 0.086, 0.024, 0.080, -0.002);
-        shape.bezierCurveTo(0.072, -0.028, 0.028, -0.052, 0, -0.056);
-        shape.bezierCurveTo(-0.028, -0.052, -0.072, -0.028, -0.080, -0.002);
-        shape.bezierCurveTo(-0.086, 0.024, -0.056, 0.040, 0, 0.036);
+        shape.moveTo(0, 0.040);
+        shape.bezierCurveTo(0.064, 0.044, 0.096, 0.026, 0.090, -0.004);
+        shape.bezierCurveTo(0.080, -0.032, 0.032, -0.056, 0, -0.060);
+        shape.bezierCurveTo(-0.032, -0.056, -0.080, -0.032, -0.090, -0.004);
+        shape.bezierCurveTo(-0.096, 0.026, -0.064, 0.044, 0, 0.040);
         var geo = new THREE.ExtrudeGeometry(shape, {
-            depth: 0.028,
+            depth: 0.030,
             bevelEnabled: true,
             bevelSegments: 5,
             steps: 1,
-            bevelSize: 0.022,
+            bevelSize: 0.024,
             bevelThickness: 0.024
         });
         // 让鼻子前表面顺应吻部呈饱满圆弧球面凸起
         var pos = geo.attributes.position;
         for (var i = 0; i < pos.count; i++) {
             var x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-            var dome = Math.max(0, 1.0 - (x * x) / 0.011 - (y * y) / 0.006) * 0.018;
-            pos.setZ(i, z + dome - x * x * 1.4);
+            var dome = Math.max(0, 1.0 - (x * x) / 0.013 - (y * y) / 0.007) * 0.020;
+            pos.setZ(i, z + dome - x * x * 1.3);
         }
         geo.computeVertexNormals();
         return geo;
@@ -766,45 +871,48 @@
         grp.add(capBot);
         return grp;
     }
-    // 精确求取雕刻头部前表面任意 (x, y_rel) 处的 Z 坐标，从根源上 100% 杜绝五官/眼镜/嘴角穿模或悬空！
+    // 精确求取雕刻头部前表面任意 (x, y_rel) 处的 Z 坐标（与 createSculptedPandaHeadGeometry 公式严格保持一致！）
     function evalHeadFrontZ(xTarget, yRel) {
-        var ny = Math.max(-0.96, Math.min(0.96, yRel / 0.575));
-        var crownTaper = ny > 0.15 ? Math.pow((ny - 0.15) / 0.85, 1.45) * 0.088 : 0.0;
-        var cheekBand = Math.exp(-Math.pow((ny + 0.22) / 0.40, 2.0));
-        // 迭代两次精确反解 nx, nz
+        var ny = Math.max(-0.96, Math.min(0.96, yRel / 0.595));
+        var crownTaper = ny > 0.15 ? Math.pow((ny - 0.15) / 0.85, 1.45) * 0.036 : 0.0;
+        var cheekBand = Math.exp(-Math.pow((ny + 0.24) / 0.37, 2.0));
         var nz = Math.sqrt(Math.max(0.04, 1.0 - ny * ny));
         var nx = 0;
-        for (var k = 0; k < 3; k++) {
-            var sx = 0.615 - crownTaper + cheekBand * (0.070 + 0.023 * Math.max(0, nz));
+        for (var k = 0; k < 4; k++) {
+            var sx = 0.610 - crownTaper + cheekBand * (0.038 + 0.016 * Math.max(0, nz));
             nx = Math.max(-0.96, Math.min(0.96, xTarget / sx));
             nz = Math.sqrt(Math.max(0.02, 1.0 - nx * nx - ny * ny));
         }
-        var sz = 0.548 - crownTaper * 0.55 + cheekBand * 0.024;
+        var sz = 0.585 - crownTaper * 0.55 + cheekBand * 0.022;
         var z = nz * sz;
         if (nz > 0.25) {
-            var eyeDistL = Math.pow((nx + 0.44) / 0.28, 2.0) + Math.pow((ny - 0.05) / 0.28, 2.0);
-            var eyeDistR = Math.pow((nx - 0.44) / 0.28, 2.0) + Math.pow((ny - 0.05) / 0.28, 2.0);
+            var eyeDistL = Math.pow((nx + 0.40) / 0.28, 2.0) + Math.pow((ny - 0.06) / 0.28, 2.0);
+            var eyeDistR = Math.pow((nx - 0.40) / 0.28, 2.0) + Math.pow((ny - 0.06) / 0.28, 2.0);
             z -= (Math.exp(-eyeDistL) + Math.exp(-eyeDistR)) * 0.018;
-            var muzR2 = Math.pow(nx / 0.39, 2.0) + Math.pow((ny + 0.29) / 0.31, 2.0);
-            z += Math.exp(-muzR2 * 1.15) * Math.max(0, nz) * 0.096;
+            var muzR2 = Math.pow(nx / 0.36, 2.0) + Math.pow((ny + 0.27) / 0.28, 2.0);
+            z += Math.exp(-muzR2 * 1.15) * Math.max(0, nz) * 0.112;
+            var puffL = Math.exp(-(Math.pow((nx + 0.13) / 0.14, 2.0) + Math.pow((ny + 0.36) / 0.13, 2.0)));
+            var puffR = Math.exp(-(Math.pow((nx - 0.13) / 0.14, 2.0) + Math.pow((ny + 0.36) / 0.13, 2.0)));
+            var philtrum = Math.exp(-(Math.pow(nx / 0.055, 2.0) + Math.pow((ny + 0.36) / 0.14, 2.0))) * 0.007;
+            z += ((puffL + puffR) * 0.017 - philtrum) * Math.max(0, nz);
             var underLipR2 = Math.pow(nx / 0.30, 2.0) + Math.pow((ny + 0.56) / 0.14, 2.0);
             z -= Math.exp(-underLipR2) * 0.014;
         }
         return z;
     }
 
-    // 柔和烘焙白肚皮贴图（上沿带马甲下摆接触阴影 AO，彻底消除突兀亮白条）
+    // 柔和烘焙奶白肚皮贴图（上沿带马甲下摆暖灰接触阴影 AO）
     function createBellyTexture(THREE, renderer) {
         var S = 512;
         var c = document.createElement("canvas");
         c.width = c.height = S;
         var ctx = c.getContext("2d");
         var g = ctx.createLinearGradient(0, 0, 0, S);
-        g.addColorStop(0.00, "#7c8ca8");
-        g.addColorStop(0.28, "#a8b8d2");
-        g.addColorStop(0.58, "#dce5f3");
-        g.addColorStop(0.85, "#cad6ea");
-        g.addColorStop(1.00, "#96a6c2");
+        g.addColorStop(0.00, "#8f8980");
+        g.addColorStop(0.28, "#c4bcb0");
+        g.addColorStop(0.58, "#f3ede2");
+        g.addColorStop(0.85, "#e5ddd0");
+        g.addColorStop(1.00, "#b5ada0");
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, S, S);
         return srgbTex(THREE, new THREE.CanvasTexture(c), renderer);
@@ -820,26 +928,33 @@
         root.add(bodyBob);
 
         var envMap = createStudioEnvMap(THREE, renderer);
+        var furBumpTex = createFurBumpTexture(THREE);
 
-        // ---------- PBR 影棚级定制材质库 ----------
+        // ---------- PBR 影棚级定制材质库（sRGB -> Linear 准确校色 + 微绒 Bump） ----------
         var headFurMat = enhancePlushMaterial(new THREE.MeshStandardMaterial({
             map: createHeadTexture(THREE, renderer),
+            bumpMap: furBumpTex,
+            bumpScale: 0.0065,
             color: 0xffffff,
-            roughness: 0.72,
+            roughness: 0.74,
             metalness: 0.01,
-            envMapIntensity: 0.55
-        }), { rimStrength: 0.24, preserveDark: true });
+            envMapIntensity: 0.50
+        }), { rimStrength: 0.22, preserveDark: true });
 
         var bellyFurMat = enhancePlushMaterial(new THREE.MeshStandardMaterial({
             map: createBellyTexture(THREE, renderer),
+            bumpMap: furBumpTex,
+            bumpScale: 0.006,
             color: 0xffffff,
-            roughness: 0.76,
+            roughness: 0.78,
             metalness: 0.01,
-            envMapIntensity: 0.45
+            envMapIntensity: 0.42
         }), { rimStrength: 0.16 });
 
         var blackFurMat = enhancePlushMaterial(new THREE.MeshStandardMaterial({
-            color: new THREE.Color(0x101216).convertSRGBToLinear(),
+            color: srgbColor(THREE, 0x101216),
+            bumpMap: furBumpTex,
+            bumpScale: 0.009,
             roughness: 0.94,
             metalness: 0,
             envMapIntensity: 0.18
@@ -847,25 +962,27 @@
         blackFurMat.name = "panda-black-fur";
 
         var innerEarMat = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(0x1c1f25).convertSRGBToLinear(),
-            roughness: 0.94,
+            color: srgbColor(THREE, 0x111216),
+            bumpMap: furBumpTex,
+            bumpScale: 0.008,
+            roughness: 0.96,
             metalness: 0,
-            envMapIntensity: 0.14
+            envMapIntensity: 0.08
         });
         var padMat = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(0x3b3740).convertSRGBToLinear(),
+            color: srgbColor(THREE, 0x3d3035),
             roughness: 0.88,
             metalness: 0,
             envMapIntensity: 0.16
         });
         var toeCreaseMat = new THREE.MeshStandardMaterial({
-            color: 0x141820,
+            color: srgbColor(THREE, 0x141820),
             roughness: 0.85,
             metalness: 0.02
         });
         var noseMat = new THREE.MeshPhysicalMaterial
             ? new THREE.MeshPhysicalMaterial({
-                color: new THREE.Color(0x14171c).convertSRGBToLinear(),
+                color: srgbColor(THREE, 0x14171c),
                 roughness: 0.30,
                 metalness: 0.04,
                 clearcoat: 0.32,
@@ -873,63 +990,63 @@
                 envMapIntensity: 0.35
             })
             : new THREE.MeshStandardMaterial({
-                color: new THREE.Color(0x14171c).convertSRGBToLinear(),
+                color: srgbColor(THREE, 0x14171c),
                 roughness: 0.28,
                 metalness: 0.06
             });
         var lipMat = new THREE.MeshStandardMaterial({
-            color: 0x1f2430,
-            roughness: 0.45,
-            metalness: 0.03
+            color: srgbColor(THREE, 0x1e1918),
+            roughness: 0.48,
+            metalness: 0.02
         });
         var shirtMat = enhancePlushMaterial(new THREE.MeshStandardMaterial({
-            color: 0xeaf0f9,
+            color: srgbColor(THREE, 0xf0f2f5),
             roughness: 0.62,
             metalness: 0.01,
             envMapIntensity: 0.50
         }), { rimStrength: 0.16 });
 
         var crimsonCapMat = new THREE.MeshStandardMaterial({
-            color: 0x8e1f2b,
+            color: srgbColor(THREE, 0x8e1f2b),
             roughness: 0.64,
             metalness: 0.04,
             envMapIntensity: 0.48
         });
         var crimsonDarkEdgeMat = new THREE.MeshStandardMaterial({
-            color: 0x6b141e,
+            color: srgbColor(THREE, 0x66121c),
             roughness: 0.68,
             metalness: 0.04,
             envMapIntensity: 0.42
         });
         var ribbonMat = new THREE.MeshStandardMaterial({
-            color: 0x9b2330,
+            color: srgbColor(THREE, 0x9c2130),
             roughness: 0.48,
             metalness: 0.06,
             envMapIntensity: 0.58
         });
         var navyBandMat = new THREE.MeshStandardMaterial({
-            color: 0x1b2640,
+            color: srgbColor(THREE, 0x1b2640),
             roughness: 0.62,
             metalness: 0.05,
             envMapIntensity: 0.50
         });
         var goldMat = new THREE.MeshStandardMaterial({
-            color: 0xe6c16c,
+            color: srgbColor(THREE, 0xe4bc62),
             roughness: 0.22,
             metalness: 0.86,
             envMapIntensity: 1.25
         });
         var ginkgoMat = new THREE.MeshStandardMaterial({
             map: createGinkgoVeinTexture(THREE, renderer),
-            color: 0xf2c95e,
-            emissive: 0x261802,
+            color: srgbColor(THREE, 0xf0c654),
+            emissive: srgbColor(THREE, 0x261802),
             roughness: 0.42,
             metalness: 0.18,
             envMapIntensity: 0.75,
             side: THREE.DoubleSide
         });
         var buttonMat = new THREE.MeshStandardMaterial({
-            color: 0x33302a,
+            color: srgbColor(THREE, 0x2f2d28),
             roughness: 0.38,
             metalness: 0.42,
             envMapIntensity: 0.80
@@ -1132,8 +1249,8 @@
         }
 
         // Two inset, stitched buttons; soft edge highlights replace the flat cylinder ends.
-        var stitchMat = new THREE.MeshStandardMaterial({color: 0x4a5b78, roughness: 0.91, metalness: 0});
-        var buttonInsetMat = new THREE.MeshStandardMaterial({color: 0x222938, roughness: 0.61, metalness: 0.12});
+        var stitchMat = new THREE.MeshStandardMaterial({ color: srgbColor(THREE, 0x3e4f6e), roughness: 0.91, metalness: 0 });
+        var buttonInsetMat = new THREE.MeshStandardMaterial({ color: srgbColor(THREE, 0x1b2232), roughness: 0.61, metalness: 0.12 });
         [0.315, 0.175].forEach(function (by, index) {
             var bz = evalChestZ(0, by);
             var buttonGroup = new THREE.Group();
@@ -1178,12 +1295,21 @@
         // The belly AO map does not belong on the neck: it created a dark horizontal band.
         var neckTransitionMat = bellyFurMat.clone();
         neckTransitionMat.map = null;
-        neckTransitionMat.color.setHex(0xeaf0f7);
+        neckTransitionMat.bumpMap = furBumpTex;
+        neckTransitionMat.bumpScale = 0.0055;
+        neckTransitionMat.color.copy(srgbColor(THREE, 0xf7f2e8));
         var neckFur = new THREE.Mesh(new THREE.LatheGeometry(neckProfile, 64), neckTransitionMat);
         neckFur.name = "panda-neck-transition";
         neckFur.scale.z = 0.94;
         neckFur.position.z = -0.005;
         spinePivot.add(neckFur);
+
+        // 圆滚蓬松奶白大熊猫短尾巴（背面转动可见标志性小团尾）
+        var pandaTail = new THREE.Mesh(new THREE.SphereGeometry(0.118, 28, 22), neckTransitionMat);
+        pandaTail.name = "panda-tail";
+        pandaTail.scale.set(1.06, 0.96, 1.04);
+        pandaTail.position.set(0, 0.055, -0.345);
+        spinePivot.add(pandaTail);
 
         [-1, 1].forEach(function (sx) {
             var collarY = 0.672;
@@ -1275,7 +1401,7 @@
             }
             loopGeo.computeVertexNormals();
             tieGroup.add(new THREE.Mesh(loopGeo, ribbonMat));
-            var ribbonFoldMat = new THREE.MeshStandardMaterial({color: 0x6b1826, roughness: 0.65, metalness: 0.01});
+            var ribbonFoldMat = new THREE.MeshStandardMaterial({color: srgbColor(THREE, 0x63131f), roughness: 0.65, metalness: 0.01});
             var foldPoints = [];
             for (var fi = 0; fi <= 10; fi++) {
                 var fu = fi / 10;
@@ -1377,7 +1503,7 @@
             sleeve.name = "panda-cloth-sleeve";
             return sleeve;
         }
-        var cuffShadowMat = new THREE.MeshStandardMaterial({ color: 0xa9b8cb, roughness: 0.82 });
+        var cuffShadowMat = new THREE.MeshStandardMaterial({ color: srgbColor(THREE, 0x9eaac0), roughness: 0.82 });
         function createTailoredCuff(radius, height) {
             var group = new THREE.Group();
             // Closed wall section gives the opening a visible fabric thickness.
@@ -1419,7 +1545,7 @@
 
         var leftShoulder = new THREE.Group();
         leftShoulder.position.set(0.415, 0.65, 0.0);
-        leftShoulder.rotation.z = 0.42;
+        leftShoulder.rotation.z = 0.25;
         leftShoulder.rotation.x = 0.04;
         spinePivot.add(leftShoulder);
         var leftSleeve = createSoftSleeve(0.126, 0.138, 0.39);
@@ -1514,24 +1640,23 @@
         thumbPad.rotation.z = -0.55;
         rightPawGroup.add(thumbPad);
 
-        // ---------- 6. 连续雕刻婴儿肥梨形头部、深邃晶莹大眼、无穿模金丝眼镜与立体微笑唇 ----------
+        // ---------- 6. 圆滚奶胖球形大熊猫头部、深邃晶莹大眼、精致金丝眼镜与 ω 微笑唇 ----------
         var headPivot = new THREE.Group();
-        // 下沉 0.025 让饱满白下巴与立体白衬衫翻领无缝衔接（侧面零缝隙！）
-        headPivot.position.set(0, 0.735, 0.012);
+        headPivot.position.set(0, 0.755, 0.012);
         spinePivot.add(headPivot);
 
-        var HC_Y = 0.555;
+        var HC_Y = 0.565;
         var headMesh = new THREE.Mesh(createSculptedPandaHeadGeometry(THREE), headFurMat);
         headMesh.position.set(0, HC_Y, 0);
         headPivot.add(headMesh);
 
-        // 带真实凹陷耳窝的圆耳朵（世界坐标 (±0.54, 2.13)）
+        // 带凹陷耳窝的圆滚大熊猫绒球圆耳（自然嵌入圆润头顶曲线）
         var earGeo = createSculptedEarGeometry(THREE);
         var ears = [];
         [-1, 1].forEach(function (sx) {
             var earPivot = new THREE.Group();
-            earPivot.position.set(0.505 * sx, HC_Y + 0.445, -0.035);
-            earPivot.rotation.z = -0.44 * sx;
+            earPivot.position.set(0.455 * sx, HC_Y + 0.455, -0.022);
+            earPivot.rotation.z = -0.34 * sx;
             earPivot.rotation.y = 0.14 * sx;
             headPivot.add(earPivot);
 
@@ -1547,47 +1672,59 @@
             ears.push({ pivot: earPivot, baseZ: earPivot.rotation.z, sx: sx });
         });
 
-        // Recessed eyes: soft sclera, convex iris, one clearcoat highlight layer.
+        // 深嵌八字黑眼圈中上部的大熊猫晶莹乌溜大眼 + 上睑纤细睫毛弧
         var irisTex = createIrisTexture(THREE, renderer);
         var irisMat = new THREE.MeshPhysicalMaterial({
             map: irisTex, roughness: 0.27, metalness: 0,
-            clearcoat: 0.75, clearcoatRoughness: 0.16, envMapIntensity: 0.55
+            clearcoat: 0.78, clearcoatRoughness: 0.14, envMapIntensity: 0.55
         });
         var scleraMat = new THREE.MeshStandardMaterial({
-            color: 0xd9e1ea, roughness: 0.43, metalness: 0, envMapIntensity: 0.45
+            color: srgbColor(THREE, 0xeee9e0), roughness: 0.46, metalness: 0, envMapIntensity: 0.40
         });
         var eyeRimMat = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(0x20252e).convertSRGBToLinear(), roughness: 0.90, metalness: 0
+            color: srgbColor(THREE, 0x161414), roughness: 0.90, metalness: 0
         });
         var eyelidMat = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(0x1c2028).convertSRGBToLinear(), roughness: 0.90, metalness: 0, side: THREE.DoubleSide
+            color: srgbColor(THREE, 0x141214), roughness: 0.90, metalness: 0, side: THREE.DoubleSide
         });
         var eyelids = [], eyes = [];
         [-1, 1].forEach(function (sx) {
-            var ex = 0.258 * sx;
-            var eyRel = 0.020;
-            var ez = evalHeadFrontZ(ex, eyRel) - 0.018;
+            var ex = 0.244 * sx;
+            var eyRel = 0.038;
+            var ez = evalHeadFrontZ(ex, eyRel) - 0.016;
             var eyeGroup = new THREE.Group();
             eyeGroup.name = "panda-eye-" + sx;
             eyeGroup.position.set(ex, HC_Y + eyRel, ez);
-            eyeGroup.rotation.y = 0.30 * sx;
-            eyeGroup.rotation.x = -0.03;
+            eyeGroup.rotation.y = 0.28 * sx;
+            eyeGroup.rotation.x = -0.02;
             headPivot.add(eyeGroup);
 
-            var socketRim = new THREE.Mesh(new THREE.TorusGeometry(0.113, 0.004, 12, 64), eyeRimMat);
+            var socketRim = new THREE.Mesh(new THREE.TorusGeometry(0.111, 0.0042, 12, 64), eyeRimMat);
             socketRim.scale.set(1, 1.065, 0.72);
             socketRim.position.z = 0.002;
             eyeGroup.add(socketRim);
-            var sclera = new THREE.Mesh(new THREE.SphereGeometry(0.112, 40, 28), scleraMat);
+
+            var lashPts = [
+                new THREE.Vector3(-0.088 * sx, 0.044, 0.036),
+                new THREE.Vector3(-0.024 * sx, 0.094, 0.044),
+                new THREE.Vector3(0.054 * sx, 0.088, 0.038),
+                new THREE.Vector3(0.102 * sx, 0.044, 0.024)
+            ];
+            eyeGroup.add(new THREE.Mesh(
+                new THREE.TubeGeometry(new THREE.CatmullRomCurve3(lashPts), 16, 0.0045, 6, false),
+                eyeRimMat
+            ));
+
+            var sclera = new THREE.Mesh(new THREE.SphereGeometry(0.110, 40, 28), scleraMat);
             sclera.scale.set(1.0, 1.06, 0.46);
             eyeGroup.add(sclera);
 
             var gaze = new THREE.Group();
             gaze.position.set(-0.004 * sx, 0.004, 0);
             eyeGroup.add(gaze);
-            var iris = new THREE.Mesh(createIrisDomeGeometry(THREE, 0.096, 0.017), irisMat);
+            var iris = new THREE.Mesh(createIrisDomeGeometry(THREE, 0.104, 0.018), irisMat);
             iris.name = "panda-iris-" + sx;
-            iris.position.z = 0.038;
+            iris.position.z = 0.037;
             gaze.add(iris);
             eyes.push({ gaze: gaze, sx: sx });
 
@@ -1600,14 +1737,14 @@
             eyelids.push(lid);
         });
 
-        // ---------- 6B. 精致香槟金细圆框眼镜（100% 脱离吻部无穿模 + 无两侧外刺尖角！） ----------
+        // ---------- 6B. 精致香槟金纤细圆框眼镜（轻盈衬托倾斜熊猫黑眼圈，绝不遮挡萌感轮廓） ----------
         var glassesGroup = new THREE.Group();
-        glassesGroup.position.set(0, HC_Y + 0.028, 0);
+        glassesGroup.position.set(0, HC_Y + 0.032, 0);
         headPivot.add(glassesGroup);
 
         var lensMat = new THREE.MeshPhysicalMaterial
             ? new THREE.MeshPhysicalMaterial({
-                color: 0xe6f6ff,
+                color: srgbColor(THREE, 0xe6f6ff),
                 transparent: true,
                 opacity: 0.055,
                 roughness: 0.06,
@@ -1617,85 +1754,108 @@
                 depthWrite: false
             })
             : new THREE.MeshStandardMaterial({
-                color: 0xe6f6ff,
+                color: srgbColor(THREE, 0xe6f6ff),
                 transparent: true,
                 opacity: 0.06,
                 roughness: 0.08,
                 depthWrite: false
             });
 
-        // 镜圈贴近眼眶前缘 +0.044（正视与侧视均自然贴面且零穿模！）
-        var gFrontZ = evalHeadFrontZ(0.24, -0.14) + 0.044;
+        var gFrontZ = evalHeadFrontZ(0.24, -0.14) + 0.042;
         [-1, 1].forEach(function (sx) {
             var rimWrap = new THREE.Group();
-            rimWrap.position.set(0.286 * sx, 0, gFrontZ);
+            rimWrap.position.set(0.270 * sx, 0, gFrontZ);
             rimWrap.rotation.y = 0.21 * sx;
             glassesGroup.add(rimWrap);
 
-            var rim = new THREE.Mesh(new THREE.TorusGeometry(0.186, 0.0090, 24, 96), goldMat);
+            var rim = new THREE.Mesh(new THREE.TorusGeometry(0.172, 0.0072, 24, 96), goldMat);
             rimWrap.add(rim);
 
-            var lens = new THREE.Mesh(new THREE.CircleGeometry(0.178, 48), lensMat);
+            var lens = new THREE.Mesh(new THREE.CircleGeometry(0.165, 48), lensMat);
             rimWrap.add(lens);
 
-            // 镜腿贴着外脸颊向耳上柔和延伸（不横穿镜片视野，也不刺出外框）
             var templeCurve = new THREE.CatmullRomCurve3([
-                new THREE.Vector3(0.182 * sx, 0.022, -0.006),
-                new THREE.Vector3(0.212 * sx, 0.042, -0.15),
-                new THREE.Vector3(0.205 * sx, 0.068, -0.34)
+                new THREE.Vector3(0.168 * sx, 0.020, -0.006),
+                new THREE.Vector3(0.204 * sx, 0.042, -0.15),
+                new THREE.Vector3(0.198 * sx, 0.068, -0.34)
             ]);
-            var temple = new THREE.Mesh(new THREE.TubeGeometry(templeCurve, 16, 0.0058, 10, false), goldMat);
+            var temple = new THREE.Mesh(new THREE.TubeGeometry(templeCurve, 16, 0.0052, 10, false), goldMat);
             rimWrap.add(temple);
         });
 
-        // 舒展优雅的宽拱形金丝鼻梁桥（精准连接左右内侧镜圈）
         var bridgeCurve = new THREE.CatmullRomCurve3([
-            new THREE.Vector3(-0.104, -0.004, gFrontZ + 0.034),
-            new THREE.Vector3(-0.052, 0.028, gFrontZ + 0.058),
-            new THREE.Vector3(0.0, 0.038, gFrontZ + 0.064),
-            new THREE.Vector3(0.052, 0.028, gFrontZ + 0.058),
-            new THREE.Vector3(0.104, -0.004, gFrontZ + 0.034)
+            new THREE.Vector3(-0.098, -0.004, gFrontZ + 0.030),
+            new THREE.Vector3(-0.048, 0.028, gFrontZ + 0.054),
+            new THREE.Vector3(0.0, 0.038, gFrontZ + 0.060),
+            new THREE.Vector3(0.048, 0.028, gFrontZ + 0.054),
+            new THREE.Vector3(0.098, -0.004, gFrontZ + 0.030)
         ]);
-        var bridgeMesh = new THREE.Mesh(new THREE.TubeGeometry(bridgeCurve, 24, 0.0082, 12, false), goldMat);
+        var bridgeMesh = new THREE.Mesh(new THREE.TubeGeometry(bridgeCurve, 24, 0.0070, 12, false), goldMat);
         glassesGroup.add(bridgeMesh);
 
-        // ---------- 6C. 圆润倒三角心形熊猫鼻 + 表面自适应 3D 上扬微笑唇与嘴角酒窝 ----------
-        var noseYRel = -0.165; // 世界 y ≈ 1.51
+        // ---------- 6C. 饱满小熊鼻 + 鼻翼小纹 + 正宗大熊猫「人中 + ω 绒唇」萌系笑颜 ----------
+        var noseYRel = -0.142;
         var noseSurfZ = evalHeadFrontZ(0, noseYRel);
         var noseMesh = new THREE.Mesh(createPandaNoseGeometry(THREE), noseMat);
-        noseMesh.position.set(0, HC_Y + noseYRel, noseSurfZ - 0.012);
-        noseMesh.rotation.x = 0.08;
+        noseMesh.position.set(0, HC_Y + noseYRel, noseSurfZ - 0.010);
+        noseMesh.rotation.x = 0.06;
         headPivot.add(noseMesh);
 
-        // 沿雕刻吻部真实曲面采样生成的 3D 温柔上扬微笑唇线（100% 贴面外露，彻底解决嘴巴消失 Bug！）
-        var smilePts = [];
-        var smileSamples = 17;
-        for (var smi = 0; smi < smileSamples; smi++) {
-            var uSmile = (smi / (smileSamples - 1)) * 2.0 - 1.0; // -1 .. +1
-            var sxSmile = uSmile * 0.195;
-            var syRel = -0.312 + Math.pow(uSmile, 2.0) * 0.058;
-            var szSmile = evalHeadFrontZ(sxSmile, syRel) + 0.0065;
-            smilePts.push(new THREE.Vector3(sxSmile, HC_Y + syRel, szSmile));
-        }
-        var smileCurve = new THREE.CatmullRomCurve3(smilePts);
-        var smileTube = new THREE.Mesh(new THREE.TubeGeometry(smileCurve, 40, 0.0095, 12, false), lipMat);
-        var closedMouth = new THREE.Group();
-        closedMouth.add(smileTube);
-        headPivot.add(closedMouth);
-
-        // 左右嘴角微翘小酒窝短弧（还原设计图灵动治愈笑意！）
+        // 鼻翼两侧精致微凹鼻孔弧纹
         [-1, 1].forEach(function (sx) {
-            var dimplePts = [
-                new THREE.Vector3(0.182 * sx, HC_Y - 0.258, evalHeadFrontZ(0.182 * sx, -0.258) + 0.005),
-                new THREE.Vector3(0.202 * sx, HC_Y - 0.246, evalHeadFrontZ(0.202 * sx, -0.246) + 0.006),
-                new THREE.Vector3(0.214 * sx, HC_Y - 0.232, evalHeadFrontZ(0.214 * sx, -0.232) + 0.004)
+            var nosPts = [
+                new THREE.Vector3(0.032 * sx, HC_Y + noseYRel - 0.034, noseSurfZ + 0.022),
+                new THREE.Vector3(0.052 * sx, HC_Y + noseYRel - 0.024, noseSurfZ + 0.016),
+                new THREE.Vector3(0.064 * sx, HC_Y + noseYRel - 0.006, noseSurfZ + 0.006)
             ];
-            var dimpleGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(dimplePts), 10, 0.0058, 8, false);
-            closedMouth.add(new THREE.Mesh(dimpleGeo, lipMat));
+            headPivot.add(new THREE.Mesh(
+                new THREE.TubeGeometry(new THREE.CatmullRomCurve3(nosPts), 10, 0.0036, 6, false),
+                eyeRimMat
+            ));
         });
 
-        // 说话动态张合口腔与粉红小舌头（贴合微笑线正下方吻部表面）
-        var mouthYRel = -0.312;
+        var closedMouth = new THREE.Group();
+        headPivot.add(closedMouth);
+
+        // 鼻下垂直人中短线（|）
+        var philtrumPts = [];
+        for (var pi = 0; pi < 6; pi++) {
+            var pyPhil = -0.185 - (pi / 5) * 0.073; // -0.185 -> -0.258
+            philtrumPts.push(new THREE.Vector3(0, HC_Y + pyPhil, evalHeadFrontZ(0, pyPhil) + 0.0055));
+        }
+        closedMouth.add(new THREE.Mesh(
+            new THREE.TubeGeometry(new THREE.CatmullRomCurve3(philtrumPts), 12, 0.0072, 10, false),
+            lipMat
+        ));
+
+        // 标志性熊猫 ω 对称柔润双唇弧 + 嘴角温柔酒窝
+        [-1, 1].forEach(function (sx) {
+            var lobePts = [];
+            var lobeSamples = 9;
+            for (var li = 0; li < lobeSamples; li++) {
+                var u = li / (lobeSamples - 1);
+                var lx = sx * u * 0.138;
+                var lyRel = -0.258 - Math.sin(u * Math.PI) * 0.034 + Math.pow(u, 2.2) * 0.008;
+                lobePts.push(new THREE.Vector3(lx, HC_Y + lyRel, evalHeadFrontZ(lx, lyRel) + 0.006));
+            }
+            closedMouth.add(new THREE.Mesh(
+                new THREE.TubeGeometry(new THREE.CatmullRomCurve3(lobePts), 20, 0.0078, 10, false),
+                lipMat
+            ));
+
+            var dimplePts = [
+                new THREE.Vector3(0.136 * sx, HC_Y - 0.250, evalHeadFrontZ(0.136 * sx, -0.250) + 0.005),
+                new THREE.Vector3(0.145 * sx, HC_Y - 0.244, evalHeadFrontZ(0.145 * sx, -0.244) + 0.005),
+                new THREE.Vector3(0.152 * sx, HC_Y - 0.238, evalHeadFrontZ(0.152 * sx, -0.238) + 0.004)
+            ];
+            closedMouth.add(new THREE.Mesh(
+                new THREE.TubeGeometry(new THREE.CatmullRomCurve3(dimplePts), 8, 0.0046, 8, false),
+                lipMat
+            ));
+        });
+
+        // 说话动态张合口腔与粉红小舌头（贴合 ω 微笑中心下方）
+        var mouthYRel = -0.285;
         var mouthSurfZ = evalHeadFrontZ(0, mouthYRel);
         var mouthCavity = new THREE.Group();
         mouthCavity.position.set(0, HC_Y + mouthYRel, mouthSurfZ + 0.004);
@@ -1705,24 +1865,24 @@
         headPivot.add(mouthCavity);
 
         var mouthInner = new THREE.Mesh(
-            new THREE.SphereGeometry(0.088, 24, 18),
-            new THREE.MeshBasicMaterial({ color: 0x48141f })
+            new THREE.SphereGeometry(0.084, 24, 18),
+            new THREE.MeshBasicMaterial({ color: srgbColor(THREE, 0x48141f) })
         );
-        mouthInner.scale.set(1.32, 0.78, 0.32);
+        mouthInner.scale.set(1.24, 0.78, 0.32);
         mouthCavity.add(mouthInner);
 
         var tongue = new THREE.Mesh(
-            new THREE.SphereGeometry(0.056, 18, 14),
-            new THREE.MeshBasicMaterial({ color: 0xe86f86 })
+            new THREE.SphereGeometry(0.054, 18, 14),
+            new THREE.MeshBasicMaterial({ color: srgbColor(THREE, 0xe86f86) })
         );
-        tongue.scale.set(1.18, 0.52, 0.34);
-        tongue.position.set(0, -0.024, 0.012);
+        tongue.scale.set(1.16, 0.52, 0.34);
+        tongue.position.set(0, -0.022, 0.012);
         mouthCavity.add(tongue);
 
         // ---------- 7. 西华师大暗酒红学士帽：软布帽冠、圆角包边帽板与编织流苏 ----------
         var hatGroup = new THREE.Group();
         hatGroup.name = "panda-academic-hat";
-        hatGroup.position.set(0, HC_Y + 0.515, -0.005);
+        hatGroup.position.set(0, HC_Y + 0.532, -0.005);
         hatGroup.rotation.x = 0.095;
         hatGroup.rotation.z = -0.025;
         headPivot.add(hatGroup);
@@ -1730,9 +1890,9 @@
         var hatClothMat = crimsonCapMat.clone();
         hatClothMat.roughness = 0.82;
         hatClothMat.metalness = 0.0;
-        var hatSeamMat = new THREE.MeshStandardMaterial({ color: 0x68202c, roughness: 0.88 });
-        var hatThreadMat = new THREE.MeshStandardMaterial({ color: 0xb66b73, roughness: 0.84 });
-        var tasselThreadMat = new THREE.MeshStandardMaterial({ color: 0xd6af57, roughness: 0.58, metalness: 0.30 });
+        var hatSeamMat = new THREE.MeshStandardMaterial({ color: srgbColor(THREE, 0x5c141e), roughness: 0.88 });
+        var hatThreadMat = new THREE.MeshStandardMaterial({ color: srgbColor(THREE, 0xb24a58), roughness: 0.84 });
+        var tasselThreadMat = new THREE.MeshStandardMaterial({ color: srgbColor(THREE, 0xd6ab4e), roughness: 0.58, metalness: 0.30 });
 
         // Rounded rolled band: no sharp cylinder caps at the forehead.
         var bandProfile = new THREE.SplineCurve([
@@ -2035,7 +2195,7 @@
             floatingLeaves.push({ mesh: leafMesh, cfg: cfg });
         });
 
-        // ---------- 动画状态与实时骨骼/表情驱动 ----------
+        // ---------- 动画状态、情绪动作机与身份光环联动 ----------
         var blinkTimer = 2.4;
         var blinkPhase = -1;
         var lastHeadY = 0;
@@ -2043,27 +2203,89 @@
         var tasselAngle = 0;
         var userYaw = 0;
 
+        var PERSONA_THEMES = {
+            "default": { core: 0x00e5ff, bloom: 0x38bdf8, inner: 0x38bdf8, rim: 0x8fa9cf, spark: 0x8bcfdc },
+            "career": { core: 0x38bdf8, bloom: 0xfbbf24, inner: 0x0ea5e9, rim: 0xfcd34d, spark: 0xfde68a },
+            "mental": { core: 0x34d399, bloom: 0x6ee7b7, inner: 0x2dd4bf, rim: 0xa7f3d0, spark: 0xa7f3d0 }
+        };
+        var personaKey = "default";
+        var personaLerp = {
+            core: new THREE.Color(PERSONA_THEMES["default"].core),
+            bloom: new THREE.Color(PERSONA_THEMES["default"].bloom),
+            inner: new THREE.Color(PERSONA_THEMES["default"].inner),
+            rim: new THREE.Color(PERSONA_THEMES["default"].rim),
+            spark: new THREE.Color(PERSONA_THEMES["default"].spark)
+        };
+        var GESTURE_DURATIONS = { wave: 1.8, nod: 1.3, book: 2.0, celebrate: 2.0 };
+        var gesture = { kind: null, elapsed: 0, duration: 0 };
+
+        function triggerGesture(kind, durationSec) {
+            if (!GESTURE_DURATIONS[kind]) return false;
+            gesture.kind = kind;
+            gesture.elapsed = 0;
+            gesture.duration = Math.max(0.5, Number(durationSec) || GESTURE_DURATIONS[kind]);
+            return true;
+        }
+
+        function setPersona(roleKey) {
+            var nextKey = PERSONA_THEMES[roleKey] ? roleKey : "default";
+            personaKey = nextKey;
+            var th = PERSONA_THEMES[nextKey];
+            personaLerp.core.setHex(th.core);
+            personaLerp.bloom.setHex(th.bloom);
+            personaLerp.inner.setHex(th.inner);
+            personaLerp.rim.setHex(th.rim);
+            personaLerp.spark.setHex(th.spark);
+            return personaKey;
+        }
+
         function update(t, dt, state) {
             var speaking = !!(state && state.voiceActive);
             var mouthPulse = (state && state.mouthPulse) || 0;
+            var audioLevel = Math.max(0, Math.min(1, Number((state && state.audioLevel) || 0)));
             var px = (state && state.pointerNX) || 0;
             var py = (state && state.pointerNY) || 0;
             var isThinking = !!(state && state.thinking);
 
-            // 柔和呼吸起伏
-            bodyBob.position.y = Math.sin(t * 1.8) * 0.014;
-            spinePivot.rotation.z = Math.sin(t * 0.9) * 0.013;
-            spinePivot.rotation.x = Math.sin(t * 1.8 + 0.5) * (speaking ? 0.020 : 0.009);
+            // 平滑推进当前触发的情绪/交互动作包络
+            var gKind = gesture.kind;
+            var gP = 0;
+            var gEnv = 0;
+            if (gKind) {
+                gesture.elapsed += dt;
+                gP = Math.min(1, gesture.elapsed / Math.max(0.1, gesture.duration));
+                gEnv = Math.sin(Math.PI * gP);
+                if (gP >= 1) {
+                    gesture.kind = null;
+                }
+            }
 
-            // 头部平滑跟随鼠标视线 + 说话轻点头
+            var colorBlend = Math.min(1, dt * 4.5);
+            outerRingCore.material.color.lerp(personaLerp.core, colorBlend);
+            outerRingBloom.material.color.lerp(personaLerp.bloom, colorBlend);
+            innerRing.material.color.lerp(personaLerp.inner, colorBlend);
+            rimLight.color.lerp(personaLerp.rim, colorBlend);
+            sparks.material.color.lerp(personaLerp.spark, colorBlend);
+
+            var celebrateBounce = gKind === "celebrate" ? Math.abs(Math.sin(gP * Math.PI * 3)) * 0.042 * gEnv : 0;
+            var nodBodyLean = gKind === "nod" ? gEnv * 0.036 : 0;
+
+            // 柔和呼吸起伏
+            bodyBob.position.y = Math.sin(t * 1.8) * 0.014 + celebrateBounce;
+            spinePivot.rotation.z = Math.sin(t * 0.9) * 0.013 + (gKind === "wave" ? -gEnv * 0.04 : 0);
+            spinePivot.rotation.x = Math.sin(t * 1.8 + 0.5) * (speaking ? 0.020 : 0.009) + nodBodyLean;
+
+            // 头部平滑跟随鼠标视线 + 说话轻点头 + 情绪动作叠加
+            var nodHeadDelta = gKind === "nod" ? Math.sin(gP * Math.PI * 4) * 0.16 * gEnv : 0;
+            var tiltHeadDelta = gKind === "wave" ? gEnv * 0.075 : (gKind === "celebrate" ? Math.sin(gP * Math.PI * 4) * 0.055 * gEnv : 0);
             var targetHeadY = px * 0.26 + Math.sin(t * 0.55) * 0.035;
-            var targetHeadX = py * 0.13 + Math.sin(t * 1.1) * 0.016 + (speaking ? Math.sin(t * 6.5) * 0.024 : 0);
+            var targetHeadX = py * 0.13 + Math.sin(t * 1.1) * 0.016 + (speaking ? Math.sin(t * 6.5) * 0.024 : 0) + nodHeadDelta;
             headPivot.rotation.y += (targetHeadY - headPivot.rotation.y) * Math.min(1, dt * 6);
             headPivot.rotation.x += (targetHeadX - headPivot.rotation.x) * Math.min(1, dt * 6);
-            headPivot.rotation.z = -px * 0.045 + (isThinking ? Math.sin(t * 2.4) * 0.038 : 0);
+            headPivot.rotation.z = -px * 0.045 + (isThinking ? Math.sin(t * 2.4) * 0.038 : 0) + tiltHeadDelta;
 
             // 圆耳朵灵动微颤
-            var earAmp = speaking ? 0.052 : 0.018;
+            var earAmp = (speaking || gKind === "celebrate") ? 0.055 : 0.018;
             ears.forEach(function (ear, idx) {
                 ear.pivot.rotation.z = ear.baseZ + Math.sin(t * 3.2 + idx * 1.7) * earAmp * ear.sx;
             });
@@ -2103,10 +2325,13 @@
                 eye.gaze.position.y += (targetY - eye.gaze.position.y) * Math.min(1, dt * 5);
             });
 
-            // 说话动态口型（闭嘴时纯享温柔微笑弧，说话时张合立体口腔与小舌头）
+            // 说话动态口型（闭嘴时纯享温柔微笑弧，说话时按韵律/音频电平张合）
             var openTarget = 0.01;
             if (speaking) {
-                openTarget = 0.36 + 0.46 * Math.abs(Math.sin(t * 10.5)) + 0.18 * mouthPulse;
+                openTarget = Math.max(
+                    0.36 + 0.44 * Math.abs(Math.sin(t * 10.5)) + 0.18 * mouthPulse,
+                    audioLevel > 0 ? (0.24 + audioLevel * 0.72) : 0
+                );
             }
             var curOpen = mouthCavity.scale.y;
             var nextOpen = curOpen + (Math.min(1.0, openTarget) - curOpen) * Math.min(1, dt * 16);
@@ -2114,31 +2339,47 @@
             mouthCavity.visible = nextOpen > 0.06;
             closedMouth.visible = !mouthCavity.visible;
 
-            // 托书右手与自然垂落左手互动摆动
+            // 托书右手与挥手左手协同互动（保持书本文字始终面向熊猫阅读方向）
             var talkWave = speaking ? Math.sin(t * 3.6) * 0.065 : 0;
-            rightElbow.rotation.x = -1.36 + Math.sin(t * 1.8) * 0.032 + talkWave;
-            leftShoulder.rotation.x = 0.04 + Math.sin(t * 1.4 + 1.1) * (speaking ? 0.075 : 0.028);
+            var bookArmBoost = gKind === "book" ? -gEnv * 0.17 : (gKind === "celebrate" ? -gEnv * 0.22 : 0);
+            rightElbow.rotation.x = -1.36 + Math.sin(t * 1.8) * 0.032 + talkWave + bookArmBoost;
+
+            var waveZ = 0;
+            var waveX = 0;
+            if (gKind === "wave") {
+                waveZ = gEnv * (1.42 + Math.sin(gP * Math.PI * 5) * 0.22);
+                waveX = -gEnv * 0.34;
+            } else if (gKind === "celebrate") {
+                waveZ = gEnv * (0.95 + Math.sin(gP * Math.PI * 6) * 0.24);
+                waveX = -gEnv * 0.26;
+            }
+            leftShoulder.rotation.z = 0.25 + waveZ;
+            leftShoulder.rotation.x = 0.04 + Math.sin(t * 1.4 + 1.1) * (speaking ? 0.075 : 0.028) + waveX;
 
             // 全息书卷悬浮呼吸、内页微颤翻动与星尘微升
-            holoBookGroup.position.y = 1.33 + Math.sin(t * 2.1) * 0.034 + talkWave * 0.16;
+            var bookLift = gKind === "book" ? gEnv * 0.085 : 0;
+            var flutterBoost = gKind === "book" ? (1 + gEnv * 1.6) : 1;
+            var sparkBoost = (gKind === "book" || gKind === "celebrate") ? (1 + gEnv * 1.5) : 1;
+            holoBookGroup.position.y = 1.33 + Math.sin(t * 2.1) * 0.034 + talkWave * 0.16 + bookLift;
             orientBookForReader(t);
             flutterPages.forEach(function (fp) {
-                fp.group.rotation.y = fp.baseY + Math.sin(t * 2.6 + fp.ph) * (speaking ? 0.08 : 0.035);
+                fp.group.rotation.y = fp.baseY + Math.sin(t * 2.6 * flutterBoost + fp.ph) * (speaking ? 0.08 : 0.035);
             });
             var posArr = sparkGeo.attributes.position.array;
             for (var i = 0; i < sparkCount; i++) {
                 var sd = sparkSeeds[i];
-                posArr[i * 3 + 1] = sd.y + ((t * 0.11 + sd.ph * 0.1) % 0.30);
+                posArr[i * 3 + 1] = sd.y + ((t * 0.11 * sparkBoost + sd.ph * 0.1) % 0.30);
                 posArr[i * 3] = sd.x + Math.sin(t * 1.8 + sd.ph) * 0.018;
             }
             sparkGeo.attributes.position.needsUpdate = true;
 
             // 舞台四周银杏叶轻盈律动
+            var leafRate = gKind === "celebrate" ? 1.8 : 1.0;
             floatingLeaves.forEach(function (item) {
                 var c = item.cfg;
-                item.mesh.position.y = c.y + Math.sin(t * 1.3 + c.ph) * 0.05;
-                item.mesh.rotation.z = c.rz + Math.sin(t * 0.9 + c.ph) * 0.12;
-                item.mesh.rotation.y = c.ry + Math.cos(t * 0.7 + c.ph) * 0.14;
+                item.mesh.position.y = c.y + Math.sin(t * 1.3 * leafRate + c.ph) * 0.05;
+                item.mesh.rotation.z = c.rz + Math.sin(t * 0.9 * leafRate + c.ph) * 0.12;
+                item.mesh.rotation.y = c.ry + Math.cos(t * 0.7 * leafRate + c.ph) * 0.14;
             });
 
             // 底座双层全息光环呼吸
@@ -2156,9 +2397,12 @@
             cameraPreset: { fov: 32, pos: [0, 1.42, 4.95], lookAt: [0, 1.30, 0] },
             update: update,
             addYaw: function (delta) {
-                userYaw = Math.max(-1.05, Math.min(1.05, userYaw + delta));
+                userYaw = Math.max(-Math.PI, Math.min(Math.PI, userYaw + delta));
             },
-            resetYaw: function () { userYaw = 0; }
+            resetYaw: function () { userYaw = 0; },
+            triggerGesture: triggerGesture,
+            setPersona: setPersona,
+            getGesture: function () { return gesture.kind; }
         };
     };
 })();

@@ -107,7 +107,7 @@ def _smtp_send(host: str, port: int, user: str, password: str, use_ssl: bool,
     """建立 SMTP(S) 连接并投递一封邮件；异常向上抛出由调用方归一"""
     msg = MIMEText(body, "html" if html else "plain", "utf-8")
     msg["Subject"] = Header(subject, "utf-8")
-    msg["From"] = formataddr((str(Header("GovAgentOS", "utf-8")), sender))
+    msg["From"] = formataddr((str(Header("CampusAgentOS", "utf-8")), sender))
     msg["To"] = ", ".join(recipients)
     context = ssl.create_default_context()
     if use_ssl:
@@ -223,7 +223,7 @@ def build_task_report(task: Dict, status: str, result: str, detail: str = "") ->
     from app.models.task import STATUS_SUCCESS
 
     label = "成功" if status == STATUS_SUCCESS else ("运行中" if status == "running" else "失败")
-    subject = "[GovAgentOS 定时任务] %s（%s）%s" % (task.get("name", "未命名任务"),
+    subject = "[CampusAgentOS 定时任务] %s（%s）%s" % (task.get("name", "未命名任务"),
                                                     task.get("task_type", ""), label)
     body_lines = [
         "任务名称：%s" % task.get("name", ""),

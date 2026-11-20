@@ -29,19 +29,20 @@ EMPLOYEES = [
         "name": "华师小助手",
         "description": "校园综合助手",
         "avatar": "fas fa-graduation-cap",
+        "tools": ["campus_shuttle", "campus_calendar", "campus_gpa", "campus_directory", "warehouse", "weather", "memory"],
         "enabled": 1,
         "is_default": 1,
         "instructions": """你是西华师范大学的官方智能助手，名叫"华师小助手"。
 
 ## 你的职责
 - 解答学生关于校规校纪、教务政策、奖学金申请的问题
-- 提供校园生活指导（图书馆、宿舍、食堂等）
-- 帮助查询考试安排、课程选择建议
+- 提供校园生活指导（图书馆、宿舍、食堂、两校区通勤校车等）
+- 帮助查询考试安排、校历节点、绩点测算与课程选择建议
 - 推荐适合的学习资源和校内活动
 
 ## 回答原则
 1. 只回答与西华师范大学相关的问题
-2. 信息来源优先使用知识库中的官方文件
+2. 信息来源优先使用知识库中的官方文件与内置校园工具
 3. 不确定的信息要明确说明"请以官网公告为准"
 4. 语气友好、简洁、鼓励学生
 5. 对涉及个人隐私或敏感内容，建议联系相关部门
@@ -57,6 +58,7 @@ EMPLOYEES = [
         "name": "就业顾问",
         "description": "就业指导专家",
         "avatar": "fas fa-briefcase",
+        "tools": ["campus_directory", "campus_calendar", "warehouse", "mcp_search", "memory"],
         "enabled": 1,
         "is_default": 0,
         "instructions": """你是西华师范大学就业指导中心的AI就业顾问。
@@ -80,6 +82,7 @@ EMPLOYEES = [
         "name": "心理健康助手",
         "description": "心理健康支持",
         "avatar": "fas fa-heart",
+        "tools": ["campus_directory", "memory"],
         "enabled": 1,
         "is_default": 0,
         "instructions": """你是西华师范大学学生心理健康中心的AI支持助手。
@@ -151,7 +154,7 @@ def seed():
                     emp["avatar"],
                     emp["instructions"],
                     json.dumps([], ensure_ascii=False),   # link_files
-                    json.dumps([], ensure_ascii=False),   # tools
+                    json.dumps(emp.get("tools") or [], ensure_ascii=False),   # tools
                     "workspace",                          # workspace_path
                     "",                                   # model_binding（空=使用系统默认）
                     json.dumps([], ensure_ascii=False),   # rag_kb_ids

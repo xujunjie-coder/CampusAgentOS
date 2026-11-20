@@ -36,7 +36,7 @@ class NewsMcpHandler(RequestHandler):
             return
         if method == "initialize":
             self.reply(request_id, result={"protocolVersion": VERSION, "capabilities": {"tools": {}},
-                                           "serverInfo": {"name": "govcheck-news", "version": "1.0"}})
+                                           "serverInfo": {"name": "campus-news", "version": "1.0"}})
             return
         if self.request.headers.get("MCP-Protocol-Version", VERSION) != VERSION:
             raise HTTPError(400)

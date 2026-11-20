@@ -63,7 +63,7 @@ def build_chat_pdf(username: str, session_id: str, messages: list) -> bytes:
                             leftMargin=16 * mm, rightMargin=16 * mm,
                             title="对话记录_%s" % session_id, author=username)
     story = [
-        Paragraph("GovAgentOS 对话记录导出", st["title"]),
+        Paragraph("CampusAgentOS · 西华师大智慧校园对话记录导出", st["title"]),
         Paragraph("用户：%s　会话：%s　消息数：%d" % (
             xhtml_escape(username), xhtml_escape(session_id), len(messages)), st["meta"]),
         Spacer(1, 4 * mm),

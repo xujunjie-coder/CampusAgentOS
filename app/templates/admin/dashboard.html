@@ -11,7 +11,7 @@
     {% if site_favicon %}<link rel='icon' href='{{ site_favicon }}'>{% end %}
     <link rel='stylesheet' href='/static/vendor/fontawesome/css/all.min.css'>
     <link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
-    <link rel='stylesheet' href='/static/css/console.css?v=20261120a'>
+    <link rel='stylesheet' href='/static/css/console.css?v=20261120b'>
     <!-- 科技大屏 HUD 调色变量（保留学校品牌标识而不遮蔽青蓝发光视觉） -->
     <style>
         :root { --cwnu-blue: #00e5ff; --cwnu-red: #ff5a6e; --ckb-cyan: #00e5ff; --ckb-royal: #2563eb; }
@@ -110,13 +110,14 @@
             </div>
         </section>
 
-        <!-- 中：3D 科技地球指向飞线 + 2D ECharts 飞线双模 + 热词 -->
+        <!-- 中：3D 科技地球指向飞线 + 2D ECharts 飞线 + 华凤/北湖双校区态势 + 热词 -->
         <section class="ckb-panel ckb-center">
             <div class="ckb-panel-head">
                 <span class="ckb-panel-title"><i class="fas fa-globe-asia"></i>信源覆盖与全域态势</span>
                 <span class="ckb-map-switch" id="mapModeSwitch">
                     <button type="button" class="is-active" data-mode="globe">3D 地球</button>
                     <button type="button" data-mode="2d">2D 飞线</button>
+                    <button type="button" data-mode="campus">双校区</button>
                 </span>
                 <span class="ckb-panel-sub" id="mapSub">三维实时态势</span>
             </div>
@@ -124,8 +125,9 @@
                 <div class="ckb-chart ckb-chart-flex" id="chartMap">
                     <div class="ckb-globe-stage" id="globeStage"></div>
                     <div class="ckb-chart-2d" id="chartMap2d" hidden></div>
+                    <div class="ckb-chart-campus" id="chartMapCampus" hidden></div>
                 </div>
-                <div class="ckb-legend-tip" id="mapTip">左键拖拽旋转 · 滚轮缩放 · 双击复位 ｜ 3D 指向箭头汇聚至西华师大 · 南充</div>
+                <div class="ckb-legend-tip" id="mapTip">左键拖拽旋转 · 滚轮缩放 · 点击节点下钻 · 双击复位 ｜ 3D 指向箭头汇聚至西华师大 · 南充</div>
                 <div class="ckb-hotwords" id="hotwords"></div>
             </div>
         </section>
@@ -171,6 +173,26 @@
         <span class="ckb-foot-time">数据生成 <b id="genTime">-</b></span>
     </div>
 
+    <!-- 节点下钻详情抽屉（点击 3D 地球节点、双校区专题或实时预警项弹出） -->
+    <aside class="ckb-drill" id="drillDrawer" aria-label="下钻详情面板" hidden>
+        <div class="ckb-drill-head">
+            <span class="ckb-drill-badge" id="drillBadge">态势下钻</span>
+            <h3 class="ckb-drill-title" id="drillTitle">-</h3>
+            <button type="button" class="ckb-drill-close" id="drillClose" title="关闭详情" aria-label="关闭详情">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="ckb-drill-body">
+            <div class="ckb-drill-stats" id="drillStats"></div>
+            <div class="ckb-drill-note" id="drillNote" hidden></div>
+            <ul class="ckb-drill-list" id="drillList"></ul>
+        </div>
+        <div class="ckb-drill-foot">
+            <a class="ckb-btn" href="/admin/sentiment"><i class="fas fa-shield-alt"></i> 智能舆情</a>
+            <a class="ckb-btn" href="/admin/warehouse"><i class="fas fa-warehouse"></i> 数据仓库</a>
+        </div>
+    </aside>
+
     <!-- 语音问答浮层（默认折叠，避免窄屏遮挡实时预警流） -->
     <div class="ckb-ask is-min" id="askPanel">
         <div class="ckb-ask-head" id="askHead">
@@ -180,7 +202,7 @@
         </div>
         <div class="ckb-ask-body">
             <div class="ckb-ask-log" id="askLog">
-                <div class="ckb-ask-a">可以问我：最新数据情况、风险预警情况、信源采集排名、近七天趋势。语音或文字均可。</div>
+                <div class="ckb-ask-a">可以问我：最新数据情况、风险预警情况、四川关注情况、华凤北湖双校区、信源采集排名。语音或文字均可。</div>
             </div>
             <div class="ckb-ask-input">
                 <input type="text" id="askInput" maxlength="120" placeholder="例如：最新数据情况" autocomplete="off">

@@ -39,6 +39,10 @@ TOOL_OPTIONS = {
     "memory": ("长期记忆（工作空间）", "fas fa-brain"),
     "warehouse": ("数仓检索", "fas fa-database"),
     "mcp_search": ("MCP 网络搜索", "fas fa-search"),
+    "campus_shuttle": ("校园班车查询", "fas fa-bus"),
+    "campus_calendar": ("校历与考试周", "fas fa-calendar-alt"),
+    "campus_gpa": ("绩点与奖学金测算", "fas fa-calculator"),
+    "campus_directory": ("校内办事黄页", "fas fa-map-signs"),
 }
 
 URL_EMPLOYEES = "/admin/employees"

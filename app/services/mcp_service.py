@@ -26,27 +26,60 @@ async def search_public_news(query):
     return await asyncio.to_thread(fetch_news, query)
 
 
-def fetch_news(query):
-    params = urlencode({"q": query, "hl": "zh-CN", "gl": "CN", "ceid": "CN:zh-Hans"})
-    request = Request("https://news.google.com/rss/search?" + params, headers={
-        "User-Agent": "Mozilla/5.0", "Accept": "application/rss+xml, application/xml"})
-    try:
-        with build_opener(NoRedirect()).open(request, timeout=8) as response:
-            body = response.read(2_000_001)
-        if len(body) > 2_000_000 or b"<!DOCTYPE" in body.upper() or b"<!ENTITY" in body.upper():
-            raise ValueError("Unsupported RSS content")
-        root = ElementTree.fromstring(body)
-    except (OSError, ElementTree.ParseError) as exc:
-        raise ValueError("News feed unavailable") from exc
+def _parse_rss_feed(feed_url: str) -> list:
+    if urlsplit(feed_url).scheme != "https":
+        raise ValueError("Unsupported feed scheme")
+    request = Request(feed_url, headers={
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/rss+xml, application/xml, text/xml",
+    })
+    with build_opener(NoRedirect()).open(request, timeout=6) as response:
+        body = response.read(2_000_001)
+    if len(body) > 2_000_000 or b"<!DOCTYPE" in body.upper() or b"<!ENTITY" in body.upper():
+        raise ValueError("Unsupported RSS content")
+    root = ElementTree.fromstring(body)
     if root.tag != "rss":
         raise ValueError("Expected an RSS feed")
     rows = []
     for item in root.findall("./channel/item")[:6]:
-        title, url = item.findtext("title", "").strip(), item.findtext("link", "").strip()
+        title = item.findtext("title", "").strip()
+        url = item.findtext("link", "").strip()
+        source = (item.findtext("source", "")
+                  or item.findtext("{http://www.bing.com/news}Source", "")).strip()
         if title and urlsplit(url).scheme == "https" and len(url) <= 500:
-            rows.append({"title": title[:200], "url": url, "published_at": item.findtext("pubDate", "")[:80],
-                         "source": item.findtext("source", "")[:100]})
+            rows.append({
+                "title": title[:200],
+                "url": url,
+                "published_at": item.findtext("pubDate", "")[:80],
+                "source": source[:100],
+            })
     return rows
+
+
+def fetch_news(query):
+    """优先使用国内直连可达的新闻 RSS 源（Bing 中文新闻 / 自定义 MCP_RSS_URL），失败回退 Google News。"""
+    feeds = []
+    custom_rss = (os.getenv("MCP_RSS_URL") or "").strip()
+    if custom_rss:
+        sep = "&" if "?" in custom_rss else "?"
+        feeds.append(custom_rss + sep + urlencode({"q": query}))
+    feeds.append("https://cn.bing.com/news/search?" + urlencode({
+        "q": query, "format": "rss", "setlang": "zh-hans",
+    }))
+    feeds.append("https://news.google.com/rss/search?" + urlencode({
+        "q": query, "hl": "zh-CN", "gl": "CN", "ceid": "CN:zh-Hans",
+    }))
+    last_exc = None
+    for feed_url in feeds:
+        try:
+            rows = _parse_rss_feed(feed_url)
+            if rows:
+                return rows
+        except (OSError, ElementTree.ParseError, ValueError) as exc:
+            last_exc = exc
+    if last_exc is not None:
+        raise ValueError("News feed unavailable") from last_exc
+    return []
 
 
 async def mcp_search(keyword: str) -> str:
@@ -94,7 +127,7 @@ async def mcp_search(keyword: str) -> str:
     try:
         result, response_headers = await send("initialize", {
             "protocolVersion": VERSION, "capabilities": {},
-            "clientInfo": {"name": "GovCheckDataAgentOS", "version": "1.0"},
+            "clientInfo": {"name": "CampusAgentOS", "version": "1.0"},
         }, 1)
         if result.get("protocolVersion") != VERSION or "tools" not in result.get("capabilities", {}):
             return "MCP 服务不支持所需版本或工具能力"

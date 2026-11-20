@@ -439,7 +439,7 @@
                 '<div class="layui-form emp-form" lay-filter="empForm">' +
                 '  <div class="emp-form-row2">' +
                 '    <div class="layui-form-item"><label class="layui-form-label">员工名称</label><div class="layui-input-block">' +
-                '      <input type="text" name="name" class="layui-input" placeholder="如：旅行规划师" value="' + esc(row.name || "") + '"></div></div>' +
+                '      <input type="text" name="name" class="layui-input" placeholder="如：华师小助手" value="' + esc(row.name || "") + '"></div></div>' +
                 '    <div class="layui-form-item"><label class="layui-form-label">启用状态</label><div class="layui-input-block">' +
                 '      <input type="checkbox" name="enabled" lay-skin="switch" lay-text="启用|停用"' + (row.enabled === 0 ? "" : " checked") + "></div></div>" +
                 "  </div>" +

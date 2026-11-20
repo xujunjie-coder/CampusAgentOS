@@ -30,11 +30,11 @@ from app.models.session import SessionRepository
 
 logger = logging.getLogger(__name__)
 
-# 随仓库入库的默认品牌图标（app/static/uploads/brand/ 下，WebP ≤ 64 KB）：
+# 随仓库入库的默认品牌图标（app/static/uploads/brand/ 下，SVG ≤ 4 KB）：
 # 系统设置里未配置 site_logo / site_favicon 时用它兜底，保证换机器/新库也能看到品牌标识；
 # 在 /admin/settings 上传后会写入 system_settings，改为上传件优先。
-DEFAULT_SITE_LOGO = "/static/uploads/brand/logo-govcheck.webp"
-DEFAULT_SITE_FAVICON = "/static/uploads/brand/favicon-govcheck.webp"
+DEFAULT_SITE_LOGO = "/static/uploads/brand/logo-cwnu.svg"
+DEFAULT_SITE_FAVICON = "/static/uploads/brand/favicon-cwnu.svg"
 
 # 会话 token 的 cookie 名；与旧 username/role cookie 并存，兼容期内两者都认
 SESSION_COOKIE = "session_token"
@@ -241,15 +241,15 @@ class BaseHandler(tornado.web.RequestHandler, SSEMixin):
         try:
             from app.services import settings_service
             brand = settings_service.branding()
-            kwargs.setdefault("site_name", brand.get("site_name") or "数据瞭望")
+            kwargs.setdefault("site_name", brand.get("site_name") or "西华师范大学 · 智慧校园")
             kwargs.setdefault("site_logo", brand.get("site_logo") or DEFAULT_SITE_LOGO)
             kwargs.setdefault("site_favicon", brand.get("site_favicon") or DEFAULT_SITE_FAVICON)
-            kwargs.setdefault("site_subtitle", brand.get("site_subtitle") or "政务数据智能平台")
+            kwargs.setdefault("site_subtitle", brand.get("site_subtitle") or "西华师范大学智慧校园服务智能体平台")
         except Exception:
-            kwargs.setdefault("site_name", "数据瞭望")
+            kwargs.setdefault("site_name", "西华师范大学 · 智慧校园")
             kwargs.setdefault("site_logo", DEFAULT_SITE_LOGO)
             kwargs.setdefault("site_favicon", DEFAULT_SITE_FAVICON)
-            kwargs.setdefault("site_subtitle", "政务数据智能平台")
+            kwargs.setdefault("site_subtitle", "西华师范大学智慧校园服务智能体平台")
         super().render(template_name, **kwargs)
 
 
