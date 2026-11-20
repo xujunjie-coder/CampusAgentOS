@@ -293,7 +293,7 @@
         if (!parsed) return false;
 
         el.setAttribute("data-ui-counted", "1");
-        if (isReducedMotion()) return true;
+        if (isReducedMotion() || document.hidden) return true;
 
         el.__uiAnimating = true;
         var duration = 420;
@@ -302,9 +302,22 @@
         var node = parsed.textNode;
 
         node.nodeValue = parsed.prefix + formatNumber(0, parsed.decimals, parsed.useCommas) + parsed.suffix;
+        var finalText = parsed.prefix + formatNumber(target, parsed.decimals, parsed.useCommas) + parsed.suffix;
+        var finished = false;
+
+        var safetyTimer = window.setTimeout(function () {
+            if (!finished && node.isConnected) {
+                finished = true;
+                node.nodeValue = finalText;
+                el.__uiAnimating = false;
+            }
+        }, duration + 160);
 
         function step(ts) {
+            if (finished) return;
             if (!node.isConnected) {
+                finished = true;
+                window.clearTimeout(safetyTimer);
                 el.__uiAnimating = false;
                 return;
             }
@@ -319,6 +332,8 @@
             if (p < 1) {
                 window.requestAnimationFrame(step);
             } else {
+                finished = true;
+                window.clearTimeout(safetyTimer);
                 el.__uiAnimating = false;
             }
         }

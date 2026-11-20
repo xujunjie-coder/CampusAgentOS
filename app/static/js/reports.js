@@ -41,6 +41,8 @@
         var option = {
             backgroundColor: 'transparent',
             textStyle: { fontFamily: 'inherit', color: theme.text },
+            animation: !document.hidden,
+            animationDuration: 280,
             tooltip: {
                 trigger: 'axis', backgroundColor: theme.tooltipBg, borderColor: theme.tooltipBorder,
                 textStyle: { color: theme.tooltipText, fontSize: 12 }

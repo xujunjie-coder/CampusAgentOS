@@ -11,14 +11,10 @@
     {% if site_favicon %}<link rel='icon' href='{{ site_favicon }}'>{% end %}
     <link rel='stylesheet' href='/static/vendor/fontawesome/css/all.min.css'>
     <link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
-    <link rel='stylesheet' href='/static/css/console.css?v=20261111b'>
-    <!-- 西华师范大学品牌色覆盖 -->
+    <link rel='stylesheet' href='/static/css/console.css?v=20261120a'>
+    <!-- 科技大屏 HUD 调色变量（保留学校品牌标识而不遮蔽青蓝发光视觉） -->
     <style>
-        :root { --cwnu-blue: #003087; --cwnu-red: #C41230; }
-        .ckb-brand-icon, .ckb-live-flag, .ckb-panel-title .fas { color: var(--cwnu-blue) !important; }
-        .ckb-head { border-bottom-color: var(--cwnu-blue) !important; }
-        .ckb-kw-tag { background: var(--cwnu-blue) !important; }
-        .ckb-footer-tag { color: var(--cwnu-blue) !important; }
+        :root { --cwnu-blue: #00e5ff; --cwnu-red: #ff5a6e; --ckb-cyan: #00e5ff; --ckb-royal: #2563eb; }
     </style>
 </head>
 <body>
@@ -34,7 +30,7 @@
             {% end %}
             <div>
                 <div class="ckb-title">西华师范大学 · 智慧校园服务数据中心</div>
-                <div class="ckb-sub">问答服务 / 政策速报 / 就业指导 / 心理支持 实时态势</div>
+                <div class="ckb-sub">SMART CAMPUS COMMAND CENTER ｜ 问答 · 舆情 · 采集 · 全域态势感知</div>
             </div>
         </div>
         <div class="ckb-head-clock">
@@ -50,38 +46,56 @@
         </div>
     </div>
 
-    <!-- 主体：KPI 条 + 五块面板（bootstrap grid 只做间距/栅格工具，主布局用 CSS Grid 锁死大屏比例） -->
+    <!-- 主体：KPI 条 + 五块面板（ECharts 5 组件 + Three.js 3D 地球指向飞线） -->
     <div class="ckb-body">
         <div class="ckb-kpis">
             <div class="ckb-kpi">
-                <div class="ckb-kpi-k">采集总量</div>
-                <div class="ckb-kpi-v" id="kpiCollect">0<small>条</small></div>
-                <div class="ckb-kpi-sub" id="kpiCollectSub">今日新增 0</div>
+                <div class="ckb-kpi-main">
+                    <div class="ckb-kpi-k">采集总量</div>
+                    <div class="ckb-kpi-v" id="kpiCollect">0<small>条</small></div>
+                    <div class="ckb-kpi-sub" id="kpiCollectSub">今日新增 0</div>
+                </div>
+                <div class="ckb-kpi-mini" id="kpiMiniCollect"></div>
             </div>
             <div class="ckb-kpi">
-                <div class="ckb-kpi-k">今日新增</div>
-                <div class="ckb-kpi-v" id="kpiToday">0<small>条</small></div>
-                <div class="ckb-kpi-sub">采集链路当日增量</div>
+                <div class="ckb-kpi-main">
+                    <div class="ckb-kpi-k">今日新增</div>
+                    <div class="ckb-kpi-v" id="kpiToday">0<small>条</small></div>
+                    <div class="ckb-kpi-sub">采集链路当日增量</div>
+                </div>
+                <div class="ckb-kpi-mini" id="kpiMiniToday"></div>
             </div>
             <div class="ckb-kpi">
-                <div class="ckb-kpi-k">数仓正文</div>
-                <div class="ckb-kpi-v" id="kpiWarehouse">0<small>篇</small></div>
-                <div class="ckb-kpi-sub">深采入库可检索</div>
+                <div class="ckb-kpi-main">
+                    <div class="ckb-kpi-k">数仓正文</div>
+                    <div class="ckb-kpi-v" id="kpiWarehouse">0<small>篇</small></div>
+                    <div class="ckb-kpi-sub">深采入库可检索</div>
+                </div>
+                <div class="ckb-kpi-mini" id="kpiMiniWarehouse"></div>
             </div>
             <div class="ckb-kpi" data-tone="risk">
-                <div class="ckb-kpi-k">高风险线索</div>
-                <div class="ckb-kpi-v" id="kpiRiskHigh">0<small>条</small></div>
-                <div class="ckb-kpi-sub" id="kpiRiskSub">关注 0 · 待复核 0</div>
+                <div class="ckb-kpi-main">
+                    <div class="ckb-kpi-k">高风险线索</div>
+                    <div class="ckb-kpi-v" id="kpiRiskHigh">0<small>条</small></div>
+                    <div class="ckb-kpi-sub" id="kpiRiskSub">关注 0 · 待复核 0</div>
+                </div>
+                <div class="ckb-kpi-mini" id="kpiMiniRisk"></div>
             </div>
             <div class="ckb-kpi">
-                <div class="ckb-kpi-k">模型调用</div>
-                <div class="ckb-kpi-v" id="kpiToken">0<small>次</small></div>
-                <div class="ckb-kpi-sub" id="kpiTokenSub">Token 0</div>
+                <div class="ckb-kpi-main">
+                    <div class="ckb-kpi-k">模型调用</div>
+                    <div class="ckb-kpi-v" id="kpiToken">0<small>次</small></div>
+                    <div class="ckb-kpi-sub" id="kpiTokenSub">Token 0</div>
+                </div>
+                <div class="ckb-kpi-mini" id="kpiMiniToken"></div>
             </div>
             <div class="ckb-kpi" data-tone="ok">
-                <div class="ckb-kpi-k">活跃会话</div>
-                <div class="ckb-kpi-v" id="kpiActive">0<small>个</small></div>
-                <div class="ckb-kpi-sub" id="kpiUserSub">用户 0 · 消息 0</div>
+                <div class="ckb-kpi-main">
+                    <div class="ckb-kpi-k">活跃会话</div>
+                    <div class="ckb-kpi-v" id="kpiActive">0<small>个</small></div>
+                    <div class="ckb-kpi-sub" id="kpiUserSub">用户 0 · 消息 0</div>
+                </div>
+                <div class="ckb-kpi-mini" id="kpiMiniActive"></div>
             </div>
         </div>
 
@@ -89,22 +103,29 @@
         <section class="ckb-panel ckb-left-top">
             <div class="ckb-panel-head">
                 <span class="ckb-panel-title"><i class="fas fa-chart-area"></i>问答服务量趋势</span>
-                <span class="ckb-panel-sub">近 14 日</span>
+                <span class="ckb-panel-sub">近 14 日 · 发光双曲线</span>
             </div>
             <div class="ckb-panel-body">
                 <div class="ckb-chart" id="chartTrend"></div>
             </div>
         </section>
 
-        <!-- 中：中国地图 + 热词 -->
+        <!-- 中：3D 科技地球指向飞线 + 2D ECharts 飞线双模 + 热词 -->
         <section class="ckb-panel ckb-center">
             <div class="ckb-panel-head">
-                <span class="ckb-panel-title"><i class="fas fa-map-marked-alt"></i>信源覆盖与地域提及</span>
-                <span class="ckb-panel-sub" id="mapSub">省级行政区着色</span>
+                <span class="ckb-panel-title"><i class="fas fa-globe-asia"></i>信源覆盖与全域态势</span>
+                <span class="ckb-map-switch" id="mapModeSwitch">
+                    <button type="button" class="is-active" data-mode="globe">3D 地球</button>
+                    <button type="button" data-mode="2d">2D 飞线</button>
+                </span>
+                <span class="ckb-panel-sub" id="mapSub">三维实时态势</span>
             </div>
-            <div class="ckb-panel-body" style="display:flex;flex-direction:column;">
-                <div class="ckb-chart ckb-chart-flex" id="chartMap"></div>
-                <div class="ckb-legend-tip" id="mapTip">口径：按采集标题/摘要中出现的省级行政区或省会城市计数</div>
+            <div class="ckb-panel-body ckb-center-body">
+                <div class="ckb-chart ckb-chart-flex" id="chartMap">
+                    <div class="ckb-globe-stage" id="globeStage"></div>
+                    <div class="ckb-chart-2d" id="chartMap2d" hidden></div>
+                </div>
+                <div class="ckb-legend-tip" id="mapTip">左键拖拽旋转 · 滚轮缩放 · 双击复位 ｜ 3D 指向箭头汇聚至西华师大 · 南充</div>
                 <div class="ckb-hotwords" id="hotwords"></div>
             </div>
         </section>
@@ -112,7 +133,7 @@
         <!-- 右：风险等级分布 -->
         <section class="ckb-panel ckb-right-top">
             <div class="ckb-panel-head">
-                <span class="ckb-panel-title"><i class="fas fa-exclamation-triangle"></i>话题分类</span>
+                <span class="ckb-panel-title"><i class="fas fa-exclamation-triangle"></i>话题风险矩阵</span>
                 <span class="ckb-panel-sub" id="riskTotal">共 0 条</span>
             </div>
             <div class="ckb-panel-body">
@@ -123,8 +144,8 @@
         <!-- 左：信源采集排行 -->
         <section class="ckb-panel ckb-left-bottom">
             <div class="ckb-panel-head">
-                <span class="ckb-panel-title"><i class="fas fa-rss"></i>助手使用分布</span>
-                <span class="ckb-panel-sub">Top 10</span>
+                <span class="ckb-panel-title"><i class="fas fa-rss"></i>信源采集矩阵</span>
+                <span class="ckb-panel-sub">Top 7</span>
             </div>
             <div class="ckb-panel-body">
                 <div class="ckb-chart" id="chartSource"></div>
@@ -150,12 +171,12 @@
         <span class="ckb-foot-time">数据生成 <b id="genTime">-</b></span>
     </div>
 
-    <!-- 语音问答浮层 -->
-    <div class="ckb-ask" id="askPanel">
+    <!-- 语音问答浮层（默认折叠，避免窄屏遮挡实时预警流） -->
+    <div class="ckb-ask is-min" id="askPanel">
         <div class="ckb-ask-head" id="askHead">
             <i class="fas fa-robot"></i>
             <span>大屏智能问答</span>
-            <span class="ckb-ask-toggle" id="askToggle">收起</span>
+            <span class="ckb-ask-toggle" id="askToggle">展开</span>
         </div>
         <div class="ckb-ask-body">
             <div class="ckb-ask-log" id="askLog">
@@ -181,8 +202,10 @@
 </div>
 
 <script src="/static/vendor/echarts/echarts.min.js"></script>
+<script src="/static/vendor/three/three.min.js"></script>
 <script src="/static/js/chart-kit.js"></script>
 <script src="/static/js/console-common.js"></script>
+<script src="/static/js/dashboard-globe.js"></script>
 <script src="/static/js/dashboard.js"></script>
 </body>
 </html>
