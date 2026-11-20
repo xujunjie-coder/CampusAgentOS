@@ -14,7 +14,7 @@
     {% end %}
 
 </head>
-<body>
+<body{% block body_attributes %}{% end %}>
     {% block content %}
     {% end %}
     <script src='/static/vendor/layui/layui.js'></script>

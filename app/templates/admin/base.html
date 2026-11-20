@@ -8,10 +8,13 @@
 #}
 {% extends "../base.html" %}
 
+{% block body_attributes %} class="admin-classic"{% end %}
+
 {% block styles %}
 <link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
-<link rel='stylesheet' href='/static/css/admin.css?v=20261119b'>
+<link rel="stylesheet" href="{{ static_url('css/admin.css') }}">
 {% block admin_styles %}{% end %}
+<link rel="stylesheet" href="{{ static_url('css/admin-classic.css') }}">
 {% end %}
 
 {% block content %}
@@ -106,6 +109,7 @@
         {% module xsrf_form_html() %}
     </form>
 </div>
+{% block admin_overlays %}{% end %}
 {% end %}
 
 {% block scripts %}

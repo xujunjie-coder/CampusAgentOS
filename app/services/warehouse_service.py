@@ -260,6 +260,7 @@ def _fetch_with_requests(url: str, headers: Optional[Dict] = None) -> str:
         raise WarehouseError("抓取失败：%s" % e)
     if not resp.encoding or resp.encoding.lower() in ("iso-8859-1", "ascii"):
         resp.encoding = resp.apparent_encoding or "utf-8"
+    _reject_blocked(resp.text)
     return resp.text
 
 
@@ -274,6 +275,13 @@ def blocked_marker(text: str) -> str:
     probe = (text or "").strip()[:300]
     if not probe:
         return ""
+    if re.search(r'["\']_waf_[\w-]+["\']\s*:', probe, re.I):
+        return "WAF 防护响应"
+    # 防护服务有时只返回长编码串，不能因为字符数足够就当成正文。
+    compact = re.sub(r"\s+", "", text or "")
+    encoded = re.findall(r"[A-Za-z0-9+/=]{512,}", compact)
+    if encoded and sum(map(len, encoded)) > len(compact) * 0.8:
+        return "非正文编码数据"
     for marker in _BLOCK_MARKERS:
         if marker in probe:
             return marker
