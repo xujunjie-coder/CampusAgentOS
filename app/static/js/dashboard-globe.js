@@ -406,15 +406,32 @@
             if (child.material) {
                 if (Array.isArray(child.material)) {
                     child.material.forEach(function (m) {
-                        if (m.map) m.map.dispose();
+                        if (m.map && !m.map.__shared) m.map.dispose();
                         m.dispose();
                     });
                 } else {
-                    if (child.material.map) child.material.map.dispose();
+                    if (child.material.map && !child.material.map.__shared) child.material.map.dispose();
                     child.material.dispose();
                 }
             }
         });
+    }
+
+    function createGlowTexture() {
+        var c = global.document.createElement("canvas");
+        c.width = 64;
+        c.height = 64;
+        var ctx = c.getContext("2d");
+        var grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        grad.addColorStop(0, "rgba(255, 255, 255, 1)");
+        grad.addColorStop(0.28, "rgba(255, 255, 255, 0.72)");
+        grad.addColorStop(0.62, "rgba(255, 255, 255, 0.18)");
+        grad.addColorStop(1, "rgba(255, 255, 255, 0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 64, 64);
+        var tex = new THREE.CanvasTexture(c);
+        tex.__shared = true;
+        return tex;
     }
 
     function mount(containerEl, opts) {
@@ -499,6 +516,17 @@
         spinGroup.add(borderGroup);
         spinGroup.add(flightGroup);
 
+        var glowTex = createGlowTexture();
+        var TRAIL_STEPS = 18;
+        var _yAxis = new THREE.Vector3();
+        var _zAxis = new THREE.Vector3();
+        var _xAxis = new THREE.Vector3();
+        var _rotMat = new THREE.Matrix4();
+        var _pt = new THREE.Vector3();
+        var _tg = new THREE.Vector3();
+        var _nrm = new THREE.Vector3();
+        var _side = new THREE.Vector3();
+
         var animations = {
             darts: [],
             waves: [],
@@ -515,61 +543,269 @@
             chinaHash: ""
         };
 
-        function createArrowMesh(color, scale) {
+        // 8-triangle 锐利后掠三角翼箭矢，指向 +Y（与地球表面平行）
+        function createChevronGeometry(scale) {
             var s = scale || 1;
-            var geom = new THREE.ConeGeometry(0.014 * s, 0.042 * s, 8);
-            var mat = new THREE.MeshBasicMaterial({
-                color: color,
+            var tipY = 0.0155 * s;
+            var wingX = 0.0082 * s;
+            var wingY = -0.0095 * s;
+            var notchY = -0.0032 * s;
+            var ridgeY = -0.0005 * s;
+            var ridgeZ = 0.0026 * s;
+
+            var T = [0, tipY, 0];
+            var L = [-wingX, wingY, 0];
+            var R = [wingX, wingY, 0];
+            var N = [0, notchY, 0];
+            var U = [0, ridgeY, ridgeZ];
+            var B = [0, ridgeY, -ridgeZ];
+
+            var verts = [].concat(
+                T, U, L,
+                T, R, U,
+                U, N, L,
+                U, R, N,
+                T, L, B,
+                T, B, R,
+                B, L, N,
+                B, N, R
+            );
+            var geom = new THREE.BufferGeometry();
+            geom.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+            geom.computeVertexNormals();
+            return geom;
+        }
+
+        function createSciFiArrow(colorHex, scale, isSubtle, isHot) {
+            var s = scale || 1;
+            var group = new THREE.Group();
+
+            var coreCol = isHot ? 0xfef9c3 : 0xe0f2fe;
+            var coreMat = new THREE.MeshBasicMaterial({
+                color: coreCol,
                 transparent: true,
-                opacity: 0.96
+                opacity: isSubtle ? 0.55 : 0.96,
+                side: THREE.DoubleSide
             });
-            return new THREE.Mesh(geom, mat);
+            var coreMesh = new THREE.Mesh(createChevronGeometry(s * 0.78), coreMat);
+            group.add(coreMesh);
+
+            var auraMat = new THREE.MeshBasicMaterial({
+                color: colorHex,
+                transparent: true,
+                opacity: isSubtle ? 0.28 : 0.48,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                side: THREE.DoubleSide
+            });
+            var auraMesh = new THREE.Mesh(createChevronGeometry(s * 1.24), auraMat);
+            group.add(auraMesh);
+
+            var tipSprite = null;
+            if (!isSubtle) {
+                var sprMat = new THREE.SpriteMaterial({
+                    map: glowTex,
+                    color: colorHex,
+                    transparent: true,
+                    opacity: 0.9,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                });
+                tipSprite = new THREE.Sprite(sprMat);
+                tipSprite.position.set(0, 0.008 * s, 0);
+                tipSprite.scale.set(0.038 * s, 0.038 * s, 1);
+                group.add(tipSprite);
+            }
+
+            return {
+                group: group,
+                coreMat: coreMat,
+                auraMat: auraMat,
+                tipSprite: tipSprite
+            };
+        }
+
+        function orientArrowOnCurve(obj, pos, tan) {
+            _yAxis.copy(tan).normalize();
+            _zAxis.copy(pos).normalize();
+            if (Math.abs(_yAxis.dot(_zAxis)) > 0.98) {
+                _zAxis.set(0, 1, 0);
+                if (Math.abs(_yAxis.dot(_zAxis)) > 0.98) {
+                    _zAxis.set(1, 0, 0);
+                }
+            }
+            _xAxis.crossVectors(_yAxis, _zAxis).normalize();
+            _zAxis.crossVectors(_xAxis, _yAxis).normalize();
+            _rotMat.makeBasis(_xAxis, _yAxis, _zAxis);
+            obj.quaternion.setFromRotationMatrix(_rotMat);
+        }
+
+        function createTrailRibbon(colorHex, isHot) {
+            var count = (TRAIL_STEPS + 1) * 2;
+            var positions = new Float32Array(count * 3);
+            var colors = new Float32Array(count * 3);
+            var indices = [];
+
+            var baseCol = new THREE.Color(colorHex);
+            var headCol = new THREE.Color(isHot ? 0xfef9c3 : 0xe0f2fe);
+            var tmpCol = new THREE.Color();
+
+            for (var i = 0; i <= TRAIL_STEPS; i++) {
+                var frac = i / TRAIL_STEPS;
+                var fade = Math.pow(frac, 1.55);
+                var whiteMix = Math.max(0, (frac - 0.58) / 0.42);
+                tmpCol.copy(baseCol).lerp(headCol, whiteMix * 0.65).multiplyScalar(fade);
+                for (var sideIdx = 0; sideIdx < 2; sideIdx++) {
+                    var vi = (i * 2 + sideIdx) * 3;
+                    colors[vi] = tmpCol.r;
+                    colors[vi + 1] = tmpCol.g;
+                    colors[vi + 2] = tmpCol.b;
+                }
+                if (i < TRAIL_STEPS) {
+                    var a = i * 2;
+                    var b = i * 2 + 1;
+                    var c = (i + 1) * 2;
+                    var d = (i + 1) * 2 + 1;
+                    indices.push(a, b, c, b, d, c);
+                }
+            }
+
+            var geom = new THREE.BufferGeometry();
+            var posAttr = new THREE.BufferAttribute(positions, 3);
+            if (posAttr.setUsage) posAttr.setUsage(THREE.DynamicDrawUsage);
+            geom.setAttribute("position", posAttr);
+            geom.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+            geom.setIndex(indices);
+
+            var mat = new THREE.MeshBasicMaterial({
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.92,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                side: THREE.DoubleSide
+            });
+            var mesh = new THREE.Mesh(geom, mat);
+            mesh.frustumCulled = false;
+
+            return {
+                mesh: mesh,
+                posAttr: posAttr,
+                mat: mat
+            };
+        }
+
+        function updateDartAndTrail(d) {
+            _pt.copy(d.curve.getPoint(d.t, _pt));
+            _tg.copy(d.curve.getTangent(d.t, _tg)).normalize();
+
+            var startEnv = Math.min(1, d.t / 0.12);
+            var endEnv = Math.min(1, (1 - d.t) / 0.14);
+            var env = Math.max(0.04, Math.min(startEnv, endEnv));
+
+            d.mesh.position.copy(_pt);
+            orientArrowOnCurve(d.mesh, _pt, _tg);
+            d.mesh.scale.setScalar(0.55 + 0.45 * env);
+
+            d.coreMat.opacity = 0.96 * env;
+            d.auraMat.opacity = 0.48 * env;
+            if (d.tipSprite) d.tipSprite.material.opacity = 0.92 * env;
+            d.trailMat.opacity = 0.92 * env;
+
+            var posArr = d.trailPosAttr.array;
+            for (var i = 0; i <= TRAIL_STEPS; i++) {
+                var frac = i / TRAIL_STEPS;
+                var sT = Math.max(0.001, d.t - (1 - frac) * d.trailLen);
+                _pt.copy(d.curve.getPoint(sT, _pt));
+                _tg.copy(d.curve.getTangent(sT, _tg)).normalize();
+                _nrm.copy(_pt).normalize();
+                _side.crossVectors(_tg, _nrm);
+                if (_side.lengthSq() < 1e-6) {
+                    _side.set(1, 0, 0);
+                } else {
+                    _side.normalize();
+                }
+                var halfW = 0.0044 * d.scale * Math.pow(frac, 1.35) * env;
+
+                var li = i * 6;
+                posArr[li] = _pt.x - _side.x * halfW;
+                posArr[li + 1] = _pt.y - _side.y * halfW;
+                posArr[li + 2] = _pt.z - _side.z * halfW;
+                posArr[li + 3] = _pt.x + _side.x * halfW;
+                posArr[li + 4] = _pt.y + _side.y * halfW;
+                posArr[li + 5] = _pt.z + _side.z * halfW;
+            }
+            d.trailPosAttr.needsUpdate = true;
         }
 
         function buildHubBeacon() {
             var hubVec = latLonToVec3(HUB.lat, HUB.lon, GLOBE_RADIUS * 1.003);
             var normal = hubVec.clone().normalize();
 
-            // 光柱
-            var pillarH = 0.092;
+            // 纤细金色光针
+            var pillarH = 0.082;
             var pillar = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.004, 0.011, pillarH, 12),
-                new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.92 })
+                new THREE.CylinderGeometry(0.0025, 0.0085, pillarH, 12),
+                new THREE.MeshBasicMaterial({
+                    color: 0xfbbf24,
+                    transparent: true,
+                    opacity: 0.9,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                })
             );
             pillar.position.copy(normal.clone().multiplyScalar(GLOBE_RADIUS + pillarH * 0.5));
             orientAlongNormal(pillar, normal);
             flightGroup.add(pillar);
 
-            // 顶部棱晶信标
+            // 顶部棱晶信标 + 柔光晕
             var diamond = new THREE.Mesh(
-                new THREE.OctahedronGeometry(0.018, 0),
-                new THREE.MeshBasicMaterial({ color: 0x00e5ff })
+                new THREE.OctahedronGeometry(0.015, 0),
+                new THREE.MeshBasicMaterial({ color: 0xfef08a })
             );
-            diamond.position.copy(normal.clone().multiplyScalar(GLOBE_RADIUS + pillarH + 0.018));
+            diamond.position.copy(normal.clone().multiplyScalar(GLOBE_RADIUS + pillarH + 0.015));
             flightGroup.add(diamond);
+
+            var hubGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+                map: glowTex,
+                color: 0xfbbf24,
+                transparent: true,
+                opacity: 0.78,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            }));
+            hubGlow.position.copy(normal.clone().multiplyScalar(GLOBE_RADIUS + pillarH * 0.85));
+            hubGlow.scale.set(0.078, 0.078, 1);
+            flightGroup.add(hubGlow);
 
             // 表面双扩散雷达波环
             for (var w = 0; w < 2; w++) {
-                var waveGeom = new THREE.RingGeometry(0.022, 0.028, 32);
+                var waveGeom = new THREE.RingGeometry(0.020, 0.026, 32);
                 var waveMat = new THREE.MeshBasicMaterial({
                     color: w === 0 ? 0xfbbf24 : 0x00e5ff,
                     side: THREE.DoubleSide,
                     transparent: true,
-                    opacity: 0.85,
+                    opacity: 0.78,
+                    blending: THREE.AdditiveBlending,
                     depthWrite: false
                 });
                 var wave = new THREE.Mesh(waveGeom, waveMat);
                 wave.position.copy(normal.clone().multiplyScalar(GLOBE_RADIUS * 1.006));
                 orientTangentRing(wave, wave.position);
                 flightGroup.add(wave);
-                animations.waves.push({ mesh: wave, phase: w * 0.5 });
+                animations.waves.push({
+                    mesh: wave,
+                    phase: w * 0.5,
+                    maxScale: 2.4,
+                    baseOpacity: 0.78
+                });
             }
 
             animations.labelNodes.push({
                 name: HUB.name,
                 value: null,
                 isHub: true,
-                localPos: normal.clone().multiplyScalar(GLOBE_RADIUS + pillarH + 0.028)
+                localPos: normal.clone().multiplyScalar(GLOBE_RADIUS + pillarH + 0.026)
             });
         }
 
@@ -639,49 +875,96 @@
 
                 var isHot = !origin.baseline && idx < Math.max(2, Math.ceil(activeCount / 3));
                 var arcColor = isHot ? 0xfbbf24 : (origin.baseline ? 0x38bdf8 : 0x00e5ff);
+                var routeScale = chord < 0.12 ? 0.82 : (origin.baseline ? 0.85 : 1.08);
 
                 var mid = startVec.clone().add(hubVec).multiplyScalar(0.5);
-                var arcRadius = GLOBE_RADIUS + Math.min(0.42, Math.max(0.10, chord * 0.45));
+                var arcRadius = GLOBE_RADIUS + Math.min(0.30, Math.max(0.06, chord * 0.36));
                 mid.normalize().multiplyScalar(arcRadius);
 
                 var curve = new THREE.QuadraticBezierCurve3(startVec, mid, hubVec);
-                var points = curve.getPoints(44);
-                var lineGeom = new THREE.BufferGeometry().setFromPoints(points);
-                var lineMat = new THREE.LineBasicMaterial({
+
+                // 柔光发光管状轨道线
+                var railGeom = new THREE.TubeGeometry(curve, 36, origin.baseline ? 0.0012 : 0.0018, 5, false);
+                var railMat = new THREE.MeshBasicMaterial({
                     color: arcColor,
                     transparent: true,
-                    opacity: origin.baseline ? 0.36 : 0.74
+                    opacity: origin.baseline ? 0.20 : 0.34,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
                 });
-                flightGroup.add(new THREE.Line(lineGeom, lineMat));
+                flightGroup.add(new THREE.Mesh(railGeom, railMat));
 
-                // 起点小灯柱与点标
+                // 起点精巧信标 + 柔光晕 + 表面脉冲波环
                 var pin = new THREE.Mesh(
-                    new THREE.SphereGeometry(origin.baseline ? 0.009 : 0.013, 10, 10),
-                    new THREE.MeshBasicMaterial({ color: arcColor })
+                    new THREE.SphereGeometry(origin.baseline ? 0.0055 : 0.0068, 10, 10),
+                    new THREE.MeshBasicMaterial({ color: isHot ? 0xfef9c3 : 0xe0f2fe })
                 );
                 pin.position.copy(startVec);
                 flightGroup.add(pin);
 
-                // 终点近端静态 3D 指向性箭头（明确指向西华师大 · 南充）
-                var staticArrow = createArrowMesh(arcColor, origin.baseline ? 0.8 : 1.05);
-                var arrowPos = curve.getPoint(0.87);
-                var arrowTan = curve.getTangent(0.87).normalize();
-                staticArrow.position.copy(arrowPos);
-                staticArrow.quaternion.setFromUnitVectors(UP, arrowTan);
-                flightGroup.add(staticArrow);
+                var pinGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+                    map: glowTex,
+                    color: arcColor,
+                    transparent: true,
+                    opacity: origin.baseline ? 0.55 : 0.82,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                }));
+                pinGlow.position.copy(startVec);
+                pinGlow.scale.set(0.044, 0.044, 1);
+                flightGroup.add(pinGlow);
 
-                // 沿弧线连续飞行的 3D 箭头镖
-                var dartCount = origin.baseline ? 1 : 2;
-                for (var d = 0; d < dartCount; d++) {
-                    var dart = createArrowMesh(isHot ? 0xfde047 : 0x67e8f9, origin.baseline ? 0.72 : 0.92);
-                    flightGroup.add(dart);
-                    animations.darts.push({
-                        mesh: dart,
-                        curve: curve,
-                        t: (idx * 0.13 + d * 0.5) % 1,
-                        speed: origin.baseline ? 0.0038 : 0.0056
-                    });
-                }
+                var pulseRing = new THREE.Mesh(
+                    new THREE.RingGeometry(0.011, 0.015, 24),
+                    new THREE.MeshBasicMaterial({
+                        color: arcColor,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.55,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false
+                    })
+                );
+                pulseRing.position.copy(startVec);
+                orientTangentRing(pulseRing, startVec);
+                flightGroup.add(pulseRing);
+                animations.waves.push({
+                    mesh: pulseRing,
+                    phase: (idx * 0.21) % 1,
+                    maxScale: 1.9,
+                    baseOpacity: 0.55
+                });
+
+                // 弧线中段全息微路标（取代旧版在南充旁堆叠的厚重静态圆锥）
+                var wayArrow = createSciFiArrow(arcColor, routeScale * 0.62, true, isHot);
+                _pt.copy(curve.getPoint(0.56, _pt));
+                _tg.copy(curve.getTangent(0.56, _tg)).normalize();
+                wayArrow.group.position.copy(_pt);
+                orientArrowOnCurve(wayArrow.group, _pt, _tg);
+                flightGroup.add(wayArrow.group);
+
+                // 沿弧线连续飞行的科幻矢量箭矢 + 渐变彗星光尾
+                var dartArrow = createSciFiArrow(arcColor, routeScale, false, isHot);
+                var trail = createTrailRibbon(arcColor, isHot);
+                flightGroup.add(trail.mesh);
+                flightGroup.add(dartArrow.group);
+
+                var dartObj = {
+                    mesh: dartArrow.group,
+                    coreMat: dartArrow.coreMat,
+                    auraMat: dartArrow.auraMat,
+                    tipSprite: dartArrow.tipSprite,
+                    trailMesh: trail.mesh,
+                    trailPosAttr: trail.posAttr,
+                    trailMat: trail.mat,
+                    scale: routeScale,
+                    trailLen: 0.26,
+                    curve: curve,
+                    t: 0.22 + ((idx * 0.29) % 0.64),
+                    speed: origin.baseline ? 0.0036 : 0.0048
+                };
+                updateDartAndTrail(dartObj);
+                animations.darts.push(dartObj);
 
                 if (idx < labelLimit) {
                     animations.labelNodes.push({
@@ -836,17 +1119,14 @@
 
                 animations.darts.forEach(function (d) {
                     d.t = (d.t + d.speed) % 1;
-                    var pos = d.curve.getPoint(d.t);
-                    var tan = d.curve.getTangent(d.t).normalize();
-                    d.mesh.position.copy(pos);
-                    d.mesh.quaternion.setFromUnitVectors(UP, tan);
+                    updateDartAndTrail(d);
                 });
 
                 animations.waves.forEach(function (w) {
                     w.phase = (w.phase + 0.015) % 1;
-                    var sc = 1 + w.phase * 2.4;
+                    var sc = 1 + w.phase * (w.maxScale || 2.4);
                     w.mesh.scale.set(sc, sc, 1);
-                    w.mesh.material.opacity = (1 - w.phase) * 0.78;
+                    w.mesh.material.opacity = (1 - w.phase) * (w.baseOpacity || 0.78);
                 });
             }
 
@@ -903,6 +1183,7 @@
                 renderer.domElement.removeEventListener("wheel", onWheel);
                 renderer.domElement.removeEventListener("dblclick", onDblClick);
                 disposeObject(scene);
+                if (glowTex) glowTex.dispose();
                 renderer.dispose();
                 containerEl.innerHTML = "";
             }
