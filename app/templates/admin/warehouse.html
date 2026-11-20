@@ -4,9 +4,9 @@
 {% block admin_content %}
 <!-- 功能区 -->
 <div class="layui-form admin-toolbar">
-    <div class="layui-input-wrap admin-search">
+    <div class="layui-input-wrap admin-search wh-search">
         <div class="layui-input-prefix"><i class="fas fa-search"></i></div>
-        <input type="text" id="whKeyword" placeholder="按标题 / 关键词 / AI摘要搜索" autocomplete="off" class="layui-input" lay-affix="clear">
+        <input type="text" id="whKeyword" placeholder="搜索标题、关键词或摘要" aria-label="搜索新闻标题、关键词或 AI 摘要" autocomplete="off" class="layui-input" lay-affix="clear">
     </div>
     <div class="layui-input-inline" style="width:150px;">
         <select id="whSourceFilter" class="layui-select" lay-filter="whSource">

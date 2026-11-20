@@ -130,6 +130,7 @@
             var opt = el.options[el.selectedIndex];
             var input = skin.querySelector(".layui-select-title input");
             if (input && opt) input.value = opt.textContent;
+            if (input && !el.hasAttribute("lay-search")) input.readOnly = true;
             Array.prototype.forEach.call(skin.querySelectorAll("dd"), function (dd) {
                 dd.classList.toggle("layui-this", dd.getAttribute("lay-value") === el.value);
             });

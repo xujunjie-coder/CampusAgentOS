@@ -114,11 +114,54 @@ def _abs_url(href: str, base_url: str) -> str:
 
 
 def _pick_cover(container, base_url: str) -> str:
+    if container is None:
+        return ""
     for img in container.find_all("img"):
-        src = img.get("src") or img.get("data-src") or ""
-        if src.startswith("http"):
-            return src
+        for attr in ("data-src", "data-original", "data-lazy-src", "src"):
+            url = _abs_url(img.get(attr) or "", base_url)
+            if url:
+                return url
+        for attr in ("data-srcset", "srcset"):
+            for candidate in (img.get(attr) or "").split(","):
+                parts = candidate.strip().split()
+                url = _abs_url(parts[0], base_url) if parts else ""
+                if url:
+                    return url
     return ""
+
+
+def _is_content_link(link, base_url: str) -> bool:
+    url = _abs_url(link.get("href") or "", base_url)
+    if not url:
+        return False
+    host = (urllib.parse.urlsplit(url).hostname or "").lower()
+    if host in {"beian.gov.cn", "www.beian.gov.cn", "beian.miit.gov.cn"}:
+        return False
+    title = link.get_text(" ", strip=True)
+    if re.search(r"ICP[备证]|公网安备|营业执照|人力资源服务许可证|隐私(?:政策|条款)", title, re.I):
+        return False
+    for parent in link.parents:
+        if parent.name in {"footer", "nav"}:
+            return False
+        tokens = " ".join(parent.get("class", [])) + " " + str(parent.get("id", ""))
+        if re.search(r"(?:^|[\s_-])(?:footer|copyright|site-nav)(?:$|[\s_-])", tokens, re.I):
+            return False
+    return True
+
+
+def _link_covers(soup, base_url: str) -> Dict[str, str]:
+    """Preserve images belonging to each link before converting the page to LLM text."""
+    covers = {}
+    for link in soup.find_all("a", href=True):
+        url = _abs_url(link.get("href") or "", base_url)
+        if not url or not _is_content_link(link, base_url):
+            continue
+        cover = _pick_cover(link, base_url)
+        if not cover and link.parent and len(link.parent.find_all("a", href=True)) == 1:
+            cover = _pick_cover(link.parent, base_url)
+        if cover:
+            covers.setdefault(url, cover)
+    return covers
 
 
 def _pick_time(text: str) -> str:
@@ -134,17 +177,26 @@ def extract_items_heuristic(html: str, base_url: str = "") -> List[Dict]:
     for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
     items, seen = [], set()
+    link_covers = _link_covers(soup, base_url)
+    content_urls = {_abs_url(a.get("href"), base_url) for a in soup.find_all("a", href=True)
+                    if _is_content_link(a, base_url)}
 
     def push(title, href, container=None, summary=""):
         title = (title or "").strip()
-        if len(title) < 6 or title in seen:
+        url = _abs_url(href, base_url)
+        if len(title) < 6 or title in seen or url not in content_urls:
             return
         seen.add(title)
+        cover = link_covers.get(url, "")
+        if not cover and container is not None:
+            nearby_urls = {_abs_url(a.get("href"), base_url) for a in container.find_all("a", href=True)}
+            if nearby_urls == {url}:
+                cover = _pick_cover(container, base_url)
         text = container.get_text(" ", strip=True) if container is not None else ""
         items.append({
             "title": title,
-            "url": _abs_url(href, base_url),
-            "cover": _pick_cover(container, base_url) if container is not None else "",
+            "url": url,
+            "cover": cover,
             "time": _pick_time(text),
             "summary": (summary or text.replace(title, "", 1)).strip()[:200],
         })
@@ -207,10 +259,14 @@ def extract_items_llm(html: str, keyword: str, base_url: str = "") -> List[Dict]
     soup = BeautifulSoup(html, "html.parser")
     for node in soup(["script", "style"]):
         node.decompose()
+    link_covers = _link_covers(soup, base_url)
+    page_images = {_abs_url(img.get(attr) or "", base_url)
+                   for img in soup.find_all("img")
+                   for attr in ("src", "data-src", "data-original", "data-lazy-src")}
     links = soup.find_all("a", href=True)
     for link in links:
         link.append(" [" + str(link["href"]) + "]")
-    source_urls = {_abs_url(str(link["href"]), base_url) for link in links}
+    source_urls = {_abs_url(str(link["href"]), base_url) for link in links if _is_content_link(link, base_url)}
     text = soup.get_text("\n", strip=True)
     text = re.sub(r"\n{3,}", "\n\n", text).strip()[:LLM_TEXT_LIMIT]
     agent = Agent(
@@ -239,7 +295,9 @@ def extract_items_llm(html: str, keyword: str, base_url: str = "") -> List[Dict]
         items.append({
             "title": title,
             "url": url,
-            "cover": _abs_url(str(d.get("cover") or ""), base_url),
+            "cover": link_covers.get(url) or (
+                _abs_url(str(d.get("cover") or ""), base_url)
+                if _abs_url(str(d.get("cover") or ""), base_url) in page_images else ""),
             "time": str(d.get("time") or "").strip(),
             "summary": str(d.get("summary") or "").strip()[:200],
         })

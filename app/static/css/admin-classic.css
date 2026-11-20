@@ -1,0 +1,118 @@
+/* Classic Layui backend skin. Visual overrides only; ui-motion.js and transitions stay intact.
+   Scoped to the admin shell. Frontend pages and the standalone data dashboard keep their themes. */
+body.admin-classic {
+    --cwnu-navy: #16baaa;
+    --cwnu-navy-hover: #12a99b;
+    --cwnu-navy-soft: #e8f7f4;
+    --cwnu-navy-tint: #f2fbf9;
+    --cwnu-navy-border: #b7e9e2;
+    --cwnu-crimson: #ff5722;
+    --surface-canvas: #f2f2f2;
+    --surface-card: #fff;
+    --surface-subtle: #fafafa;
+    --border-subtle: #e6e6e6;
+    --border-strong: #d2d2d2;
+    --ink-1: #333;
+    --ink-2: #555;
+    --ink-3: #666;
+    --ink-4: #999;
+    --shadow-card: 0 1px 2px rgba(0,0,0,.05);
+    --radius-sm: 2px;
+    --radius-md: 2px;
+    --radius-lg: 2px;
+    background: #f2f2f2;
+    color: #333;
+}
+.admin-classic .admin-layout .admin-header { height: 60px; background: #23262e; border-bottom: 0; box-shadow: none; }
+.admin-classic .admin-layout .admin-logo { height: 60px; line-height: 60px; background: #1b1e24; color: #fff; border-right-color: #23262e; }
+.admin-classic .admin-logo-crest { color: #16baaa; background: transparent; border-radius: 2px; }
+.admin-classic .admin-layout .admin-logo-tag { background: #393d49; color: #c2c2c2; border-radius: 2px; }
+.admin-classic .admin-layout .layui-header .layui-nav { background: transparent; }
+.admin-classic .admin-layout .layui-header .layui-nav .layui-nav-item { line-height: 60px; }
+.admin-classic .admin-layout .layui-header .layui-nav .layui-nav-item > a { color: #c2c2c2; }
+.admin-classic .admin-layout .layui-header .layui-nav .layui-nav-item > a i { color: #c2c2c2; }
+.admin-classic .admin-layout .layui-header .layui-nav .layui-nav-item > a:hover,
+.admin-classic .admin-layout .layui-header .layui-nav .layui-nav-item > a:hover i { color: #fff; }
+.admin-classic .admin-layout .layui-header .layui-nav-child { top: 58px; border-radius: 2px; }
+.admin-classic .admin-layout .layui-header .layui-nav-child dd a { border-radius: 0; }
+.admin-classic .admin-user-avatar { color: #fff; background: #393d49; }
+.admin-classic .admin-role-badge { color: #fff; background: #1e9fff; border: 0; border-radius: 2px; }
+.admin-classic .admin-cmdk-trigger { color: #c2c2c2; background: #2f333f; border-color: #48505e; border-radius: 2px; }
+.admin-classic .admin-cmdk-trigger i { color: #c2c2c2; }
+.admin-classic .admin-cmdk-trigger kbd { color: #c2c2c2; background: #393d49; border-color: #59616f; border-radius: 2px; }
+.admin-classic .admin-layout .admin-side { top: 60px; background: #393d49; border-right: 0; }
+.admin-classic .admin-side .layui-nav-tree { padding: 0 0 24px; }
+.admin-classic .admin-side .layui-nav-tree .layui-nav-item { margin: 0; }
+.admin-classic .admin-side .layui-nav-tree .layui-nav-item > a { height: 45px; line-height: 45px; border-radius: 0; color: #c2c2c2; font-weight: 400; padding: 0 20px; }
+.admin-classic .admin-side .layui-nav-tree .layui-nav-item > a i,
+.admin-classic .admin-side .layui-nav-tree .layui-nav-child a i { color: inherit; }
+.admin-classic .admin-side .layui-nav-tree .layui-nav-more { border-color: #c2c2c2 transparent transparent; }
+.admin-classic .admin-side .layui-nav-tree .layui-nav-itemed > .layui-nav-child { padding: 0; background: rgba(0,0,0,.25) !important; }
+.admin-classic .admin-side .layui-nav-tree .layui-nav-itemed > a { color: #fff !important; background: transparent !important; }
+.admin-classic .admin-side .layui-nav-tree .layui-nav-child dd { margin: 0; }
+.admin-classic .admin-side .layui-nav-tree .layui-nav-child a { height: 40px; line-height: 40px; padding-left: 40px; border-radius: 0; color: #c2c2c2 !important; font-weight: 400; }
+.admin-classic .admin-side .layui-nav-tree .layui-nav-item > a:hover,
+.admin-classic .admin-side .layui-nav-tree .layui-nav-child a:hover { background: #4e5465 !important; color: #fff !important; }
+.admin-classic .admin-side .layui-nav-tree .layui-this > a,
+.admin-classic .admin-side .layui-nav-tree .layui-nav-child dd.layui-this > a { background: #16baaa !important; color: #fff !important; font-weight: 400; }
+.admin-classic .admin-side .layui-nav-tree .layui-this > a i,
+.admin-classic .admin-side .layui-nav-tree .layui-nav-child dd.layui-this > a i { color: #fff !important; }
+.admin-classic .admin-side .layui-nav-tree .layui-this > a::before { display: none; }
+.admin-classic .admin-side .layui-nav-tree .layui-nav-itemed > a .layui-nav-more { border-color: transparent transparent #fff; }
+.admin-classic .admin-layout .admin-body { top: 60px; background: #f2f2f2; }
+.admin-classic .admin-layout .admin-footer { height: 44px; line-height: 44px; background: #eee; color: #666; border-top-color: #ddd; }
+.admin-classic .admin-page-head { height: 48px; padding: 0 18px; background: #fff; backdrop-filter: none; }
+.admin-classic .admin-page-title { font-size: 15px; font-weight: 500; color: #333; }
+.admin-classic .admin-page-body { padding: 15px 18px 28px; }
+.admin-classic .admin-card, .admin-classic .admin-welcome-banner, .admin-classic .admin-stat,
+.admin-classic .ck-panel, .admin-classic .nt-card, .admin-classic .emp-card, .admin-classic .model-card { border-radius: 2px; }
+.admin-classic .admin-card .layui-card-header { height: 42px; line-height: 42px; font-size: 14px; font-weight: 400; background: #fff; }
+.admin-classic .admin-stat-icon { border-radius: 2px; color: #fff; }
+.admin-classic .admin-stat.is-blue .admin-stat-icon { background: #1e9fff; color: #fff; }
+.admin-classic .admin-stat.is-orange .admin-stat-icon { background: #ffb800; color: #fff; }
+.admin-classic .admin-stat.is-green .admin-stat-icon { background: #16baaa; color: #fff; }
+.admin-classic .admin-stat.is-cyan .admin-stat-icon { background: #2f4056; color: #fff; }
+.admin-classic .admin-tag { border-radius: 2px; color: #fff; font-weight: 600; }
+.admin-classic .admin-tag.layui-bg-orange { background: #ffb800 !important; color: #3f2900 !important; }
+.admin-classic .admin-tag.layui-bg-blue { background: #00518f !important; color: #fff !important; }
+/* Collect remains embedded; use the same backend component colors and restrained corners. */
+.admin-classic .collect-page { --cwnu-navy: #16baaa; --cwnu-navy-hover: #12a99b; --cwnu-navy-soft: #e8f7f4; --cwnu-navy-tint: #f2fbf9; --cwnu-navy-border: #b7e9e2; --bg: #f2f2f2; --line: #e6e6e6; --line-strong: #d2d2d2; --text: #333; --text-2: #555; --dim: #666; --radius: 2px; }
+.admin-classic .collect-page .panel { border-radius: 2px; border-top-width: 1px; }
+.admin-classic .collect-page .keyword-input-wrap, .admin-classic .collect-page .run-btn,
+.admin-classic .collect-page .source-card, .admin-classic .collect-page .filter-input-wrap,
+.admin-classic .collect-page .filter-select, .admin-classic .collect-page .collect-status { border-radius: 2px; }
+.admin-classic .collect-page .run-btn { box-shadow: none; }
+@media (min-width: 901px) {
+    .admin-classic .admin-layout .admin-logo { width: 200px; }
+    .admin-classic .admin-layout .layui-header .layui-layout-left { left: 200px; }
+    .admin-classic .admin-layout .admin-side { width: 200px; }
+    .admin-classic .admin-side .layui-side-scroll { width: 220px; }
+    .admin-classic .admin-side .layui-nav-tree { width: 200px; }
+    .admin-classic .admin-layout .admin-body, .admin-classic .admin-layout .admin-footer { left: 200px; }
+    .admin-classic .admin-layout.is-collapsed .admin-body, .admin-classic .admin-layout.is-collapsed .admin-footer { left: 0; }
+}
+
+/* Account menu reserves its own arrow column, independent of badge width. */
+.admin-classic .admin-layout .layui-header .layui-nav .admin-user-trigger {
+    position: relative; display: inline-flex !important; align-items: center; gap: 9px;
+    height: 60px; line-height: normal; padding: 0 32px 0 14px; box-sizing: border-box;
+}
+.admin-classic .admin-user-trigger .admin-user-avatar { width: 30px; height: 30px; flex: 0 0 30px; line-height: 1; }
+.admin-classic .admin-layout .layui-header .admin-user-avatar > i { margin: 0; line-height: 1; }
+.admin-classic .admin-user-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; line-height: 22px; }
+.admin-classic .admin-user-trigger .admin-role-badge {
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    height: 20px; padding: 0 7px; line-height: 20px; font-size: 11px;
+    color: #fff; background: #155f9b; border: 1px solid #4283b9; box-sizing: border-box;
+}
+.admin-classic .admin-layout .layui-header .admin-user-trigger .layui-nav-more {
+    position: absolute; top: 0; right: 9px; width: 14px; height: 60px;
+    margin: 0; line-height: 60px; text-align: center; color: #c2c2c2; font-size: 12px;
+}
+.admin-classic .admin-user-trigger + .layui-nav-child { left: auto; right: 0; min-width: 160px; }
+.admin-classic .admin-cmdk-trigger { height: 34px; gap: 8px; padding: 0 11px; font-size: 13px; border-radius: 3px; }
+.admin-classic .admin-cmdk-trigger kbd { font-size: 10px; line-height: 16px; padding: 0 5px; }
+@media (max-width: 640px) {
+    .admin-classic .admin-layout .layui-header .layui-nav .admin-user-trigger { padding-left: 6px; padding-right: 24px; gap: 6px; }
+    .admin-classic .admin-cmdk-trigger { width: 32px; padding: 0; }
+}

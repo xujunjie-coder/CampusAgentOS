@@ -1,39 +1,11 @@
-{#
-采集管理独立主页：不使用 layui，保留独立轻量结构，视觉与西华师大现代学院白蓝体系一致。
-自上而下三区：关键词输入区 | 信源采集选择区（含可视化参数配置） | 采集数据橱窗列表区（1行3列，12条/页）。
-#}
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ site_name or "西华师范大学 · 智慧校园" }} | 采集中心</title>
-    {% if site_favicon %}<link rel="icon" href="{{ site_favicon }}">{% end %}
-    <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/collect.css?v=20261119b">
-</head>
-<body>
-    <!-- 顶栏：品牌 + 系统整合入口 + 用户 -->
-    <header class="collect-header">
-        <div class="brand">
-            {% if site_logo %}
-            <img src="{{ site_logo }}" alt="" class="brand-logo" width="28" height="28">
-            {% else %}
-            <span class="brand-crest" aria-hidden="true"><i class="fas fa-satellite-dish"></i></span>
-            {% end %}
-            <div class="brand-titles">
-                <span class="brand-name">{{ site_name or "西华师范大学 · 智慧校园" }} · 采集中心</span>
-                <span class="brand-sub">CAMPUS COLLECT CENTER</span>
-            </div>
-        </div>
-        <nav class="header-nav">
-            <a href="/" class="nav-link"><i class="fas fa-comments"></i> 对话前台</a>
-            <a href="/admin" class="nav-link"><i class="fas fa-sliders-h"></i> 后台管理</a>
-            <span class="user-chip"><i class="fas fa-user-shield"></i> {{ username }}<em class="role-badge">{{ role }}</em></span>
-            <a href="javascript:;" id="logoutLink" class="nav-link nav-logout"><i class="fas fa-sign-out-alt"></i> 退出</a>
-        </nav>
-    </header>
+{% extends "admin/base.html" %}
 
+{% block admin_styles %}
+<link rel="stylesheet" href="{{ static_url('css/collect.css') }}">
+{% end %}
+
+{% block admin_content %}
+<div class="collect-page">
     <main class="collect-main">
         <!-- ① 关键词输入区 -->
         <section class="panel" id="keywordSection">
@@ -91,24 +63,23 @@
         </section>
     </main>
 
-    <footer class="collect-footer">© 2026 {{ site_name or "西华师范大学 · 智慧校园" }} · 采集中心 · Tornado + Agentica</footer>
+</div>
+{% end %}
 
-    <!-- 采集进度遮罩 -->
-    <div class="loading-overlay hidden" id="loadingOverlay">
-        <div class="loader-ring"></div>
-        <div class="loading-text" id="loadingText">正在采集 …</div>
-        <div class="loading-sub" id="loadingDetail">正在抓取信源并解析结果</div>
+{% block admin_overlays %}
+<!-- Outside the animated scroll content: fixed positioning must refer to the viewport. -->
+<div class="collect-page collect-overlay-root">
+    <div class="loading-overlay hidden" id="loadingOverlay" aria-hidden="true">
+        <div class="loading-card">
+            <div class="loader-ring" aria-hidden="true"></div>
+            <div class="loading-text" id="loadingText" role="status" aria-live="polite">正在采集 …</div>
+            <div class="loading-sub" id="loadingDetail">正在抓取信源并解析结果</div>
+        </div>
     </div>
-
-    <!-- 轻提示 -->
     <div class="toast-box" id="toastBox"></div>
+</div>
+{% end %}
 
-    <!-- XSRF：API 请求头与退出登录表单共用 -->
-    <form action="/auth/logout" method="post" id="logoutForm" class="hidden-form">
-        {% module xsrf_form_html() %}
-    </form>
-
-    <script src="{{ static_url('js/ui-motion.js') }}" defer></script>
-    <script src="{{ static_url('js/collect.js') }}"></script>
-</body>
-</html>
+{% block admin_scripts %}
+<script src="{{ static_url('js/collect.js') }}"></script>
+{% end %}

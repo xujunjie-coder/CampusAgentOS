@@ -45,6 +45,16 @@ class CollectRepository:
                 "(source_id, source_name, keyword, title, url, cover, summary, published_at, username) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
             new = conn.total_changes - before
+            # A repeated collection may discover media/links absent in an older result.
+            # Fill only missing fields and keep the "new" counter tied to actual inserts.
+            for row in rows:
+                conn.execute(
+                    "UPDATE collect_items SET "
+                    "url = CASE WHEN COALESCE(url, '') = '' AND ? <> '' THEN ? ELSE url END, "
+                    "cover = CASE WHEN COALESCE(cover, '') = '' AND ? <> '' THEN ? ELSE cover END "
+                    "WHERE source_id = ? AND title = ? AND "
+                    "((COALESCE(url, '') = '' AND ? <> '') OR (COALESCE(cover, '') = '' AND ? <> ''))",
+                    (row[4], row[4], row[5], row[5], source_id, row[3], row[4], row[5]))
             saved = conn.execute(
                 "SELECT COUNT(*) AS c FROM collect_items WHERE source_id = ?", (source_id,)).fetchone()["c"]
         return {"saved": saved, "new": new}

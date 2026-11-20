@@ -1,8 +1,8 @@
 """
-采集管理控制器 —— 任务6：独立采集主页（/collect，不走 layui 后台框架）
+采集管理控制器 —— 任务6：采集管理页（/collect，复用后台框架）
 
 分层规则不变：
-- 表现层：templates/collect.html 独立页面壳（关键词输入区 | 信源采集选择区 | 采集数据橱窗列表区），
+- 表现层：templates/collect.html 后台内容页（关键词输入区 | 信源采集选择区 | 采集数据橱窗列表区），
           交互全部在 static/js/collect.js，走本模块 JSON API
 - 控制层：页面 Handler 渲染壳；API Handler 校验参数后把阻塞采集编排放入线程池（run_in_executor），
           避免 requests / 智能体推理阻塞 Tornado IOLoop
@@ -10,7 +10,7 @@
 - 模型层：SourceRepository 选源、CollectRepository 读写采集数据，控制器不写 SQL
 
 权限：沿用后台菜单鉴权体系（登录 + 后台角色 + require_menu('/collect')），
-「数据采集 / 采集管理」菜单由 db.py 幂等种子，侧边导航可直接跳转本独立主页。
+「数据采集 / 采集管理」菜单由 db.py 幂等种子，侧边导航显示采集管理并高亮当前入口。
 """
 
 import asyncio
@@ -21,7 +21,7 @@ from concurrent.futures import ThreadPoolExecutor
 import tornado.ioloop
 import tornado.web
 
-from app.controllers.admin import AdminGuard, backend_required
+from app.controllers.admin import AdminGuard, AdminBaseHandler, backend_required
 from app.models.collect import CollectRepository, PAGE_SIZE
 from app.models.source import SourceRepository
 from app.services import collect_service
@@ -35,16 +35,12 @@ MAX_SOURCES_PER_RUN = 10
 _EXECUTOR = ThreadPoolExecutor(max_workers=4, thread_name_prefix="collect")
 
 
-class CollectPageHandler(AdminGuard):
-    """采集主页：独立全屏页面（科技感风格，无 layui），登录 + 后台角色 + 菜单鉴权"""
+class CollectPageHandler(AdminBaseHandler):
+    """采集管理复用后台框架、导航与菜单权限。"""
 
-    @tornado.web.authenticated
-    @backend_required
-    def get(self):
-        if not self.require_menu(URL_COLLECT):
-            return
-        self.render("collect.html", title="采集中心 · 某省数据瞭望系统",
-                    username=self.current_user, role=self.role_code() or "admin")
+    template_name = "collect.html"
+    page_name = "采集管理"
+    nav_url = URL_COLLECT
 
 
 class CollectApiHandler(AdminGuard):

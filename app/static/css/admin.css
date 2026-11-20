@@ -415,180 +415,15 @@
     animation: adminEnter 220ms var(--ease-out) both;
 }
 
-/* ---------- 4. 后台全站 Layui 统一现代组件皮肤 ---------- */
-.admin-layout .layui-btn,
-.layui-layer .layui-btn {
-    border-radius: 8px;
-    font-weight: 500;
-    background-color: var(--cwnu-navy, #003087);
+/* 原生 Layui 组件外观由 vendor/layui.css 提供；只保留交互动效。 */
+.admin-layout .layui-btn, .layui-layer .layui-btn {
     transition: background-color var(--dur-fast, 140ms) var(--ease-out),
-                border-color var(--dur-fast, 140ms) var(--ease-out),
-                color var(--dur-fast, 140ms) var(--ease-out),
-                box-shadow var(--dur-fast, 140ms) var(--ease-out),
-                transform var(--dur-fast, 140ms) var(--ease-out);
+        border-color var(--dur-fast, 140ms) var(--ease-out),
+        color var(--dur-fast, 140ms) var(--ease-out),
+        box-shadow var(--dur-fast, 140ms) var(--ease-out),
+        transform var(--dur-fast, 140ms) var(--ease-out);
 }
-
-.admin-layout .layui-btn:hover,
-.layui-layer .layui-btn:hover {
-    background-color: var(--cwnu-navy-hover, #002366);
-    opacity: 1;
-}
-
-.admin-layout .layui-btn:active,
-.layui-layer .layui-btn:active {
-    transform: scale(0.98);
-}
-
-.admin-layout .layui-btn-normal,
-.layui-layer .layui-btn-normal {
-    background-color: #1d4ed8;
-}
-
-.admin-layout .layui-btn-normal:hover,
-.layui-layer .layui-btn-normal:hover {
-    background-color: #1e40af;
-}
-
-.admin-layout .layui-btn-primary,
-.layui-layer .layui-btn-primary {
-    background-color: #ffffff;
-    border: 1px solid var(--border-strong, #d0d9e6);
-    color: var(--ink-2, #334155);
-}
-
-.admin-layout .layui-btn-primary:hover,
-.layui-layer .layui-btn-primary:hover {
-    background-color: var(--cwnu-navy-tint, #f5f8fe);
-    border-color: var(--cwnu-navy, #003087);
-    color: var(--cwnu-navy, #003087);
-}
-
-.admin-layout .layui-btn-danger,
-.layui-layer .layui-btn-danger {
-    background-color: var(--cwnu-crimson, #c41230);
-    color: #fff;
-}
-
-.admin-layout .layui-btn-danger.layui-btn-primary,
-.layui-layer .layui-btn-danger.layui-btn-primary {
-    background-color: #fff;
-    border-color: #f3c4cc;
-    color: var(--cwnu-crimson, #c41230);
-}
-
-.admin-layout .layui-btn-danger.layui-btn-primary:hover,
-.layui-layer .layui-btn-danger.layui-btn-primary:hover {
-    background-color: var(--cwnu-crimson-soft, #fdf2f4);
-    border-color: var(--cwnu-crimson, #c41230);
-}
-
-.admin-layout .layui-btn-warm,
-.layui-layer .layui-btn-warm {
-    background-color: #d97706;
-}
-
-.admin-layout .layui-btn-sm,
-.layui-layer .layui-btn-sm {
-    border-radius: 7px;
-}
-
-.admin-layout .layui-btn-xs,
-.layui-layer .layui-btn-xs {
-    border-radius: 6px;
-}
-
-/* 表单输入框与下拉 */
-.admin-layout .layui-input,
-.admin-layout .layui-textarea,
-.admin-layout .layui-select,
-.layui-layer .layui-input,
-.layui-layer .layui-textarea,
-.layui-layer .layui-select {
-    border-radius: 8px;
-    border-color: #d6dfec;
-    color: var(--ink-1, #0f172a);
-    transition: border-color var(--dur-fast, 140ms) var(--ease-out), box-shadow var(--dur-fast, 140ms) var(--ease-out);
-}
-
-.admin-layout .layui-input:focus,
-.admin-layout .layui-textarea:focus,
-.layui-layer .layui-input:focus,
-.layui-layer .layui-textarea:focus {
-    border-color: var(--cwnu-navy, #003087) !important;
-    box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.09);
-}
-
-.admin-layout .layui-form-select dl,
-.layui-layer .layui-form-select dl {
-    border-radius: 10px;
-    border-color: var(--border-subtle, #e5eaf2);
-    box-shadow: var(--shadow-float);
-    padding: 4px;
-}
-
-.admin-layout .layui-form-select dl dd,
-.layui-layer .layui-form-select dl dd {
-    border-radius: 6px;
-}
-
-.admin-layout .layui-form-select dl dd.layui-this,
-.layui-layer .layui-form-select dl dd.layui-this {
-    background-color: var(--cwnu-navy, #003087);
-    color: #fff;
-}
-
-.admin-layout .layui-form-onswitch,
-.layui-layer .layui-form-onswitch {
-    border-color: var(--cwnu-navy, #003087);
-    background-color: var(--cwnu-navy, #003087);
-}
-
-/* 弹层视觉统一 */
-.layui-layer {
-    border-radius: 12px !important;
-    overflow: hidden;
-    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18) !important;
-}
-
-.layui-layer-title {
-    background: #ffffff !important;
-    border-bottom: 1px solid var(--border-subtle, #e5eaf2) !important;
-    font-weight: 700 !important;
-    color: var(--ink-1, #0f172a) !important;
-}
-
-.layui-layer-btn {
-    border-top: 1px solid #f1f5f9;
-    background: #fafbfd;
-    padding: 10px 16px !important;
-}
-
-.layui-layer-btn .layui-layer-btn0 {
-    background-color: var(--cwnu-navy, #003087) !important;
-    border-color: var(--cwnu-navy, #003087) !important;
-    border-radius: 8px !important;
-}
-
-.layui-layer-btn a {
-    border-radius: 8px !important;
-}
-
-/* 分页组件 */
-.admin-layout .layui-laypage a,
-.admin-layout .layui-laypage span {
-    border-radius: 7px;
-    border-color: var(--border-subtle, #e5eaf2);
-    color: var(--ink-2, #334155);
-}
-
-.admin-layout .layui-laypage .layui-laypage-curr .layui-laypage-em {
-    background-color: var(--cwnu-navy, #003087);
-    border-radius: 7px;
-}
-
-.admin-layout .layui-laypage a:hover {
-    color: var(--cwnu-navy, #003087);
-}
+.admin-layout .layui-btn:active, .layui-layer .layui-btn:active { transform: scale(0.98); }
 
 /* ---------- 5. 通用卡片与表格容器 ---------- */
 .admin-layout .h-100 {
@@ -647,45 +482,9 @@
     overflow-x: auto;
 }
 
-/* 表格去重格线，采用浅灰表头与柔和底线 */
-.admin-card .layui-table {
-    margin: 0;
-    border: none;
-    color: var(--ink-2, #334155);
-}
-
-.admin-card .layui-table thead tr {
-    background-color: #f8fafc;
-}
-
-.admin-card .layui-table th {
-    border-width: 0 0 1px 0;
-    border-color: var(--border-subtle, #e5eaf2);
-    font-weight: 600;
-    font-size: 12.5px;
-    color: var(--ink-3, #64748b);
-    padding: 10px 12px;
-    white-space: nowrap;
-}
-
-.admin-card .layui-table td {
-    border-width: 0 0 1px 0;
-    border-color: #f1f5f9;
-    padding: 10px 12px;
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-}
-
+/* 保留行悬停过渡，表格边框/字号/间距恢复 Layui 原生样式。 */
 .admin-card .layui-table tbody tr {
     transition: background-color var(--dur-fast, 140ms) var(--ease-out);
-}
-
-.admin-card .layui-table tbody tr:hover {
-    background-color: var(--cwnu-navy-tint, #f5f8fe) !important;
-}
-
-.admin-card .layui-table tbody tr:last-child td {
-    border-bottom: none;
 }
 
 /* ---------- 6. 工作台：欢迎条 / 指标卡 / 描述表 / 快捷入口 ---------- */
@@ -874,6 +673,11 @@
 
 .admin-toolbar {
     margin-bottom: 14px;
+    /* 入场动画让工具栏和后面的卡片各自成为层叠上下文。
+       把筛选区整体抬高，确保 Layui 下拉列表能覆盖后面的表格。 */
+    position: relative;
+    z-index: 10;
+    overflow: visible;
 }
 
 .admin-toolbar .admin-search {
@@ -881,8 +685,41 @@
     flex: 0 0 220px;
 }
 
+.admin-toolbar .wh-search {
+    width: 280px;
+    flex: 0 1 280px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.wh-search .layui-input-prefix {
+    width: 36px;
+    padding: 0;
+    text-align: center;
+    color: #667085;
+    pointer-events: none;
+}
+
+.wh-search .layui-input {
+    padding-left: 38px;
+    padding-right: 32px;
+    font-size: 14px;
+    color: #333;
+}
+
+.wh-search .layui-input::placeholder {
+    color: #737373;
+    opacity: 1;
+}
+
 .admin-toolbar .layui-input-inline {
     margin-bottom: 0;
+}
+
+/* 普通下拉框只用于选择；搜索型下拉框仍保留输入光标。 */
+.admin-layout select:not([lay-search]) + .layui-form-select .layui-select-title input {
+    caret-color: transparent;
+    cursor: pointer;
 }
 
 .admin-toolbar-split {

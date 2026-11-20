@@ -1,5 +1,5 @@
 /* ============================================================
- * 采集中心（任务6）交互逻辑 —— 独立主页，不使用 layui
+ * 采集中心（任务6）交互逻辑 —— 后台内容页，复用统一导航壳
  * 三区联动：关键词输入 → 信源选择（可视化参数配置） → 橱窗列表（3列/12条每页）
  * 数据接口：/api/collect/sources | /api/collect/run | /api/collect/items
  * 所有 POST 携带 X-Xsrftoken（取自页面隐藏表单）
@@ -23,7 +23,7 @@
     function $(id) { return document.getElementById(id); }
 
     function xsrfToken() {
-        var input = document.querySelector('#logoutForm input[name="_xsrf"]');
+        var input = document.querySelector('#adminLogoutForm input[name="_xsrf"]');
         return input ? input.value : "";
     }
 
@@ -51,15 +51,53 @@
         });
     }
 
-    function toast(msg, type) {
+    var toastLayerReady = false;
+
+    function positionToasts() {
         var box = $("toastBox");
+        var edge = 0;
+        document.querySelectorAll(".admin-header, .admin-page-head").forEach(function (el) {
+            var rect = el.getBoundingClientRect();
+            if (rect.bottom > 0 && rect.top < window.innerHeight) edge = Math.max(edge, rect.bottom);
+        });
+        var top = Math.max(16, Math.min(edge + 16, window.innerHeight - 100));
+        box.style.top = top + "px";
+        box.style.setProperty("--toast-top", top + "px");
+    }
+
+    function prepareToastLayer() {
+        var box = $("toastBox");
+        if (!toastLayerReady) {
+            // A body-level portal also supports older pages/browsers without Popover.
+            var scope = document.createElement("div");
+            scope.className = "collect-page collect-overlay-root collect-toast-root";
+            document.body.appendChild(scope);
+            scope.appendChild(box);
+            if (typeof box.showPopover === "function") box.setAttribute("popover", "manual");
+            window.addEventListener("resize", positionToasts);
+            toastLayerReady = true;
+        }
+        positionToasts();
+        return box;
+    }
+
+    function toast(msg, type) {
+        var box = prepareToastLayer();
         var el = document.createElement("div");
         el.className = "toast " + (type || "");
         el.textContent = msg;
         box.appendChild(el);
+        if (box.hasAttribute("popover") && !box.matches(":popover-open")) {
+            try { box.showPopover(); } catch (error) { box.removeAttribute("popover"); }
+        }
         setTimeout(function () {
             el.classList.add("out");
-            setTimeout(function () { el.remove(); }, 320);
+            setTimeout(function () {
+                el.remove();
+                if (!box.children.length && box.hasAttribute("popover") && box.matches(":popover-open")) {
+                    box.hidePopover();
+                }
+            }, 320);
         }, 4200);
     }
 
@@ -70,7 +108,9 @@
     }
 
     function setLoading(on, text) {
-        $("loadingOverlay").classList.toggle("hidden", !on);
+        var overlay = $("loadingOverlay");
+        overlay.classList.toggle("hidden", !on);
+        overlay.setAttribute("aria-hidden", on ? "false" : "true");
         if (text) { $("loadingText").textContent = text; }
         $("runBtn").disabled = on;
     }
@@ -260,20 +300,31 @@
         }).catch(function (e) { toast("列表加载失败：" + e.message, "err"); });
     }
 
+    function safeHttpUrl(raw) {
+        try {
+            var url = new URL(String(raw || ""));
+            return /^(https?:)$/.test(url.protocol) ? url.href : "";
+        } catch (error) { return ""; }
+    }
+
     function renderShowcase(list) {
         var box = $("showcase");
         box.innerHTML = "";
         $("emptyTip").classList.toggle("show", !list.length);
         list.forEach(function (it) {
-            var card = document.createElement("article");
-            card.className = "show-card";
-
-            var coverHtml = it.cover
-                ? '<img src="' + escapeHtml(it.cover) + '" alt="" loading="lazy">'
-                : '<div class="cover-fallback"><i class="fas fa-newspaper"></i></div>';
-            var titleHtml = it.url
-                ? '<a href="' + escapeHtml(it.url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(it.title) + "</a>"
-                : escapeHtml(it.title);
+            var url = safeHttpUrl(it.url), cover = safeHttpUrl(it.cover);
+            var card = document.createElement(url ? "a" : "article");
+            card.className = "show-card" + (url ? " is-link" : "");
+            if (url) {
+                card.href = url;
+                card.target = "_blank";
+                card.rel = "noopener noreferrer";
+                card.setAttribute("aria-label", "打开原文：" + it.title);
+            }
+            var coverHtml = cover
+                ? '<img src="' + escapeHtml(cover) + '" alt="" loading="lazy">'
+                : '<div class="cover-fallback"><i class="fas fa-newspaper"></i><span>暂无配图</span></div>';
+            var titleHtml = escapeHtml(it.title);
             var time = it.published_at || it.collected_at || "";
 
             card.innerHTML =
@@ -291,8 +342,15 @@
             // 封面加载失败兜底：外链图可能失效，替换为科技感占位封面
             var img = card.querySelector(".show-cover img");
             if (img) {
+                function fitCover() {
+                    if (!img.naturalWidth || !img.naturalHeight) return;
+                    var small = img.naturalWidth < 240 || img.naturalHeight < 96;
+                    img.parentNode.classList.toggle("is-thumbnail", small);
+                }
+                img.addEventListener("load", fitCover);
+                if (img.complete) fitCover();
                 img.addEventListener("error", function () {
-                    img.outerHTML = '<div class="cover-fallback"><i class="fas fa-newspaper"></i></div>';
+                    img.outerHTML = '<div class="cover-fallback"><i class="fas fa-newspaper"></i><span>图片暂时无法加载</span></div>';
                 });
             }
             box.appendChild(card);
@@ -350,7 +408,6 @@
         clearTimeout(state.filterTimer);
         state.filterTimer = setTimeout(function () { loadItems(1); }, 400);
     });
-    $("logoutLink").addEventListener("click", function () { $("logoutForm").submit(); });
 
     loadSources();
     loadItems(1);
