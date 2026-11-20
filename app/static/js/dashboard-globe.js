@@ -530,18 +530,33 @@
         var animations = {
             darts: [],
             waves: [],
-            labelNodes: []
+            labelNodes: [],
+            pickMeshes: [],
+            coordMap: {}
         };
         var state = {
             active: true,
             disposed: false,
             dragging: false,
+            downX: 0,
+            downY: 0,
             lastX: 0,
             lastY: 0,
             velX: 0,
             velY: 0,
-            chinaHash: ""
+            chinaHash: "",
+            focusTarget: null,
+            focusedRegion: "",
+            pauseAutoUntil: 0
         };
+        var onNodeClick = typeof opts.onNodeClick === "function" ? opts.onNodeClick : null;
+        var raycaster = new THREE.Raycaster();
+        var pointerVec = new THREE.Vector2();
+
+        function recordCoord(key, lat, lon, extra) {
+            if (!key || !Number.isFinite(lat) || !Number.isFinite(lon)) return;
+            animations.coordMap[key] = Object.assign({ name: key, lat: lat, lon: lon }, extra || {});
+        }
 
         // 8-triangle 锐利后掠三角翼箭矢，指向 +Y（与地球表面平行）
         function createChevronGeometry(scale) {
@@ -803,10 +818,32 @@
 
             animations.labelNodes.push({
                 name: HUB.name,
+                region: "四川",
                 value: null,
                 isHub: true,
+                lat: HUB.lat,
+                lon: HUB.lon,
                 localPos: normal.clone().multiplyScalar(GLOBE_RADIUS + pillarH + 0.026)
             });
+
+            var hubHit = new THREE.Mesh(
+                new THREE.SphereGeometry(0.042, 10, 10),
+                new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+            );
+            hubHit.position.copy(normal.clone().multiplyScalar(GLOBE_RADIUS + pillarH * 0.65));
+            hubHit.userData = {
+                name: HUB.name,
+                region: "四川",
+                value: null,
+                baseline: false,
+                isHub: true,
+                lat: HUB.lat,
+                lon: HUB.lon
+            };
+            flightGroup.add(hubHit);
+            animations.pickMeshes.push(hubHit);
+            recordCoord("南充", HUB.lat, HUB.lon, { region: "四川", isHub: true });
+            recordCoord(HUB.name, HUB.lat, HUB.lon, { region: "四川", isHub: true });
         }
 
         function buildFlights(regionList, chinaGeo) {
@@ -817,13 +854,17 @@
             animations.darts = [];
             animations.waves = [];
             animations.labelNodes = [];
+            animations.pickMeshes = [];
+            animations.coordMap = {};
 
             var cpByName = {};
             if (chinaGeo && Array.isArray(chinaGeo.features)) {
                 chinaGeo.features.forEach(function (f) {
                     var p = f.properties || {};
                     if (p.name && Array.isArray(p.cp) && p.cp.length >= 2) {
-                        cpByName[p.name] = { lon: Number(p.cp[0]), lat: Number(p.cp[1]) };
+                        var lat = Number(p.cp[1]), lon = Number(p.cp[0]);
+                        cpByName[p.name] = { lon: lon, lat: lat };
+                        recordCoord(p.name, lat, lon, { region: p.name });
                     }
                 });
             }
@@ -842,25 +883,36 @@
                 var isSichuan = name === "四川";
                 routes.push({
                     name: isSichuan ? "成都" : name,
+                    region: name,
                     lat: cp.lat,
                     lon: cp.lon,
                     value: val,
                     baseline: false
                 });
+                recordCoord(name, cp.lat, cp.lon, { region: name, value: val });
+                if (isSichuan) recordCoord("成都", cp.lat, cp.lon, { region: "四川", value: val });
             });
 
             // 保证至少具备丰富全国飞线与指向箭头视觉
             if (routes.length < 6) {
                 BASELINE_ORIGINS.forEach(function (b) {
+                    recordCoord(b.name, b.lat, b.lon, { region: b.name, baseline: true });
                     if (seen[b.name]) return;
                     seen[b.name] = true;
                     routes.push({
                         name: b.name,
+                        region: b.name,
                         lat: b.lat,
                         lon: b.lon,
                         value: null,
                         baseline: true
                     });
+                });
+            } else {
+                BASELINE_ORIGINS.forEach(function (b) {
+                    if (!animations.coordMap[b.name]) {
+                        recordCoord(b.name, b.lat, b.lon, { region: b.name, baseline: true });
+                    }
                 });
             }
 
@@ -901,6 +953,23 @@
                 );
                 pin.position.copy(startVec);
                 flightGroup.add(pin);
+
+                var hitPin = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.032, 8, 8),
+                    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+                );
+                hitPin.position.copy(startVec);
+                hitPin.userData = {
+                    name: origin.name,
+                    region: origin.region || origin.name,
+                    value: origin.value,
+                    baseline: !!origin.baseline,
+                    isHub: false,
+                    lat: origin.lat,
+                    lon: origin.lon
+                };
+                flightGroup.add(hitPin);
+                animations.pickMeshes.push(hitPin);
 
                 var pinGlow = new THREE.Sprite(new THREE.SpriteMaterial({
                     map: glowTex,
@@ -969,9 +1038,12 @@
                 if (idx < labelLimit) {
                     animations.labelNodes.push({
                         name: origin.name,
+                        region: origin.region || origin.name,
                         value: origin.value,
                         isHub: false,
                         baseline: origin.baseline,
+                        lat: origin.lat,
+                        lon: origin.lon,
                         localPos: startVec.clone().multiplyScalar(1.015)
                     });
                 }
@@ -980,16 +1052,75 @@
             rebuildLabelElements();
         }
 
+        function handleNodeSelect(info) {
+            if (!info) return;
+            var key = info.region || info.name || "";
+            if (key) {
+                focusRegion(key);
+            }
+            if (onNodeClick) {
+                onNodeClick({
+                    name: info.name || key,
+                    region: key,
+                    value: info.value,
+                    baseline: !!info.baseline,
+                    isHub: !!info.isHub
+                });
+            }
+        }
+
+        function applyFocusHighlight() {
+            var target = state.focusedRegion;
+            animations.labelNodes.forEach(function (node) {
+                if (!node.el) return;
+                var hit = !!target && (
+                    node.region === target ||
+                    node.name === target ||
+                    (target === "四川" && (node.isHub || node.name === "成都"))
+                );
+                node.el.classList.toggle("is-focus", hit);
+            });
+        }
+
+        function focusRegion(regionName) {
+            var q = String(regionName || "").trim();
+            if (!q) return false;
+            var info = animations.coordMap[q] || (q === "四川" ? animations.coordMap["成都"] : null);
+            if (!info && (q.indexOf("南充") !== -1 || q.indexOf("西华师大") !== -1)) {
+                info = { name: HUB.name, region: "四川", lat: HUB.lat, lon: HUB.lon };
+            }
+            state.focusedRegion = (info && info.region) || q;
+            applyFocusHighlight();
+            if (!info) return false;
+
+            state.focusTarget = {
+                y: -(90 + info.lon) * DEG2RAD,
+                x: Math.max(-0.68, Math.min(0.68, (info.lat - 5) * DEG2RAD))
+            };
+            state.velX = 0;
+            state.velY = 0;
+            state.pauseAutoUntil = Date.now() + 4500;
+            return true;
+        }
+
         function rebuildLabelElements() {
             labelLayer.innerHTML = "";
             animations.labelNodes.forEach(function (node) {
                 var el = global.document.createElement("div");
                 el.className = "ckb-globe-label" +
                     (node.isHub ? " is-hub" : (node.baseline ? " is-base" : ""));
+                el.setAttribute("data-region", node.region || node.name);
+                el.title = "点击查看「" + (node.region || node.name) + "」详情";
                 el.textContent = node.value ? (node.name + " · " + node.value) : node.name;
+                el.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+                el.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    handleNodeSelect(node);
+                });
                 labelLayer.appendChild(el);
                 node.el = el;
             });
+            applyFocusHighlight();
         }
 
         var tmpWorld = new THREE.Vector3();
@@ -1011,11 +1142,13 @@
                 var facing = tmpNormal.dot(tmpToCam);
                 if (facing < 0.22) {
                     node.el.style.opacity = "0";
+                    node.el.style.pointerEvents = "none";
                     return;
                 }
                 tmpWorld.project(camera);
                 if (tmpWorld.z > 1) {
                     node.el.style.opacity = "0";
+                    node.el.style.pointerEvents = "none";
                     return;
                 }
                 var px = (tmpWorld.x * 0.5 + 0.5) * w;
@@ -1033,16 +1166,20 @@
                     node.el.style.transform = "translate3d(" + px.toFixed(1) + "px," + py.toFixed(1) + "px,0) translate(-50%, -120%)";
                 }
                 node.el.style.opacity = String(Math.min(1, (facing - 0.22) * 2.4).toFixed(2));
+                node.el.style.pointerEvents = "auto";
             });
         }
 
-        // 交互事件：左键拖拽旋转、滚轮微缩放、双击复位中国视角
+        // 交互事件：左键拖拽旋转、滚轮微缩放、双击复位、短按点击三维信标下钻
         function onPointerDown(e) {
             state.dragging = true;
+            state.downX = e.clientX;
+            state.downY = e.clientY;
             state.lastX = e.clientX;
             state.lastY = e.clientY;
             state.velX = 0;
             state.velY = 0;
+            state.focusTarget = null;
             if (renderer.domElement.setPointerCapture) {
                 try { renderer.domElement.setPointerCapture(e.pointerId); } catch (err) {}
             }
@@ -1058,8 +1195,23 @@
             spinGroup.rotation.y += state.velY;
             tiltGroup.rotation.x = Math.max(-0.85, Math.min(0.85, tiltGroup.rotation.x + state.velX));
         }
-        function onPointerUp() {
+        function onPointerUp(e) {
+            var wasDragging = state.dragging;
             state.dragging = false;
+            if (!wasDragging || !e) return;
+            var moved = Math.hypot(e.clientX - state.downX, e.clientY - state.downY);
+            if (moved < 6 && animations.pickMeshes.length) {
+                var rect = renderer.domElement.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) {
+                    pointerVec.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    pointerVec.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                    raycaster.setFromCamera(pointerVec, camera);
+                    var hits = raycaster.intersectObjects(animations.pickMeshes, false);
+                    if (hits && hits.length && hits[0].object && hits[0].object.userData) {
+                        handleNodeSelect(hits[0].object.userData);
+                    }
+                }
+            }
         }
         function onWheel(e) {
             e.preventDefault();
@@ -1067,6 +1219,10 @@
             camera.position.z = camDist;
         }
         function onDblClick() {
+            state.focusTarget = null;
+            state.focusedRegion = "";
+            state.pauseAutoUntil = 0;
+            applyFocusHighlight();
             spinGroup.rotation.y = TARGET_LON_Y;
             tiltGroup.rotation.x = TARGET_LAT;
             camDist = 2.68;
@@ -1103,12 +1259,29 @@
 
             var reduced = isReducedMotion();
             if (!state.dragging) {
-                if (Math.abs(state.velY) > 0.0001 || Math.abs(state.velX) > 0.0001) {
+                if (state.focusTarget) {
+                    var dyFocus = state.focusTarget.y - spinGroup.rotation.y;
+                    while (dyFocus > Math.PI) dyFocus -= Math.PI * 2;
+                    while (dyFocus < -Math.PI) dyFocus += Math.PI * 2;
+                    var dxFocus = state.focusTarget.x - tiltGroup.rotation.x;
+                    if (Math.abs(dyFocus) < 0.004 && Math.abs(dxFocus) < 0.004) {
+                        spinGroup.rotation.y = state.focusTarget.y;
+                        tiltGroup.rotation.x = state.focusTarget.x;
+                        state.focusTarget = null;
+                    } else if (reduced) {
+                        spinGroup.rotation.y = state.focusTarget.y;
+                        tiltGroup.rotation.x = state.focusTarget.x;
+                        state.focusTarget = null;
+                    } else {
+                        spinGroup.rotation.y += dyFocus * 0.14;
+                        tiltGroup.rotation.x += dxFocus * 0.14;
+                    }
+                } else if (Math.abs(state.velY) > 0.0001 || Math.abs(state.velX) > 0.0001) {
                     spinGroup.rotation.y += state.velY;
                     tiltGroup.rotation.x = Math.max(-0.85, Math.min(0.85, tiltGroup.rotation.x + state.velX));
                     state.velX *= 0.92;
                     state.velY *= 0.92;
-                } else if (!reduced) {
+                } else if (!reduced && Date.now() > state.pauseAutoUntil) {
                     spinGroup.rotation.y += 0.0014;
                 }
             }
@@ -1169,6 +1342,7 @@
         return {
             update: update,
             resize: resize,
+            focusRegion: focusRegion,
             setActive: function (on) {
                 state.active = !!on;
                 if (state.active) resize();

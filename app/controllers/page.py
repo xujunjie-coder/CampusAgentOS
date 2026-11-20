@@ -11,4 +11,4 @@ from app.controllers.base import BaseHandler
 class IndexHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        self.render("index.html", title="某省数据瞭望系统", username=self.current_user, role=self.get_current_role())
+        self.render("index.html", title="西华师范大学 · 智慧校园智能体平台", username=self.current_user, role=self.get_current_role())

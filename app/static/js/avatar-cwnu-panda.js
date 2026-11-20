@@ -2195,7 +2195,7 @@
             floatingLeaves.push({ mesh: leafMesh, cfg: cfg });
         });
 
-        // ---------- 动画状态与实时骨骼/表情驱动 ----------
+        // ---------- 动画状态、情绪动作机与身份光环联动 ----------
         var blinkTimer = 2.4;
         var blinkPhase = -1;
         var lastHeadY = 0;
@@ -2203,27 +2203,89 @@
         var tasselAngle = 0;
         var userYaw = 0;
 
+        var PERSONA_THEMES = {
+            "default": { core: 0x00e5ff, bloom: 0x38bdf8, inner: 0x38bdf8, rim: 0x8fa9cf, spark: 0x8bcfdc },
+            "career": { core: 0x38bdf8, bloom: 0xfbbf24, inner: 0x0ea5e9, rim: 0xfcd34d, spark: 0xfde68a },
+            "mental": { core: 0x34d399, bloom: 0x6ee7b7, inner: 0x2dd4bf, rim: 0xa7f3d0, spark: 0xa7f3d0 }
+        };
+        var personaKey = "default";
+        var personaLerp = {
+            core: new THREE.Color(PERSONA_THEMES["default"].core),
+            bloom: new THREE.Color(PERSONA_THEMES["default"].bloom),
+            inner: new THREE.Color(PERSONA_THEMES["default"].inner),
+            rim: new THREE.Color(PERSONA_THEMES["default"].rim),
+            spark: new THREE.Color(PERSONA_THEMES["default"].spark)
+        };
+        var GESTURE_DURATIONS = { wave: 1.8, nod: 1.3, book: 2.0, celebrate: 2.0 };
+        var gesture = { kind: null, elapsed: 0, duration: 0 };
+
+        function triggerGesture(kind, durationSec) {
+            if (!GESTURE_DURATIONS[kind]) return false;
+            gesture.kind = kind;
+            gesture.elapsed = 0;
+            gesture.duration = Math.max(0.5, Number(durationSec) || GESTURE_DURATIONS[kind]);
+            return true;
+        }
+
+        function setPersona(roleKey) {
+            var nextKey = PERSONA_THEMES[roleKey] ? roleKey : "default";
+            personaKey = nextKey;
+            var th = PERSONA_THEMES[nextKey];
+            personaLerp.core.setHex(th.core);
+            personaLerp.bloom.setHex(th.bloom);
+            personaLerp.inner.setHex(th.inner);
+            personaLerp.rim.setHex(th.rim);
+            personaLerp.spark.setHex(th.spark);
+            return personaKey;
+        }
+
         function update(t, dt, state) {
             var speaking = !!(state && state.voiceActive);
             var mouthPulse = (state && state.mouthPulse) || 0;
+            var audioLevel = Math.max(0, Math.min(1, Number((state && state.audioLevel) || 0)));
             var px = (state && state.pointerNX) || 0;
             var py = (state && state.pointerNY) || 0;
             var isThinking = !!(state && state.thinking);
 
-            // 柔和呼吸起伏
-            bodyBob.position.y = Math.sin(t * 1.8) * 0.014;
-            spinePivot.rotation.z = Math.sin(t * 0.9) * 0.013;
-            spinePivot.rotation.x = Math.sin(t * 1.8 + 0.5) * (speaking ? 0.020 : 0.009);
+            // 平滑推进当前触发的情绪/交互动作包络
+            var gKind = gesture.kind;
+            var gP = 0;
+            var gEnv = 0;
+            if (gKind) {
+                gesture.elapsed += dt;
+                gP = Math.min(1, gesture.elapsed / Math.max(0.1, gesture.duration));
+                gEnv = Math.sin(Math.PI * gP);
+                if (gP >= 1) {
+                    gesture.kind = null;
+                }
+            }
 
-            // 头部平滑跟随鼠标视线 + 说话轻点头
+            var colorBlend = Math.min(1, dt * 4.5);
+            outerRingCore.material.color.lerp(personaLerp.core, colorBlend);
+            outerRingBloom.material.color.lerp(personaLerp.bloom, colorBlend);
+            innerRing.material.color.lerp(personaLerp.inner, colorBlend);
+            rimLight.color.lerp(personaLerp.rim, colorBlend);
+            sparks.material.color.lerp(personaLerp.spark, colorBlend);
+
+            var celebrateBounce = gKind === "celebrate" ? Math.abs(Math.sin(gP * Math.PI * 3)) * 0.042 * gEnv : 0;
+            var nodBodyLean = gKind === "nod" ? gEnv * 0.036 : 0;
+
+            // 柔和呼吸起伏
+            bodyBob.position.y = Math.sin(t * 1.8) * 0.014 + celebrateBounce;
+            spinePivot.rotation.z = Math.sin(t * 0.9) * 0.013 + (gKind === "wave" ? -gEnv * 0.04 : 0);
+            spinePivot.rotation.x = Math.sin(t * 1.8 + 0.5) * (speaking ? 0.020 : 0.009) + nodBodyLean;
+
+            // 头部平滑跟随鼠标视线 + 说话轻点头 + 情绪动作叠加
+            var nodHeadDelta = gKind === "nod" ? Math.sin(gP * Math.PI * 4) * 0.16 * gEnv : 0;
+            var tiltHeadDelta = gKind === "wave" ? gEnv * 0.075 : (gKind === "celebrate" ? Math.sin(gP * Math.PI * 4) * 0.055 * gEnv : 0);
             var targetHeadY = px * 0.26 + Math.sin(t * 0.55) * 0.035;
-            var targetHeadX = py * 0.13 + Math.sin(t * 1.1) * 0.016 + (speaking ? Math.sin(t * 6.5) * 0.024 : 0);
+            var targetHeadX = py * 0.13 + Math.sin(t * 1.1) * 0.016 + (speaking ? Math.sin(t * 6.5) * 0.024 : 0) + nodHeadDelta;
             headPivot.rotation.y += (targetHeadY - headPivot.rotation.y) * Math.min(1, dt * 6);
             headPivot.rotation.x += (targetHeadX - headPivot.rotation.x) * Math.min(1, dt * 6);
-            headPivot.rotation.z = -px * 0.045 + (isThinking ? Math.sin(t * 2.4) * 0.038 : 0);
+            headPivot.rotation.z = -px * 0.045 + (isThinking ? Math.sin(t * 2.4) * 0.038 : 0) + tiltHeadDelta;
 
             // 圆耳朵灵动微颤
-            var earAmp = speaking ? 0.052 : 0.018;
+            var earAmp = (speaking || gKind === "celebrate") ? 0.055 : 0.018;
             ears.forEach(function (ear, idx) {
                 ear.pivot.rotation.z = ear.baseZ + Math.sin(t * 3.2 + idx * 1.7) * earAmp * ear.sx;
             });
@@ -2263,10 +2325,13 @@
                 eye.gaze.position.y += (targetY - eye.gaze.position.y) * Math.min(1, dt * 5);
             });
 
-            // 说话动态口型（闭嘴时纯享温柔微笑弧，说话时张合立体口腔与小舌头）
+            // 说话动态口型（闭嘴时纯享温柔微笑弧，说话时按韵律/音频电平张合）
             var openTarget = 0.01;
             if (speaking) {
-                openTarget = 0.36 + 0.46 * Math.abs(Math.sin(t * 10.5)) + 0.18 * mouthPulse;
+                openTarget = Math.max(
+                    0.36 + 0.44 * Math.abs(Math.sin(t * 10.5)) + 0.18 * mouthPulse,
+                    audioLevel > 0 ? (0.24 + audioLevel * 0.72) : 0
+                );
             }
             var curOpen = mouthCavity.scale.y;
             var nextOpen = curOpen + (Math.min(1.0, openTarget) - curOpen) * Math.min(1, dt * 16);
@@ -2274,31 +2339,47 @@
             mouthCavity.visible = nextOpen > 0.06;
             closedMouth.visible = !mouthCavity.visible;
 
-            // 托书右手与自然垂落左手互动摆动
+            // 托书右手与挥手左手协同互动（保持书本文字始终面向熊猫阅读方向）
             var talkWave = speaking ? Math.sin(t * 3.6) * 0.065 : 0;
-            rightElbow.rotation.x = -1.36 + Math.sin(t * 1.8) * 0.032 + talkWave;
-            leftShoulder.rotation.x = 0.04 + Math.sin(t * 1.4 + 1.1) * (speaking ? 0.075 : 0.028);
+            var bookArmBoost = gKind === "book" ? -gEnv * 0.17 : (gKind === "celebrate" ? -gEnv * 0.22 : 0);
+            rightElbow.rotation.x = -1.36 + Math.sin(t * 1.8) * 0.032 + talkWave + bookArmBoost;
+
+            var waveZ = 0;
+            var waveX = 0;
+            if (gKind === "wave") {
+                waveZ = gEnv * (1.42 + Math.sin(gP * Math.PI * 5) * 0.22);
+                waveX = -gEnv * 0.34;
+            } else if (gKind === "celebrate") {
+                waveZ = gEnv * (0.95 + Math.sin(gP * Math.PI * 6) * 0.24);
+                waveX = -gEnv * 0.26;
+            }
+            leftShoulder.rotation.z = 0.25 + waveZ;
+            leftShoulder.rotation.x = 0.04 + Math.sin(t * 1.4 + 1.1) * (speaking ? 0.075 : 0.028) + waveX;
 
             // 全息书卷悬浮呼吸、内页微颤翻动与星尘微升
-            holoBookGroup.position.y = 1.33 + Math.sin(t * 2.1) * 0.034 + talkWave * 0.16;
+            var bookLift = gKind === "book" ? gEnv * 0.085 : 0;
+            var flutterBoost = gKind === "book" ? (1 + gEnv * 1.6) : 1;
+            var sparkBoost = (gKind === "book" || gKind === "celebrate") ? (1 + gEnv * 1.5) : 1;
+            holoBookGroup.position.y = 1.33 + Math.sin(t * 2.1) * 0.034 + talkWave * 0.16 + bookLift;
             orientBookForReader(t);
             flutterPages.forEach(function (fp) {
-                fp.group.rotation.y = fp.baseY + Math.sin(t * 2.6 + fp.ph) * (speaking ? 0.08 : 0.035);
+                fp.group.rotation.y = fp.baseY + Math.sin(t * 2.6 * flutterBoost + fp.ph) * (speaking ? 0.08 : 0.035);
             });
             var posArr = sparkGeo.attributes.position.array;
             for (var i = 0; i < sparkCount; i++) {
                 var sd = sparkSeeds[i];
-                posArr[i * 3 + 1] = sd.y + ((t * 0.11 + sd.ph * 0.1) % 0.30);
+                posArr[i * 3 + 1] = sd.y + ((t * 0.11 * sparkBoost + sd.ph * 0.1) % 0.30);
                 posArr[i * 3] = sd.x + Math.sin(t * 1.8 + sd.ph) * 0.018;
             }
             sparkGeo.attributes.position.needsUpdate = true;
 
             // 舞台四周银杏叶轻盈律动
+            var leafRate = gKind === "celebrate" ? 1.8 : 1.0;
             floatingLeaves.forEach(function (item) {
                 var c = item.cfg;
-                item.mesh.position.y = c.y + Math.sin(t * 1.3 + c.ph) * 0.05;
-                item.mesh.rotation.z = c.rz + Math.sin(t * 0.9 + c.ph) * 0.12;
-                item.mesh.rotation.y = c.ry + Math.cos(t * 0.7 + c.ph) * 0.14;
+                item.mesh.position.y = c.y + Math.sin(t * 1.3 * leafRate + c.ph) * 0.05;
+                item.mesh.rotation.z = c.rz + Math.sin(t * 0.9 * leafRate + c.ph) * 0.12;
+                item.mesh.rotation.y = c.ry + Math.cos(t * 0.7 * leafRate + c.ph) * 0.14;
             });
 
             // 底座双层全息光环呼吸
@@ -2318,7 +2399,10 @@
             addYaw: function (delta) {
                 userYaw = Math.max(-Math.PI, Math.min(Math.PI, userYaw + delta));
             },
-            resetYaw: function () { userYaw = 0; }
+            resetYaw: function () { userYaw = 0; },
+            triggerGesture: triggerGesture,
+            setPersona: setPersona,
+            getGesture: function () { return gesture.kind; }
         };
     };
 })();

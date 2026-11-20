@@ -283,11 +283,13 @@
             '    <div class="chat-process-list"></div>' +
             "  </div>" +
             '  <div class="chat-bubble chat-bubble-assistant"><div class="chat-content"></div><span class="chat-caret"><i class="fas fa-ellipsis-h"></i></span></div>' +
+            '  <div class="chat-sources-slot" hidden></div>' +
             "</div>";
         messagesEl.appendChild(row);
 
         var contentEl = row.querySelector(".chat-content");
         var bubbleEl = row.querySelector(".chat-bubble-assistant");
+        var sourcesSlotEl = row.querySelector(".chat-sources-slot");
         var caretEl = row.querySelector(".chat-caret");
         var processEl = row.querySelector(".chat-process");
         var processListEl = row.querySelector(".chat-process-list");
@@ -379,6 +381,48 @@
                 }
                 state.reasoningText += text;
                 state.reasoningItem.textContent = state.reasoningText;
+                scrollToBottom();
+            },
+            setSources: function (items) {
+                if (!sourcesSlotEl || !Array.isArray(items) || !items.length) return;
+                var details = document.createElement("details");
+                details.className = "chat-sources";
+                var summary = document.createElement("summary");
+                var icon = document.createElement("i");
+                icon.className = "fas fa-book-open";
+                icon.setAttribute("aria-hidden", "true");
+                summary.appendChild(icon);
+                summary.appendChild(document.createTextNode(" 参考来源 · " + items.length + " 篇知识库文档"));
+                var list = document.createElement("div");
+                list.className = "chat-sources-list";
+                items.forEach(function (src) {
+                    if (!src) return;
+                    var card = document.createElement("div");
+                    card.className = "chat-source-item";
+                    var head = document.createElement("div");
+                    head.className = "chat-source-head";
+                    var titleEl = document.createElement("strong");
+                    titleEl.textContent = src.title || "知识库文档";
+                    head.appendChild(titleEl);
+                    if (typeof src.score === "number" && src.score > 0) {
+                        var scoreEl = document.createElement("span");
+                        scoreEl.className = "chat-source-score";
+                        scoreEl.textContent = "相关度 " + Math.min(99, Math.round(src.score * 100)) + "%";
+                        head.appendChild(scoreEl);
+                    }
+                    card.appendChild(head);
+                    if (src.excerpt) {
+                        var excerptEl = document.createElement("p");
+                        excerptEl.className = "chat-source-excerpt";
+                        excerptEl.textContent = src.excerpt;
+                        card.appendChild(excerptEl);
+                    }
+                    list.appendChild(card);
+                });
+                details.appendChild(summary);
+                details.appendChild(list);
+                sourcesSlotEl.replaceChildren(details);
+                sourcesSlotEl.hidden = false;
                 scrollToBottom();
             },
             showError: function (msg) {
@@ -655,12 +699,13 @@
     function bindSidebarResizer() {
         var handle = $("chatSideResizer");
         if (!handle || !app) return;
-        var storageKey = "govcheck.chat.sideWidth";
+        var storageKey = "campusagent.chat.sideWidth";
+        var legacyStorageKey = "govcheck.chat.sideWidth";
         var minWidth = 220;
         var maxWidth = 380;
         var width = 250;
         try {
-            var stored = Number(localStorage.getItem(storageKey));
+            var stored = Number(localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey));
             if (Number.isFinite(stored) && stored >= minWidth && stored <= maxWidth) width = stored;
         } catch (error) {}
 
@@ -952,6 +997,8 @@
             }
         } else if (ev === "notice") {
             turn.addTool("知识仓库", data.text);
+        } else if (ev === "sources") {
+            turn.setSources((data && data.items) || []);
         } else if (ev === "error") {
             turn.showError((data && data.message) || "未知错误");
         }

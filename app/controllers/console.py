@@ -24,7 +24,7 @@ import logging
 import tornado.web
 
 from app.controllers.admin import AdminApiHandler, AdminBaseHandler, backend_required
-from app.models.console import ConsoleStatsRepository
+from app.models.console import ConsoleStatsRepository, _ALIASES_SORTED
 from app.models.digital_employee import DigitalEmployeeRepository
 from app.services import settings_service
 
@@ -35,7 +35,7 @@ URL_REPORTS = "/admin/reports"
 URL_TOOLS = "/admin/tools"
 URL_SETTINGS = "/admin/settings"
 
-# 工具注册表展示元数据：id 必须与 services/agent_service.py 的 TOOL_REGISTRY / _tools_for 对齐
+# 工具注册表展示元数据：id 必须与 services/agent_service.py 的 TOOL_REGISTRY / CAMPUS_TOOLS / _tools_for 对齐
 TOOL_META = {
     "weather": {"name": "天气查询", "kind": "内置工具", "provider": "agentica · WeatherTool",
                 "desc": "按城市返回实时天气，供数字员工在对话中按需调用"},
@@ -48,7 +48,15 @@ TOOL_META = {
     "warehouse": {"name": "数仓检索", "kind": "数据工具", "provider": "本地 warehouse_data",
                   "desc": "按关键词检索已入库正文（status=2），把站内数据作为对话依据"},
     "mcp_search": {"name": "网络搜索", "kind": "MCP", "provider": "/mcp/news",
-                   "desc": "经 MCP 通道检索公开新闻，补齐站外实时信息"},
+                   "desc": "经 MCP 通道检索公开新闻（优先国内可达 RSS 源），补齐站外实时信息"},
+    "campus_shuttle": {"name": "校园班车查询", "kind": "校园工具", "provider": "CampusAgentOS · CWNU",
+                       "desc": "查询华凤校区、北湖校区及都京方向通勤校车停靠点与公交接驳参考"},
+    "campus_calendar": {"name": "校历与考试周", "kind": "校园工具", "provider": "CampusAgentOS · CWNU",
+                        "desc": "按今日日期动态计算本学期阶段、选课、四六级与期末考试周参考节点"},
+    "campus_gpa": {"name": "绩点与奖学金测算", "kind": "校园工具", "provider": "CampusAgentOS · CWNU",
+                   "desc": "解析成绩单并计算 4.0/5.0 制参考 GPA，同步匹配国奖/励志/校奖条件"},
+    "campus_directory": {"name": "校内办事黄页", "kind": "校园工具", "provider": "CampusAgentOS · CWNU",
+                         "desc": "检索教务、资助、就业、图书馆、报修、校园网及心理危机热线"},
 }
 
 
@@ -69,7 +77,7 @@ class AdminConsoleDashboardHandler(AdminBaseHandler):
             refresh = 10
         return {
             "refresh_seconds": max(5, min(refresh, 120)),
-            "site_subtitle": brand.get("site_subtitle") or "政务数据智能平台",
+            "site_subtitle": brand.get("site_subtitle") or "西华师范大学智慧校园服务智能体平台",
             "watermark": brand.get("ui_watermark") == "1",
         }
 
@@ -176,21 +184,28 @@ class StatsStreamHandler(AdminBaseHandler):
 
 # ==================== 大屏语音问答 ====================
 
-def _answer_question(question: str, snap: dict) -> dict:
-    """库内口径直答：按问题意图命中指标，拼出可朗读的一句话 + 指标卡
+def _match_question_region(question: str) -> str:
+    if "南充" in question:
+        return "四川"
+    for alias, province in _ALIASES_SORTED:
+        if alias in question:
+            return province
+    return ""
 
-    设计取舍：大屏问答走**确定性规则**，不调用外部大模型——
-    答辩现场即使 AHLLMProxy 不可用也能稳定回答；需要大模型深度解读时，
-    页面提供"转智能问数（/qa）"入口，由成员 D 的问数链路生成报告。
+
+def _answer_question(question: str, snap: dict) -> dict:
+    """库内口径直答 + 大屏画面联动指令（action）：
+    按问题意图命中指标并可选附带前端联动 action（地球聚焦/切换双校区/高亮面板），
+    不依赖外部大模型，答辩或离线环境同样稳定响应。
     """
     q = (question or "").strip()
-    low = q.lower()
     ov = snap.get("overview") or {}
     risk = ov.get("risk") or {}
     counts = risk.get("counts") or {}
     token = ov.get("token") or {}
     chips = []
     intent = "overview"
+    action = None
 
     def num(value):
         try:
@@ -208,8 +223,40 @@ def _answer_question(question: str, snap: dict) -> dict:
             return num(wh.get("done"))
         return num(wh)
 
-    if any(k in q for k in ("风险", "预警", "隐患", "异常", "安全", "舆情")):
+    matched_region = _match_question_region(q)
+
+    if any(k in q for k in ("校区", "华凤", "北湖", "都京")):
+        intent = "campus"
+        action = {"type": "switch_map_mode", "mode": "campus"}
+        kws = snap.get("keywords") or []
+        top_kw = "、".join(str(r.get("keyword")) for r in kws[:3]) or "奖学金、双选会"
+        add("华凤校区", "主枢纽", "")
+        add("北湖校区", "联动枢纽", "")
+        add("高风险线索", num(counts.get("high")), "条")
+        add("今日采集", num(ov.get("collect_today")), "条")
+        answer = "已为您切换至「华凤 / 北湖双校区」态势视图：今日校园关注焦点集中在 %s，待关注与高风险线索共 %d 条。" % (
+            top_kw, num(counts.get("high")) + num(counts.get("watch")))
+
+    elif matched_region:
+        intent = "region_focus"
+        action = {"type": "focus_region", "region": matched_region}
+        reg_list = (snap.get("by_region") or {}).get("list") or []
+        hit = next((r for r in reg_list if r.get("name") == matched_region), None)
+        rank = (reg_list.index(hit) + 1) if hit else 0
+        cnt = num(hit.get("value")) if hit else 0
+        add("聚焦区域", matched_region, "")
+        add("文本提及", cnt, "篇")
+        if rank:
+            add("全网排名", "第 %d 名" % rank, "")
+        answer = (
+            "已在 3D 地球定位至「%s」：当前关联资讯与报道共 %d 篇（全国排名第 %d）。" % (matched_region, cnt, rank)
+            if hit else
+            "已在 3D 地球定位至「%s」节点：当前采集中暂未出现高频文本提及，可点击地球节点查看关联轨迹。" % matched_region
+        )
+
+    elif any(k in q for k in ("风险", "预警", "隐患", "异常", "安全", "舆情")):
         intent = "risk"
+        action = {"type": "highlight_panel", "target": "risk"}
         high, watch = num(counts.get("high")), num(counts.get("watch"))
         add("高风险", high, "条")
         add("关注", watch, "条")
@@ -225,6 +272,7 @@ def _answer_question(question: str, snap: dict) -> dict:
 
     elif any(k in q for k in ("信源", "来源", "渠道", "站点")):
         intent = "source"
+        action = {"type": "highlight_panel", "target": "source"}
         sources = snap.get("by_source") or []
         for row in sources[:4]:
             add(row.get("source_name") or "-", num(row.get("count")), "条")
@@ -234,6 +282,7 @@ def _answer_question(question: str, snap: dict) -> dict:
 
     elif any(k in q for k in ("关键词", "热词", "主题", "焦点")):
         intent = "keywords"
+        action = {"type": "highlight_panel", "target": "center"}
         kws = snap.get("keywords") or []
         for row in kws[:5]:
             add(row.get("keyword") or "-", num(row.get("count")), "次")
@@ -242,6 +291,7 @@ def _answer_question(question: str, snap: dict) -> dict:
 
     elif any(k in q for k in ("趋势", "增长", "环比", "走势", "这几天")):
         intent = "trend"
+        action = {"type": "highlight_panel", "target": "trend"}
         trend = snap.get("trend") or []
         last7 = sum(num(r.get("collect")) for r in trend[-7:])
         prev7 = sum(num(r.get("collect")) for r in trend[-14:-7])
@@ -254,6 +304,7 @@ def _answer_question(question: str, snap: dict) -> dict:
 
     elif any(k in q for k in ("地区", "地域", "省份", "地图", "分布")):
         intent = "region"
+        action = {"type": "switch_map_mode", "mode": "globe"}
         regions = (snap.get("by_region") or {}).get("list") or []
         for row in regions[:4]:
             add(row.get("name") or "-", num(row.get("value")), "篇")
@@ -263,6 +314,7 @@ def _answer_question(question: str, snap: dict) -> dict:
 
     elif any(k in q for k in ("用户", "活跃", "在线", "会话")):
         intent = "users"
+        action = {"type": "highlight_panel", "target": "kpis"}
         add("用户总数", num(ov.get("users")), "人")
         add("活跃会话", num(ov.get("active_sessions")), "个")
         add("对话消息", num(ov.get("messages")), "条")
@@ -271,6 +323,7 @@ def _answer_question(question: str, snap: dict) -> dict:
 
     elif any(k in q for k in ("token", "模型", "成本", "调用")):
         intent = "token"
+        action = {"type": "highlight_panel", "target": "kpis"}
         add("模型调用", num(token.get("call_count")), "次")
         add("Token 合计", num(token.get("token_total")), "")
         answer = "模型累计调用 %d 次，消耗 Token %d。" % (
@@ -278,6 +331,7 @@ def _answer_question(question: str, snap: dict) -> dict:
 
     elif any(k in q for k in ("采集", "数据量", "最新", "总量", "多少数据")):
         intent = "collect"
+        action = {"type": "highlight_panel", "target": "kpis"}
         wh = warehouse_total()
         add("采集总量", num(ov.get("collect_total")), "条")
         add("今日新增", num(ov.get("collect_today")), "条")
@@ -286,6 +340,7 @@ def _answer_question(question: str, snap: dict) -> dict:
             num(ov.get("collect_total")), num(ov.get("collect_today")), wh)
 
     else:
+        action = {"type": "highlight_panel", "target": "kpis"}
         wh = warehouse_total()
         add("采集总量", num(ov.get("collect_total")), "条")
         add("今日新增", num(ov.get("collect_today")), "条")
@@ -302,8 +357,9 @@ def _answer_question(question: str, snap: dict) -> dict:
         "answer": answer,
         "chips": chips,
         "speak": answer.split("（数据口径")[0],
+        "action": action,
         "generated_at": snap.get("generated_at", ""),
-        "suggest": ["最新数据情况", "风险预警情况", "信源采集排名", "近七天趋势"],
+        "suggest": ["华凤北湖双校区", "四川关注情况", "风险预警情况", "信源采集排名"],
     }
 
 
@@ -336,7 +392,10 @@ def _registry_snapshot() -> dict:
         ids = list(TOOL_REGISTRY.keys())
     except Exception:  # agentica 未装时不阻断页面，按元数据兜底
         ids = [k for k in TOOL_META if k in ("weather", "todo", "task", "memory")]
-    ids = ids + [k for k in ("warehouse", "mcp_search") if k not in ids]
+    ids = ids + [
+        k for k in ("warehouse", "mcp_search", "campus_shuttle", "campus_calendar", "campus_gpa", "campus_directory")
+        if k not in ids
+    ]
 
     employees = []
     try:

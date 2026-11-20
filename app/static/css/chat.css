@@ -820,6 +820,68 @@
     font-family: Consolas, Monaco, monospace; font-size: 12px;
 }
 
+/* ---------- 知识库引用溯源可折叠卡 ---------- */
+.chat-sources-slot { margin-top: 8px; }
+.chat-sources-slot[hidden] { display: none; }
+.chat-sources {
+    border: 1px solid #dbe5f2;
+    border-radius: 10px;
+    background: #f8fbff;
+    color: #334155;
+    font-size: 12.5px;
+    overflow: hidden;
+}
+.chat-sources summary {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--cwnu-navy, #003087);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    user-select: none;
+    list-style: none;
+}
+.chat-sources summary:hover { background: #eef4fc; }
+.chat-sources[open] summary { border-bottom: 1px solid #dbe5f2; }
+.chat-sources-list {
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+.chat-source-item {
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e2eaf5;
+}
+.chat-source-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.chat-source-head strong { font-size: 12.5px; color: #0f172a; font-weight: 600; }
+.chat-source-score {
+    flex: none;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #eef3fb;
+    color: var(--cwnu-navy, #003087);
+}
+.chat-source-excerpt {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #475569;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 /* ---------- 输入区（方案A：白底圆角悬浮胶囊） ---------- */
 .chat-composer {
     flex: 0 0 auto;

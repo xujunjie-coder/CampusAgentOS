@@ -133,7 +133,8 @@
     var retry = document.getElementById('faceRetry');
     var usernameInput = document.getElementById('faceUsername');
     var rememberUsername = document.getElementById('faceRememberUsername');
-    var rememberKey = 'govcheck.face.username';
+    var rememberKey = 'campusagent.face.username';
+    var legacyRememberKey = 'govcheck.face.username';
     var MAX_STALL_RECOVERIES = 4;
     var stream = null;
     var cameraReady = false;
@@ -144,7 +145,7 @@
     var request = null;
 
     try {
-        var remembered = localStorage.getItem(rememberKey);
+        var remembered = localStorage.getItem(rememberKey) || localStorage.getItem(legacyRememberKey);
         if (remembered && remembered.length <= 32) {
             usernameInput.value = remembered;
             rememberUsername.checked = true;
@@ -153,7 +154,10 @@
 
     rememberUsername.addEventListener('change', function () {
         if (!rememberUsername.checked) {
-            try { localStorage.removeItem(rememberKey); } catch (err) {}
+            try {
+                localStorage.removeItem(rememberKey);
+                localStorage.removeItem(legacyRememberKey);
+            } catch (err) {}
         }
     });
 

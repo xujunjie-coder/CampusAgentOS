@@ -110,8 +110,36 @@
     box-shadow: 0 8px 26px rgba(15, 23, 42, .08);
     min-height: 0;
 }
-.avatar-stage canvas { display: block; cursor: grab; }
+.avatar-stage canvas { display: block; cursor: grab; touch-action: none; }
 .avatar-stage canvas:active { cursor: grabbing; }
+
+.avatar-stage-actions {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.avatar-stage-actions[hidden] { display: none; }
+.avatar-stage-btn {
+    border: 1px solid rgba(255, 255, 255, .22);
+    background: rgba(15, 23, 42, .68);
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color .16s, border-color .16s, transform .14s;
+}
+.avatar-stage-btn:hover {
+    background: rgba(0, 48, 135, .86);
+    border-color: rgba(147, 197, 253, .65);
+    color: #ffffff;
+}
+.avatar-stage-btn:active { transform: scale(0.96); }
 
 .avatar-model-tag {
     position: absolute;
@@ -352,6 +380,63 @@
 .avatar-process-item > b { display: block; font-size: 12px; margin-bottom: 5px; color: #475569; }
 .avatar-process-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.7; }
 .avatar-process-item.is-tool .avatar-process-text { font-family: Consolas, Monaco, monospace; }
+
+/* 引用知识库来源折叠卡（与过程抽屉保持轻量视觉统一） */
+.avatar-sources {
+    margin: 0 12px 10px 0;
+    border: 1px solid #d5e2f5;
+    border-radius: 10px;
+    background: #f5f9ff;
+    color: #334155;
+}
+.avatar-sources summary {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cwnu-navy);
+}
+.avatar-sources summary:hover { background: #eaf2fd; border-radius: 10px; }
+.avatar-sources[open] summary { border-bottom: 1px solid #dbe5f2; border-radius: 10px 10px 0 0; }
+.avatar-sources-body { padding: 8px 12px; display: flex; flex-direction: column; gap: 7px; }
+.avatar-source-item {
+    padding: 7px 9px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e2eaf5;
+    font-size: 12px;
+}
+.avatar-source-item > b { display: block; color: #0f172a; margin-bottom: 3px; }
+.avatar-source-excerpt { color: #475569; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* 语音提问麦克风按钮 */
+.avatar-mic-btn {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 12px;
+    border: 1px solid #cfdbed;
+    background: #f8fafc;
+    color: var(--cwnu-navy);
+    font-size: 15px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color .16s, border-color .16s, color .16s, transform .14s;
+}
+.avatar-mic-btn:hover { background: var(--cwnu-navy-soft); border-color: #92b0db; }
+.avatar-mic-btn:active { transform: scale(0.96); }
+.avatar-mic-btn.is-listening {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #ffffff;
+    animation: avatarMicPulse 1.2s infinite;
+}
+@keyframes avatarMicPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, .45); }
+    50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+}
 
 .avatar-caption-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
 .avatar-playback-controls { display: flex; align-items: center; gap: 6px; }

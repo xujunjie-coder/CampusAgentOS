@@ -25,7 +25,7 @@ from app.services import model_service
 logger = logging.getLogger(__name__)
 
 _INSTRUCTION = (
-    "你是政务数据平台的智能问数分析师。用户会给出一个问题和从数据仓库统计接口聚合的真实数据快照，"
+    "你是西华师范大学智慧校园平台（CampusAgentOS）的智能问数分析师。用户会给出一个问题和从数据仓库统计接口聚合的真实数据快照，"
     "你必须只基于数据快照回答，禁止编造数字。输出一个 JSON 对象（不要 markdown 围栏、不要多余文字），"
     '字段：title(15字内报告标题), summary(80字内结论), '
     'metrics(数组,2-5项,每项{name,value,unit},value为字符串数字), '

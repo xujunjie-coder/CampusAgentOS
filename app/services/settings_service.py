@@ -35,8 +35,8 @@ BRAND_URL_PREFIX = "/static/uploads/brand/"
 
 # 允许写入 system_settings 的键（白名单，防止接口被当成任意配置写入口）
 DEFAULTS = {
-    "site_name": "数据瞭望",
-    "site_subtitle": "政务数据智能平台",
+    "site_name": "西华师范大学 · 智慧校园",
+    "site_subtitle": "西华师范大学智慧校园服务智能体平台",
     "site_logo": "",
     "site_favicon": "",
     "ui_watermark": "1",

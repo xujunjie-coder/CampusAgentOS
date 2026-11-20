@@ -264,7 +264,7 @@ class AdminNotifyTestHandler(AdminApiHandler):
         b = self.body()
         channel = (b.get("channel") or "email").strip()
         result = await tornado.ioloop.IOLoop.current().run_in_executor(
-            None, notify_service.notify, channel, "GovAgentOS 通知测试",
+            None, notify_service.notify, channel, "CampusAgentOS 通知测试",
             "这是一条来自定时任务模块的通知测试消息。")
         self.ok(result=result, status=notify_service.channels_status())
 
