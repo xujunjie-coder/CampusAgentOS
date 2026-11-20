@@ -1,4 +1,4 @@
-# GovCheckDataAgentOS（某省数据瞭望系统 · GovAgentOS）
+# GovCheckDataAgentOS（数据瞭望系统 · GovAgentOS）
 
 面向政务数据采集与舆情研判的一体化 Agent 平台：后台做信源管理、智能体批量采集、数据仓库与知识仓库（RAG），
 前台做 AI 对话、3D 数字人交互、智能问数，并把采集结果交给大模型做风险分级与异常预警。
