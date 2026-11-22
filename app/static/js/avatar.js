@@ -759,7 +759,12 @@
     }
 
     function cleanSentence(s) {
-        return String(s).replace(/[#*`>_~\[\]()]/g, " ").replace(/\s+/g, " ").trim();
+        return String(s)
+            // Strip complete keycaps first so ordinary digits remain readable.
+            .replace(/[#*0-9]\uFE0F?\u20E3/gu, " ")
+            // Includes flags, skin tones and joiners used by compound emoji.
+            .replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\u200D\uFE0E\uFE0F\u20E3\u{E0020}-\u{E007F}]/gu, "")
+            .replace(/[#*`>_~\[\]()]/g, " ").replace(/\s+/g, " ").trim();
     }
 
     function renderPlaybackControls() {

@@ -295,8 +295,6 @@
     text-overflow: ellipsis;
 }
 .chat-session-title-text { display: inline; }
-.chat-session-title.is-scrolling { text-overflow: clip; }
-.chat-session-title.is-scrolling .chat-session-title-text { display: inline-block; }
 .chat-session-list li:hover .chat-session-item:not(.is-active) {
     background: var(--side-hover);
 }
@@ -335,6 +333,9 @@
 .chat-session-action { position: absolute; top: 50%; right: 39px; transform: translateY(-50%); }
 .chat-session-action[data-action="delete"] { right: 6px; }
 @media (hover: hover) and (pointer: fine) {
+    .chat-session-list li:has(.chat-session-action) .chat-session-item { padding-right: 11px; }
+    .chat-session-list li:has(.chat-session-action):hover .chat-session-item,
+    .chat-session-list li:has(.chat-session-action):focus-within .chat-session-item { padding-right: 76px; }
     .chat-session-action {
         opacity: 0;
         transform: translate(4px, -50%);
@@ -785,6 +786,42 @@
     font-family: Consolas, Monaco, monospace; font-size: 13px;
 }
 
+/* ---------- 流式响应活动状态：不依赖文本增量，工具等待期间持续显示 ---------- */
+.chat-turn-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 8px; }
+.chat-turn-meta .chat-bot-name { margin: 0; }
+.chat-progress {
+    display: inline-flex; align-items: center; gap: 6px;
+    max-width: 100%; min-width: 0;
+    color: var(--cwnu-navy, #003087);
+    font-size: 12px; line-height: 1.5; font-weight: 400;
+}
+.chat-progress[hidden] { display: none; }
+.chat-progress-text { min-width: 0; overflow-wrap: anywhere; }
+.chat-progress-spinner {
+    flex: 0 0 12px; width: 12px; height: 12px; box-sizing: border-box;
+    border: 2px solid #cbdcf5; border-top-color: currentColor; border-radius: 50%;
+    animation: chatProgressSpin 1s linear infinite;
+}
+.chat-progress-dots { display: flex; gap: 4px; margin-left: 3px; flex-shrink: 0; }
+.chat-progress-dots i {
+    width: 4px; height: 4px; border-radius: 50%; background: currentColor;
+    animation: chatProgressDot 1.3s ease-in-out infinite;
+}
+.chat-progress-dots i:nth-child(2) { animation-delay: .16s; }
+.chat-progress-dots i:nth-child(3) { animation-delay: .32s; }
+.chat-msg-assistant.is-working:not(.has-answer) .chat-bubble-assistant { display: none; }
+.chat-msg-assistant.is-working .chat-process-head > .fa-layer-group { animation: chatProgressGlow 1.8s ease-in-out infinite; }
+@keyframes chatProgressSpin { to { transform: rotate(360deg); } }
+@keyframes chatProgressDot {
+    0%, 60%, 100% { transform: translateY(0); opacity: .35; }
+    30% { transform: translateY(-3px); opacity: 1; }
+}
+@keyframes chatProgressGlow { 50% { opacity: .4; } }
+@media (prefers-reduced-motion: reduce) {
+    .chat-progress-spinner, .chat-progress-dots i,
+    .chat-msg-assistant.is-working .chat-process-head > .fa-layer-group { animation: none; }
+}
+
 /* ---------- 执行过程时间线 ---------- */
 .chat-process {
     border: 1px solid #e2e8f0;
@@ -821,7 +858,7 @@
 }
 
 /* ---------- 知识库引用溯源可折叠卡 ---------- */
-.chat-sources-slot { margin-top: 8px; }
+.chat-sources-slot { margin-bottom: 8px; }
 .chat-sources-slot[hidden] { display: none; }
 .chat-sources {
     border: 1px solid #dbe5f2;
@@ -844,6 +881,8 @@
 }
 .chat-sources summary:hover { background: #eef4fc; }
 .chat-sources[open] summary { border-bottom: 1px solid #dbe5f2; }
+.chat-source-credit { padding: 8px 12px; color: #475569; font-size: 12px; }
+.chat-source-credit a { color: var(--cwnu-navy, #003087); text-decoration: underline; }
 .chat-sources-list {
     padding: 8px 10px;
     display: flex;
@@ -1303,3 +1342,8 @@
     .chat-asst-panel { width: 300px; }
     .chat-asst-tip { display: none; }
 }
+
+.chat-temporary-btn { margin: 8px 0 0 !important; }
+.chat-temporary-btn[aria-pressed="true"] { background: #e7efff; border-color: #3467ba; color: #003886; }
+.chat-temporary-hint { margin: 10px 4px; font-size: 12px; line-height: 1.6; color: #52627a; }
+.chat-map-link{display:inline-block;margin-top:10px;padding:9px 14px;border-radius:9px;background:#00368c;color:#fff!important;text-decoration:none;font-weight:600}

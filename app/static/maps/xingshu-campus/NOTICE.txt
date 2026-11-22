@@ -1,0 +1,14 @@
+行署校区三维地图
+来源：https://github.com/CWNU-Open-Source-Community/SCSWiki
+原文：https://scswiki.com/start/xingshu-campus-map
+作者：SCSWiki contributors；文档内容 CC BY-SA 4.0，代码 MIT，随附原许可说明。
+模型和 manifest 从本项目已导入的 SCSWiki 源码快照复制，未修改。
+交互页面由 CampusAgentOS 适配，沿用平台已有 Three.js/GLTFLoader。
+2026-11-22：增加浅色楼块/道路/绿地配色、阴影、建筑名称、搜索、平移及名称避让。
+模型几何未修改，建筑名称与位置仍取自原manifest；?标记表示需要核验。
+三组建筑审查JSON覆盖42栋，记录清单名与GLB内部旧名称差异；未取得腾讯3D逐栋对照，不声称已实景重建。
+本页未调用腾讯或高德地图数据服务，未抓取商业卫星瓦片或3D模型。
+道路与地面数据：© OpenStreetMap contributors，Open Database License 1.0
+https://www.openstreetmap.org/copyright
+未复制来源为“网络来源”的参考图片，也不提供参考图片图层。
+本图为学生维护的非官方白模，不是学校导航或应急疏散图；建筑名称、轮廓、高度与现状仍待核验。

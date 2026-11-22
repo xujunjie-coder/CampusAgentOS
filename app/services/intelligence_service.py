@@ -5,6 +5,7 @@ import json
 import math
 import re
 import unicodedata
+from urllib.parse import urlsplit
 
 from app.models import intelligence
 from app.models.model_engine import ModelEngineRepository
@@ -185,13 +186,53 @@ async def index_document(title, content):
     return intelligence.save_document(title, fingerprint(model), zip(parts, vectors))
 
 
+def _scswiki_source_url(content):
+    """Read the importer's provenance line, never arbitrary links in the body."""
+    match = re.search(r"^原文[：:]\s*(https://[^\s<>]+)[ \t]*$", content or "", re.M)
+    if not match:
+        return ""
+    url = match.group(1)
+    if any(unicodedata.category(char) == "Cc" for char in url):
+        return ""
+    try:
+        parsed = urlsplit(url)
+        if (parsed.scheme != "https" or parsed.hostname != "scswiki.com"
+                or parsed.username or parsed.password or parsed.port not in (None, 443)):
+            return ""
+    except ValueError:
+        return ""
+    return url
+
+
+def is_usable_knowledge_text(content):
+    """Accept nonempty text with at most 2% unexpected C0 control characters."""
+    if not isinstance(content, str) or not content.strip():
+        return False
+    controls = sum(ord(char) < 32 and char not in "\n\r\t" for char in content)
+    return controls / len(content) <= 0.02
+
+
+def knowledge_display_text(content):
+    """Replace the imported Vue-only map block with our actual map entry."""
+    url = _scswiki_source_url(content)
+    if not url or urlsplit(url).path.rstrip("/") != "/start/xingshu-campus-map":
+        return content
+    content = re.sub(r"<ClientOnly\b[^>]*>.*?</ClientOnly>",
+                     "[打开行署校区三维地图](/campus-map)", content, flags=re.S)
+    # Also handle chunks split inside the component's outer wrapper.
+    content = re.sub(r"<XingshuCampusMap\s*/>", "[打开行署校区三维地图](/campus-map)", content)
+    content = re.sub(r"</?(?:ClientOnly|template)\b[^>]*>", "", content)
+    return content
+
+
 async def retrieve(query, ids):
     ids = list(dict.fromkeys(int(i) for i in ids if str(i).isascii() and str(i).isdigit()
                             and len(str(i)) <= 18))[:30]
     if not ids:
         return []
     model = embedding_engine()
-    rows = intelligence.knowledge_chunks(ids, fingerprint(model))
+    rows = [row for row in intelligence.knowledge_chunks(ids, fingerprint(model))
+            if is_usable_knowledge_text(row["content"])]
     if not rows:
         return []
     vector, = await document_vectors(model, [query])
@@ -215,7 +256,8 @@ async def retrieve(query, ids):
             score = 0.78 * vec_score + 0.22 * bm25_norm
         if math.isfinite(score) and score > threshold:
             hits.append((score, row["id"], row["title"], row["content"]))
-    return [{"id": doc_id, "title": title, "excerpt": content, "score": round(score, 4)}
+    return [{"id": doc_id, "title": title, "excerpt": knowledge_display_text(content), "score": round(score, 4),
+             "source_url": _scswiki_source_url(content)}
             for score, doc_id, title, content in sorted(hits, reverse=True)[:4]]
 
 

@@ -14,6 +14,7 @@ import tornado.web
 from app.controllers.auth import LoginHandler, RegisterHandler, LogoutHandler
 from app.controllers.base import NotFoundHandler
 from app.controllers.chat import ChatHandler, HistoryHandler
+from app.controllers.course_materials import CourseMaterialHandler
 from app.controllers.health import HealthHandler
 from app.controllers.face import (
     AdminUserFaceItemHandler,
@@ -31,7 +32,7 @@ from app.controllers.assistant import (
     AssistantSelectApiHandler,
 )
 
-from app.controllers.page import IndexHandler
+from app.controllers.page import IndexHandler, CampusMapHandler
 from app.controllers.collect import (
     CollectPageHandler,
     CollectSourcesApiHandler,
@@ -174,6 +175,7 @@ def make_app():
             # 前台（用户侧）
             (r"/", IndexHandler),
             (r"/api/chat", ChatHandler),
+            (r"/api/course-materials/([a-z0-9-]+)/(preview|file|download)", CourseMaterialHandler),
             (r"/api/history", HistoryHandler),
             (r"/mcp/news", NewsMcpHandler),
 
@@ -192,6 +194,7 @@ def make_app():
 
             # 成员 D：智能问数（任务1核心：数仓统计 + 模型报告）
             (r"/qa", QaPageHandler),
+            (r"/campus-map", CampusMapHandler),
             (r"/api/qa/ask", QaAskApiHandler),
             (r"/api/qa/history", QaHistoryApiHandler),
             (r"/api/qa/report/(\d+)", QaReportApiHandler),

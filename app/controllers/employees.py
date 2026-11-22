@@ -30,6 +30,7 @@ from app.controllers.admin import AdminBaseHandler, AdminApiHandler, backend_req
 from app.models.digital_employee import (
     DigitalEmployeeRepository, EMPLOYEE_PAGE_SIZE, AVATAR_ICONS)
 from app.models.user import UserRepository
+from app.models import intelligence
 from app.services.agent_service import reset_agents
 
 TOOL_OPTIONS = {
@@ -39,10 +40,6 @@ TOOL_OPTIONS = {
     "memory": ("长期记忆（工作空间）", "fas fa-brain"),
     "warehouse": ("数仓检索", "fas fa-database"),
     "mcp_search": ("MCP 网络搜索", "fas fa-search"),
-    "campus_shuttle": ("校园班车查询", "fas fa-bus"),
-    "campus_calendar": ("校历与考试周", "fas fa-calendar-alt"),
-    "campus_gpa": ("绩点与奖学金测算", "fas fa-calculator"),
-    "campus_directory": ("校内办事黄页", "fas fa-map-signs"),
 }
 
 URL_EMPLOYEES = "/admin/employees"
@@ -93,6 +90,25 @@ def _norm_tools(tools) -> list:
     return [t for t in tools if isinstance(t, str) and t in TOOL_OPTIONS]
 
 
+def _norm_knowledge_ids(raw) -> list:
+    if not isinstance(raw, list):
+        raise ValueError("知识库绑定必须为文档编号数组")
+    ids = []
+    for value in raw:
+        text = str(value)
+        if not text.isascii() or not text.isdigit() or len(text) > 18:
+            raise ValueError("知识文档编号无效")
+        doc_id = str(int(text))
+        if doc_id not in ids:
+            ids.append(doc_id)
+    if len(ids) > 30:
+        raise ValueError("每位助理最多绑定 30 份知识文档")
+    available = {str(d['id']) for d in intelligence.document_options()}
+    if any(doc_id not in available for doc_id in ids):
+        raise ValueError("部分知识文档不存在或尚未索引，请刷新后重新选择")
+    return ids
+
+
 def _norm_link_files(files) -> list:
     """关联文件路径校验：必须落在 workspace 内且为 .md 文件，非法项静默过滤（重复项只保留首个）"""
     out = []
@@ -129,8 +145,7 @@ def _form_fields(b: dict) -> dict:
     if "tools" in b:
         fields["tools"] = _norm_tools(b.get("tools"))
     if "rag_kb_ids" in b:
-        raw = b.get("rag_kb_ids")
-        fields["rag_kb_ids"] = [str(i) for i in raw] if isinstance(raw, list) else []
+        fields["rag_kb_ids"] = _norm_knowledge_ids(b.get("rag_kb_ids"))
     for key in ("enabled", "enable_long_term_memory", "enable_experience_capture"):
         if b.get(key) is not None:
             fields[key] = _bool_arg(b.get(key))
@@ -152,6 +167,7 @@ class AdminEmployeesHandler(AdminBaseHandler):
                              for key, (label, icon) in TOOL_OPTIONS.items()],
             "avatar_icons": AVATAR_ICONS,
             "employee_page_size": EMPLOYEE_PAGE_SIZE,
+            "knowledge_options": intelligence.document_options(),
         }
 
 
@@ -196,6 +212,11 @@ class AdminEmployeesApiHandler(AdminApiHandler):
                 os.path.dirname(__file__), os.pardir, os.pardir, workspace_path.replace("\\", "/")))):
             self.fail("工作空间目录不存在（须为项目根目录下的相对路径）")
             return
+        try:
+            rag_kb_ids = _norm_knowledge_ids(b.get("rag_kb_ids", []))
+        except ValueError as exc:
+            self.fail(str(exc))
+            return
         new_id = DigitalEmployeeRepository.create(
             name,
             instructions=b.get("instructions") or "",
@@ -205,7 +226,7 @@ class AdminEmployeesApiHandler(AdminApiHandler):
             description=(b.get("description") or "").strip(),
             avatar=(b.get("avatar") or "fas fa-briefcase").strip(),
             model_binding=(b.get("model_binding") or "").strip(),
-            rag_kb_ids=[str(i) for i in (b.get("rag_kb_ids") or []) if isinstance(i, (str, int))],
+            rag_kb_ids=rag_kb_ids,
             enabled=_bool_arg(b.get("enabled", 1)),
             enable_long_term_memory=_bool_arg(b.get("enable_long_term_memory", 1)),
             enable_experience_capture=_bool_arg(b.get("enable_experience_capture", 1)),
@@ -238,7 +259,11 @@ class AdminEmployeeItemHandler(AdminApiHandler):
         if not self.require_menu(URL_EMPLOYEES):
             return
         b = self.body()
-        fields = _form_fields(b)
+        try:
+            fields = _form_fields(b)
+        except ValueError as exc:
+            self.fail(str(exc))
+            return
         if "name" in fields and (not fields["name"] or len(fields["name"]) > 64):
             self.fail("数字员工名称需为1-64个字符")
             return

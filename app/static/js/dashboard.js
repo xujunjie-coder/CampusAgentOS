@@ -277,7 +277,7 @@
                 return '<li><div class="d-title">' + C.esc(it.title || '') + '</div>' +
                     '<div class="d-meta">' + C.esc(it.meta || '') + '</div></li>';
             }).join('')
-            : '<li class="d-empty">当前筛选条件下暂无明细记录</li>';
+            : '<li class="d-empty">' + C.esc(cfg.emptyText || '当前筛选条件下暂无明细记录') + '</li>';
         drawer.hidden = false;
     }
 
@@ -299,13 +299,11 @@
             var txt = ((row && row.title) || '') + ' ' + ((row && row.source_name) || '');
             return txt.indexOf(regionName) !== -1 || (regionName === '四川' && /南充|华凤|西华|成都/.test(txt));
         });
-        if (!related.length) {
-            related = (snap.latest_risks || []).slice(0, 3);
-        }
 
         openDrillDrawer({
             badge: (info && info.isHub) ? '主枢纽节点' : '区域下钻',
             title: (info && info.name && info.name !== regionName) ? (regionName + ' · ' + info.name) : regionName,
+            emptyText: '该地区暂无关联资讯',
             stats: [
                 { label: '文本提及', value: String(count), unit: '篇' },
                 { label: '全网排名', value: foundIdx >= 0 ? ('#' + (foundIdx + 1)) : '基线', unit: '' },
@@ -366,10 +364,10 @@
             var txt = ((r && r.title) || '') + ' ' + ((r && r.source_name) || '');
             return kwRegex.test(txt);
         });
-        if (!rows.length) { rows = (snap.latest_risks || []).slice(0, 3); }
         openDrillDrawer({
             badge: (nodeData && nodeData.isHub) ? '双校区枢纽' : '校园专题',
             title: name,
+            emptyText: '该校园节点暂无关联资讯',
             stats: [
                 { label: '活跃指数', value: String((nodeData && nodeData.heat) || 12), unit: '' },
                 { label: '关联线索', value: String(rows.length), unit: '条' }

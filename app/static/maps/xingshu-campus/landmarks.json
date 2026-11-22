@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "kind": "campus-gate-landmarks",
+  "source": "已导入SCSWiki源码快照内的xingshu-campus-reference.png，仅读取西门、南门点位，未发布图片",
+  "coordinateSystem": "原模型局部米坐标：x东/y上/z南",
+  "referenceFitRmsM": 6.297,
+  "pixelToLocalAffine": {
+    "x": [
+      0.497944055,
+      0.019691733,
+      -303.734147
+    ],
+    "y": [
+      -0.0141137944,
+      -0.481156996,
+      602.420555
+    ]
+  },
+  "landmarks": [
+    {
+      "id": "gate-west",
+      "name": "西门",
+      "positionLocal": [
+        -236.068,
+        0,
+        -273.695
+      ],
+      "referencePixel": [
+        109,
+        680
+      ],
+      "status": "approximate",
+      "note": "依据已有行署校区参考示意图的校门位置及原模型仿射配准标注，位置为示意，未实测；请以现场出入口和通行安排为准。"
+    },
+    {
+      "id": "gate-south",
+      "name": "南门",
+      "positionLocal": [
+        -3.804,
+        0,
+        -18.642
+      ],
+      "referencePixel": [
+        555,
+        1197
+      ],
+      "status": "approximate",
+      "note": "依据已有行署校区参考示意图的校门位置及原模型仿射配准标注，位置为示意，未实测；请以现场出入口和通行安排为准。"
+    }
+  ]
+}

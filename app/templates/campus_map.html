@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block styles %}
+<link rel="stylesheet" href="{{ static_url('css/campus-map.css') }}">
+{% end %}
+{% block content %}
+<main class="campus-map-page">
+    <header class="map-header"><a href="/">← 返回对话大厅</a><h1>行署校区</h1><span>西华师大 · 智慧校园</span></header>
+    <p class="map-notice">本地图由学生绘制，非官方。</p>
+    <section id="campusMapShell" class="map-shell" aria-label="可交互校园地图">
+        <div class="map-toolbar">
+            <form id="mapSearchForm" class="map-search" role="search"><label class="sr-only" for="mapSearch">搜索或选择建筑</label><i class="fas fa-search map-search-icon" aria-hidden="true"></i><input id="mapSearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mapSearchOptions" placeholder="搜索或选择建筑、校门…" autocomplete="off" disabled><button id="mapSearchToggle" type="button" aria-label="展开建筑列表" aria-controls="mapSearchOptions" aria-expanded="false" disabled><i class="fas fa-chevron-down" aria-hidden="true"></i></button><div id="mapSearchOptions" class="map-search-options" role="listbox" aria-label="建筑与校门" hidden></div></form>
+            <button id="mapTop" type="button" disabled>俯视全校</button>
+            <button id="mapFullscreen" type="button">全屏查看</button>
+        </div>
+        <div id="mapStage" class="map-stage">
+            <p id="mapStatus" role="status">正在加载三维地图…</p>
+            <svg id="mapLabelLines" class="map-label-lines" aria-hidden="true"></svg><div id="mapLabelLayer" class="map-label-layer" aria-label="建筑名称标注"></div>
+            <div class="map-stage-badge"><span class="map-live-dot"></span> 行署校区 <span id="mapCount">42 栋建筑</span></div>
+            <div class="map-controls" aria-label="地图视角控制"><button type="button" id="mapNorth" title="朝北俯视" aria-label="朝北俯视"><span id="mapCompass">▲</span><small>N</small></button><div class="map-zoom"><button type="button" id="mapZoomIn" aria-label="放大地图">＋</button><button type="button" id="mapZoomOut" aria-label="缩小地图">−</button></div></div>
+            <aside id="mapBuildingDetail" class="map-building-detail" hidden><div class="map-detail-heading"><span class="map-detail-icon"><i id="mapDetailIcon" class="fas fa-building" aria-hidden="true"></i></span><div><strong id="mapDetailName"></strong><span class="map-review-chip">信息待核验</span></div><button id="mapCloseDetail" type="button" aria-label="关闭建筑详情">×</button></div><p id="mapDetailNote">建筑名称与位置来自学生整理，轮廓和高度不是实测成果。</p><div class="map-detail-actions"><button id="mapDetailFocus" type="button">靠近查看</button><span id="mapDetailId"></span></div></aside>
+        </div>
+        <div class="map-footer"><strong id="mapSelection" aria-live="polite">点击建筑或名称，了解对应位置</strong><span id="mapInteractionHint">校门名称常显，建筑名称仅俯视显示 · 蓝色点为西门，绿色点为南门（位置示意） · Shift / 右键拖动平移</span></div>
+    </section>
+    <footer class="map-credit">模型与资料：<a href="https://scswiki.com/start/xingshu-campus-map" target="_blank" rel="noopener noreferrer">SCSWiki 贡献者</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>。道路与地面数据：© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors（ODbL）</a>。平台适配浅色楼块、地面配色和名称标注，未改动原模型几何；未使用商业地图瓦片或参考底图。<a href="/static/maps/xingshu-campus/NOTICE.txt">资源与许可说明</a></footer>
+</main>
+{% end %}
+{% block scripts %}
+<script src="/static/vendor/three/three.min.js"></script>
+<script src="/static/vendor/three/GLTFLoader.js"></script>
+<script src="{{ static_url('js/campus-map-labels.js') }}"></script>
+<script src="{{ static_url('js/campus-map.js') }}"></script>
+{% end %}

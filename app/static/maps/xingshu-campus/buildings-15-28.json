@@ -1,0 +1,698 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-11-22",
+  "campus": "行署校区",
+  "scope": "xs-bldg-0015..xs-bldg-0028",
+  "geometryChanged": false,
+  "method": "核对本地清单、GLB节点元数据和POSITION accessor包围盒；公开网页只用于明确支持的名称/时效证据。",
+  "features": [
+    {
+      "id": "xs-bldg-0015",
+      "name": "第一学生食堂",
+      "modelName": "橘园餐厅（学生一餐厅）",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "模型旧名为“橘园餐厅（学生一餐厅）”，与清单简称可能是别名关系，尚缺当前校方命名证据。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M2",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "B"
+      },
+      "identityConfidence": "B",
+      "isMeasured": false,
+      "heightMode": "document-and-panorama-guided-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          129.19052124023438,
+          0,
+          -367.05865478515625
+        ],
+        "max": [
+          211.890625,
+          11.399999618530273,
+          -315.8556213378906
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        82.7,
+        11.4,
+        51.2
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-021",
+        "pano-022",
+        "pano-023",
+        "pano-026",
+        "pano-037"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0016",
+      "name": "行署礼堂",
+      "modelName": "行署礼堂",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "存在2024年度维修记录，旧全景与当前屋顶/立面可能不一致，不能据旧视图判定现状。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        },
+        {
+          "title": "方志四川政务发布：川北人民行政公署主要办公建筑风格特色鉴赏（2024-01-09）",
+          "url": "https://www.thepaper.cn/newsDetail_forward_25948774"
+        },
+        {
+          "title": "四川省财政厅公开2024年度项目绩效表：行署礼堂维修项目",
+          "url": "https://czt.sc.gov.cn/scczt/c082806/2025/9/1/3eb1f71eca134d95b4462e5198ade7e1/files/1-%E9%83%A8%E9%97%A8%E9%A2%84%E7%AE%97%E9%A1%B9%E7%9B%AE%E6%94%AF%E5%87%BA%E7%BB%A9%E6%95%88%E8%87%AA%E8%AF%84%E8%A1%A8%EF%BC%88%E9%98%B6%E6%AE%B5%E9%A1%B9%E7%9B%AE%EF%BC%892024%E5%B9%B4-%E6%95%B4%E7%90%86%E6%8A%A5%E5%87%BA-20250902175854179.pdf"
+        }
+      ],
+      "modelGrade": "M2",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "B"
+      },
+      "identityConfidence": "B",
+      "isMeasured": false,
+      "heightMode": "multi-view-visual-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          71.10863494873047,
+          0,
+          -403.5268249511719
+        ],
+        "max": [
+          110.02918243408203,
+          17,
+          -348.81573486328125
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        38.92,
+        17,
+        54.71
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-024",
+        "pano-025",
+        "pano-030",
+        "pano-031",
+        "pano-032"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0017",
+      "name": "西二楼",
+      "modelName": "川北行署西二楼（蜀道研究院候选）",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "期刊官网支持西二楼与蜀道研究院的关系，但不能据此验证当前GLB多边形对应的具体位置。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        },
+        {
+          "title": "《蜀道研究》期刊官网：编辑部地址为行署校区西二楼蜀道研究院",
+          "url": "https://hdyj.cbpt.cnki.net/portal/journal/portal/client/index"
+        },
+        {
+          "title": "方志四川政务发布：川北人民行政公署主要办公建筑风格特色鉴赏（2024-01-09）",
+          "url": "https://www.thepaper.cn/newsDetail_forward_25948774"
+        }
+      ],
+      "modelGrade": "M1+",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "B"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "document-and-panorama-guided-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          -53.06730651855469,
+          0,
+          -233.91102600097656
+        ],
+        "max": [
+          -8.199130058288574,
+          8.699999809265137,
+          -206.56333923339844
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        44.87,
+        8.7,
+        27.35
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-007",
+        "pano-009",
+        "pano-010",
+        "pano-016"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0018",
+      "name": "大学科技园",
+      "modelName": "第二教学楼",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "身份冲突：清单是大学科技园，模型旧名为第二教学楼；须先用地标对齐。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M2",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "B"
+      },
+      "identityConfidence": "B",
+      "isMeasured": false,
+      "heightMode": "panorama-guided-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          -245.66265869140625,
+          0,
+          -244.36790466308594
+        ],
+        "max": [
+          -178.6855926513672,
+          8.800000190734863,
+          -197.44161987304688
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        66.98,
+        8.8,
+        46.93
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-017",
+        "pano-018",
+        "pano-038"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0019",
+      "name": "高职学院实训大楼",
+      "modelName": "南侧边界大型组合建筑候选",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "身份冲突：清单为高职学院实训大楼，模型是南侧边界大型组合候选；高度仍为占位估计。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M1",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "C"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "cluster-context-placeholder-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          -137.6094512939453,
+          0,
+          -101.43155670166016
+        ],
+        "max": [
+          -18.550992965698242,
+          11.399999618530273,
+          -45.46772766113281
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        119.06,
+        11.4,
+        55.96
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-014",
+        "pano-019",
+        "pano-047"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0020",
+      "name": "西苑学生公寓",
+      "modelName": "高职实训楼候选",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "身份冲突：清单为西苑学生公寓，模型旧名是高职实训楼候选，不能直接改造为公寓立面。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M1+",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "C"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "panorama-guided-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          -110.8158187866211,
+          0,
+          -134.71910095214844
+        ],
+        "max": [
+          -25.953351974487305,
+          26,
+          -95.75926971435547
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        84.86,
+        26,
+        38.96
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-018",
+        "pano-019"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0021",
+      "name": "东南片区两层红砖建筑候选",
+      "modelName": "东南片区两层红砖建筑候选",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "仍为两层红砖建筑候选；模型注明参考OSM层数，不等于有当前逐栋实测。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M1+",
+      "confidence": {
+        "xy": "C",
+        "z": "B",
+        "roof": "C"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "osm-levels-with-morphology-reference",
+      "boundsLocalXYZ": {
+        "min": [
+          86.98649597167969,
+          0,
+          -188.0943145751953
+        ],
+        "max": [
+          140.889892578125,
+          8.600000381469727,
+          -159.93136596679688
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        53.9,
+        8.6,
+        28.16
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-020",
+        "pano-041",
+        "pano-046"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0022",
+      "name": "东南片区大型组合建筑候选",
+      "modelName": "东南片区大型组合建筑候选",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "组合建筑包络占位，未确定具体建筑身份和楼群分栋关系。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M1",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "C"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "cluster-context-placeholder-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          140.70347595214844,
+          0,
+          -169.0590362548828
+        ],
+        "max": [
+          222.57940673828125,
+          18.799999237060547,
+          -73.8618392944336
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        81.88,
+        18.8,
+        95.2
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-020",
+        "pano-041",
+        "pano-046",
+        "pano-047"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0023",
+      "name": "第二学生食堂",
+      "modelName": "长廊宿舍区低层附属体候选",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "身份冲突：清单为第二学生食堂，模型旧名为长廊宿舍区低层附属体候选。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M1",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "C"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "panorama-guided-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          165.7884063720703,
+          0,
+          -232.4268035888672
+        ],
+        "max": [
+          211.2741241455078,
+          4.400000095367432,
+          -169.43780517578125
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        45.49,
+        4.4,
+        62.99
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-020",
+        "pano-041"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0024",
+      "name": "计算机中心",
+      "modelName": "镜湖边开放长廊建筑候选",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "身份冲突：清单为计算机中心，模型旧名为镜湖边开放长廊建筑候选。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M1+",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "B"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "panorama-guided-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          -142.5600128173828,
+          0,
+          -261.8043212890625
+        ],
+        "max": [
+          -70.29796600341797,
+          4.5,
+          -222.84539794921875
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        72.26,
+        4.5,
+        38.96
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-004",
+        "pano-005",
+        "pano-006"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0025",
+      "name": "校史陈列室",
+      "modelName": "镜湖北侧红砖实验楼候选",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "身份冲突：清单为校史陈列室，模型旧名为镜湖北侧红砖实验楼候选。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M1+",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "C"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "panorama-guided-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          -128.93507385253906,
+          0,
+          -289.1476135253906
+        ],
+        "max": [
+          -81.78777313232422,
+          15.199999809265137,
+          -262.2425231933594
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        47.15,
+        15.2,
+        26.91
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-004",
+        "pano-006",
+        "pano-007"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0026",
+      "name": "体育馆",
+      "modelName": "西北边界未解析建筑轮廓候选",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "身份冲突：清单为体育馆，模型为西北边界未解析轮廓且无全景场景索引，高度为暂存默认值。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M1",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "C"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "temporary-default-preserved",
+      "boundsLocalXYZ": {
+        "min": [
+          -170.99717712402344,
+          0,
+          -488.8890380859375
+        ],
+        "max": [
+          -109.34026336669922,
+          9,
+          -454.736328125
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        61.66,
+        9,
+        34.15
+      ],
+      "referenceSceneIdsInModel": [],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0027",
+      "name": "校医院",
+      "modelName": "北侧灰砖两层建筑候选",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "身份冲突：清单为校医院，模型为北侧灰砖两层候选，不能据其他校区医院照片替换。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M1+",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "C"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "panorama-guided-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          -0.8016449809074402,
+          0,
+          -398.2395935058594
+        ],
+        "max": [
+          37.917537689208984,
+          8.100000381469727,
+          -375.416748046875
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        38.72,
+        8.1,
+        22.82
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-030",
+        "pano-033",
+        "pano-043"
+      ],
+      "geometryCorrectionApplied": false
+    },
+    {
+      "id": "xs-bldg-0028",
+      "name": "北三公寓",
+      "modelName": "北侧中轴西部组合建筑候选",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "身份冲突：清单为北三公寓，模型为北侧中轴西部组合包络候选，高度仍为占位估计。",
+        "高度非实测；尚未完成腾讯3D或当前官方影像的逐栋对照。"
+      ],
+      "references": [
+        {
+          "title": "西华师范大学官方行署校区全景入口（可访问；未完成影像核对）",
+          "url": "https://www.cwnu.edu.cn/qjxy/bh/index.html"
+        }
+      ],
+      "modelGrade": "M1",
+      "confidence": {
+        "xy": "C",
+        "z": "C",
+        "roof": "C"
+      },
+      "identityConfidence": "C",
+      "isMeasured": false,
+      "heightMode": "cluster-context-placeholder-estimate",
+      "boundsLocalXYZ": {
+        "min": [
+          33.89236068725586,
+          0,
+          -459.2763977050781
+        ],
+        "max": [
+          80.19087982177734,
+          11.399999618530273,
+          -398.9281921386719
+        ]
+      },
+      "axisAlignedSizeMetres": [
+        46.3,
+        11.4,
+        60.35
+      ],
+      "referenceSceneIdsInModel": [
+        "pano-030",
+        "pano-032",
+        "pano-033"
+      ],
+      "geometryCorrectionApplied": false
+    }
+  ]
+}

@@ -43,10 +43,15 @@
 
     function formatInline(src) {
         return src
+            .replace(/\[([^\]]+)\]\((\/campus-map)\)/g, '<a href="$2">$1</a>')
             .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
             .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
             .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-                '<a href="$2" target="_blank" rel="noopener">$1</a>');
+                '<a href="$2" target="_blank" rel="noopener">$1</a>')
+            .replace(/\[([^\]]+)\]\((\/api\/course-materials\/[a-z0-9-]+\/preview)\)/g,
+                '<a href="$2" target="_blank" rel="noopener">$1</a>')
+            .replace(/\[([^\]]+)\]\((\/api\/course-materials\/[a-z0-9-]+\/download)\)/g,
+                '<a href="$2" download>$1</a>');
     }
 
     function splitTableRow(line, escaped) {
@@ -202,6 +207,24 @@
         scrollEl.scrollTop = scrollEl.scrollHeight;
     }
 
+    function isAtBottom() {
+        // Allow for fractional scroll positions at non-integer zoom levels.
+        return scrollEl.scrollHeight - scrollEl.clientHeight - scrollEl.scrollTop <= 2;
+    }
+
+    function addSCSWikiAttribution(details) {
+        var credit = document.createElement("div");
+        credit.className = "chat-source-credit";
+        credit.appendChild(document.createTextNode("SCSWiki 贡献者 · "));
+        var license = document.createElement("a");
+        license.href = "https://creativecommons.org/licenses/by-sa/4.0/";
+        license.target = "_blank";
+        license.rel = "noopener noreferrer";
+        license.textContent = "CC BY-SA 4.0";
+        credit.appendChild(license);
+        details.appendChild(credit);
+    }
+
     function clearMessages() {
         messagesEl.innerHTML = "";
     }
@@ -269,11 +292,20 @@
     // 返回一个 assistant 会话句柄，供流式增量写入；assistant 为本轮应答的数字助理（任务10，可空）
     function addAssistantTurn(assistant) {
         var row = document.createElement("div");
-        row.className = "chat-msg chat-msg-assistant";
+        row.className = "chat-msg chat-msg-assistant is-working";
+        row.setAttribute("aria-busy", "true");
         row.innerHTML =
             '<div class="chat-avatar chat-avatar-bot"><i class="fas fa-robot"></i></div>' +
             '<div class="chat-body">' +
-            '  <div class="chat-bot-name"><i class="fas fa-robot"></i><span class="chat-bot-name-text"></span><span class="chat-bot-tools"></span></div>' +
+            '  <div class="chat-turn-meta">' +
+            '  <div class="chat-bot-name"><i class="fas fa-robot"></i><span class="chat-bot-name-text"></span></div>' +
+            '    <div class="chat-progress" role="status" aria-live="polite" aria-atomic="true">' +
+            '      <span class="chat-progress-spinner" aria-hidden="true"></span>' +
+            '      <span class="chat-progress-text">正在思考</span>' +
+            '      <span class="chat-progress-dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
+            '    </div>' +
+            '  </div>' +
+            '  <div class="chat-sources-slot" hidden></div>' +
             '  <div class="chat-process" hidden>' +
             '    <div class="chat-process-head">' +
             '      <i class="fas fa-layer-group"></i><span class="chat-process-label">执行过程</span>' +
@@ -282,15 +314,15 @@
             "    </div>" +
             '    <div class="chat-process-list"></div>' +
             "  </div>" +
-            '  <div class="chat-bubble chat-bubble-assistant"><div class="chat-content"></div><span class="chat-caret"><i class="fas fa-ellipsis-h"></i></span></div>' +
-            '  <div class="chat-sources-slot" hidden></div>' +
+            '  <div class="chat-bubble chat-bubble-assistant"><div class="chat-content"></div></div>' +
             "</div>";
         messagesEl.appendChild(row);
 
         var contentEl = row.querySelector(".chat-content");
         var bubbleEl = row.querySelector(".chat-bubble-assistant");
         var sourcesSlotEl = row.querySelector(".chat-sources-slot");
-        var caretEl = row.querySelector(".chat-caret");
+        var progressEl = row.querySelector(".chat-progress");
+        var progressTextEl = row.querySelector(".chat-progress-text");
         var processEl = row.querySelector(".chat-process");
         var processListEl = row.querySelector(".chat-process-list");
         var processCountEl = row.querySelector(".chat-process-count");
@@ -298,7 +330,6 @@
         var nameEl = row.querySelector(".chat-bot-name");
         var nameIconEl = nameEl.querySelector("i");
         var nameTextEl = nameEl.querySelector(".chat-bot-name-text");
-        var nameToolsEl = nameEl.querySelector(".chat-bot-tools");
         var avatarIconEl = row.querySelector(".chat-avatar-bot i");
 
         var state = {
@@ -306,6 +337,7 @@
             processCount: 0,
             reasoningItem: null,
             reasoningText: "",
+            pendingTasks: new Map(),
             finished: false,
             errorShown: false,
         };
@@ -326,6 +358,11 @@
             }
         }
 
+        function setProgress(text) {
+            if (state.finished || progressTextEl.textContent === text) return;
+            progressTextEl.textContent = text;
+        }
+
         // 任务10：按本轮实际应答的数字助理渲染头像与署名（无身份信息则隐藏整行）
         function applyAssistant(a) {
             if (!a || !a.name) {
@@ -337,19 +374,32 @@
             nameIconEl.className = icon;
             avatarIconEl.className = icon;
             nameTextEl.textContent = a.name;
-            var tools = a.tools && a.tools.length ? a.tools.length : 0;
-            nameToolsEl.textContent = tools ? "· " + tools + " 个工具" : "";
         }
         applyAssistant(assistant);
 
         return {
             setAssistant: applyAssistant,
             appendDelta: function (text) {
+                if (!text || state.finished) return;
+                if (!state.pendingTasks.size) setProgress("正在生成回复");
+                row.classList.add("has-answer");
                 state.answer += text;
-                contentEl.innerHTML = renderMarkdown(state.answer);
-                scrollToBottom();
+                var answer = state.answer.replace(/[（(]署名[：:]\s*SCSWiki\s*贡献者[，,；;]\s*许可[：:]\s*CC BY-SA 4\.0(?:\s+https\\?:\/\/creativecommons\.org\/licenses\/by-sa\/4\.0\/?)?\s*[）)]/gi, "");
+                if (answer !== state.answer && sourcesSlotEl.hidden) {
+                    var details = document.createElement("details");
+                    details.className = "chat-sources";
+                    var summary = document.createElement("summary");
+                    summary.textContent = "参考来源";
+                    details.appendChild(summary);
+                    addSCSWikiAttribution(details);
+                    sourcesSlotEl.replaceChildren(details);
+                    sourcesSlotEl.hidden = false;
+                }
+                contentEl.innerHTML = renderMarkdown(answer);
             },
-            addTool: function (name, args) {
+            addTool: function (name, args, callId) {
+                if (state.finished) return;
+                setProgress("正在处理工具请求 · " + name);
                 ensureProcessVisible();
                 state.processCount++;
                 processCountEl.textContent = "(" + state.processCount + ")";
@@ -363,9 +413,26 @@
                     (argText ? '<span class="chat-proc-args">' + escapeHtml(argText) + "</span>" : "") +
                     "</span>";
                 processListEl.appendChild(item);
-                scrollToBottom();
+                if (name === "task" && callId) {
+                    var status = document.createElement("span");
+                    status.className = "chat-proc-args";
+                    status.textContent = "执行中";
+                    item.querySelector(".chat-proc-text").appendChild(status);
+                    state.pendingTasks.set(callId, status);
+                    setProgress(state.pendingTasks.size + " 个子智能体协作中");
+                }
+            },
+            finishTool: function (callId, status) {
+                var label = state.pendingTasks.get(callId);
+                if (!label || state.finished) return;
+                var statusLabels = { completed: "已返回结果", timeout: "已超时", partial: "已返回部分结果", failed: "执行失败" };
+                label.textContent = statusLabels[status] || "已结束";
+                state.pendingTasks.delete(callId);
+                setProgress(state.pendingTasks.size ? state.pendingTasks.size + " 个子智能体协作中" : "正在整理协作结果");
             },
             appendReasoning: function (text) {
+                if (!text || state.finished) return;
+                if (!state.pendingTasks.size) setProgress("正在思考");
                 ensureProcessVisible();
                 // 思考过程合并进同一条时间线条目，持续累加文本
                 if (!state.reasoningItem) {
@@ -381,7 +448,6 @@
                 }
                 state.reasoningText += text;
                 state.reasoningItem.textContent = state.reasoningText;
-                scrollToBottom();
             },
             setSources: function (items) {
                 if (!sourcesSlotEl || !Array.isArray(items) || !items.length) return;
@@ -395,6 +461,7 @@
                 summary.appendChild(document.createTextNode(" 参考来源 · " + items.length + " 篇知识库文档"));
                 var list = document.createElement("div");
                 list.className = "chat-sources-list";
+                var hasSCSWikiSource = false;
                 items.forEach(function (src) {
                     if (!src) return;
                     var card = document.createElement("div");
@@ -403,7 +470,26 @@
                     head.className = "chat-source-head";
                     var titleEl = document.createElement("strong");
                     titleEl.textContent = src.title || "知识库文档";
-                    head.appendChild(titleEl);
+                    var sourceUrl = null;
+                    try {
+                        var parsedSource = new URL(src.source_url || "");
+                        if (parsedSource.protocol === "https:" && parsedSource.hostname === "scswiki.com" &&
+                            !parsedSource.username && !parsedSource.password && (!parsedSource.port || parsedSource.port === "443")) {
+                            sourceUrl = parsedSource.href;
+                        }
+                    } catch (e) { /* 没有可信原文地址时保留普通标题 */ }
+                    if (sourceUrl) {
+                        hasSCSWikiSource = true;
+                        var sourceLink = document.createElement("a");
+                        sourceLink.href = sourceUrl;
+                        sourceLink.target = "_blank";
+                        sourceLink.rel = "noopener noreferrer";
+                        sourceLink.title = "查看原文";
+                        sourceLink.appendChild(titleEl);
+                        head.appendChild(sourceLink);
+                    } else {
+                        head.appendChild(titleEl);
+                    }
                     if (typeof src.score === "number" && src.score > 0) {
                         var scoreEl = document.createElement("span");
                         scoreEl.className = "chat-source-score";
@@ -411,19 +497,27 @@
                         head.appendChild(scoreEl);
                     }
                     card.appendChild(head);
+                    var isCampusMap = sourceUrl && new URL(sourceUrl).pathname.replace(/\/$/, "") === "/start/xingshu-campus-map";
                     if (src.excerpt) {
                         var excerptEl = document.createElement("p");
                         excerptEl.className = "chat-source-excerpt";
-                        excerptEl.textContent = src.excerpt;
+                        excerptEl.textContent = isCampusMap ? "学生整理的行署校区非官方三维白模，支持旋转、缩放和点选建筑。建筑信息请以现场标识为准。" : src.excerpt;
                         card.appendChild(excerptEl);
+                    }
+                    if (isCampusMap) {
+                        var mapLink = document.createElement("a");
+                        mapLink.href = "/campus-map";
+                        mapLink.className = "chat-map-link";
+                        mapLink.textContent = "打开行署校区三维地图 →";
+                        card.appendChild(mapLink);
                     }
                     list.appendChild(card);
                 });
                 details.appendChild(summary);
                 details.appendChild(list);
+                if (hasSCSWikiSource) addSCSWikiAttribution(details);
                 sourcesSlotEl.replaceChildren(details);
                 sourcesSlotEl.hidden = false;
-                scrollToBottom();
             },
             showError: function (msg) {
                 state.errorShown = true;
@@ -442,7 +536,11 @@
             finish: function () {
                 if (state.finished) return;
                 state.finished = true;
-                if (caretEl) caretEl.style.display = "none";
+                state.pendingTasks.forEach(function (label) { label.textContent = "本轮已结束"; });
+                state.pendingTasks.clear();
+                row.classList.remove("is-working");
+                row.setAttribute("aria-busy", "false");
+                progressEl.hidden = true;
                 // 仅当既无正文、又无错误、也无过程时，才给空兑底
                 if (!state.answer && !state.errorShown) {
                     var hasProcess = !processEl.hidden;
@@ -545,38 +643,31 @@
         asst.icon.className = iconClass(a && a.avatar) + " chat-asst-icon";
         if ($("sideAgentIcon")) $("sideAgentIcon").className = iconClass(a && a.avatar);
         if ($("sideAgentName")) $("sideAgentName").textContent = name;
-        if ($("sideAgentDesc")) {
-            $("sideAgentDesc").textContent = a ? (a.description || "暂无简介") : "后台未启用任何数字员工";
-        }
         var emptyAgentEl = messagesEl && messagesEl.querySelector(".chat-empty-agent");
         if (emptyAgentEl) emptyAgentEl.textContent = name;
         if (!a) {
+            asst.tip.hidden = false;
             asst.tip.textContent = "无可用助理，请到后台「数字员工」启用";
             asst.btn.disabled = true;
             return;
         }
         asst.btn.disabled = false;
-        var tools = (a.tools || []).length;
-        asst.tip.textContent = (a.is_default ? "系统默认助理" : "已选助理") + "・" + tools + " 个工具";
+        asst.tip.hidden = true;
+        asst.tip.textContent = "";
     }
 
     function renderAssistantPanel() {
         if (!assistants.length) {
-            asst.count.textContent = "";
             asst.list.innerHTML = '<div class="chat-asst-empty">暂无可用的数字助理<br>请到后台「智能体服务 → 数字员工」启用或新增智能体</div>';
             return;
         }
-        asst.count.textContent = assistants.length + " 位可选";
         asst.list.innerHTML = assistants.map(function (a) {
             var active = currentAssistant && currentAssistant.id === a.id;
-            var tools = (a.tools || []).length;
             return '<button type="button" class="chat-asst-item' + (active ? " is-active" : "") +
                 '" data-asst-id="' + escHtml(a.id) + '">' +
                 '<span class="chat-asst-item-ico"><i class="' + escHtml(iconClass(a.avatar)) + '"></i></span>' +
                 '<span class="chat-asst-item-main">' +
                 '<span class="chat-asst-item-name">' + escHtml(a.name) +
-                (a.is_default ? '<span class="chat-asst-badge is-default">默认</span>' : "") +
-                (tools ? '<span class="chat-asst-badge">' + tools + " 工具</span>" : "") +
                 "</span>" +
                 '<span class="chat-asst-item-desc">' + escHtml(a.description || "未填写简介") + "</span>" +
                 "</span>" +
@@ -670,8 +761,23 @@
 
     // ---------- 发送消息并消费流 ----------
     var sessionId = "default";
+    var temporaryChat = false, temporaryHistory = [];
+    var sessionDraft = false;
     var archiveList = false, sessionArchived = false, sessionChanging = false;
     var sessionListRequest = 0, historyRequest = 0;
+
+    function rememberSession(id) {
+        try { localStorage.setItem("campus-chat-session:" + app.dataset.username, id); } catch (e) {}
+    }
+
+    function restoreSession(sessions) {
+        var savedId;
+        try { savedId = localStorage.getItem("campus-chat-session:" + app.dataset.username); } catch (e) {}
+        var selected = sessions.find(function (session) { return session.session_id === savedId; }) || sessions[0];
+        sessionId = selected ? selected.session_id : "default";
+        sessionDraft = false;
+        sessionArchived = false;
+    }
 
     function sessionStatus(message) {
         var status = $("chatSessionStatus");
@@ -679,9 +785,20 @@
         status.hidden = !message;
     }
 
-    function newSession() {
+    function setTemporaryChat(enabled) {
+        temporaryChat = enabled;
+        temporaryHistory = [];
+        $("temporaryChatBtn").setAttribute("aria-pressed", String(enabled));
+        $("temporaryChatHint").hidden = !enabled;
+        var exportButton = $("exportPdfBtn");
+        if (exportButton) exportButton.disabled = enabled;
+    }
+
+    function newSession(temporary) {
+        setTemporaryChat(Boolean(temporary));
         var bytes = crypto.getRandomValues(new Uint8Array(16));
         sessionId = Array.from(bytes, function (byte) { return byte.toString(16).padStart(2, "0"); }).join("");
+        sessionDraft = !temporaryChat;
         sessionArchived = false;
         historyRequest++;
         clearMessages();
@@ -755,9 +872,10 @@
             if (!response.ok) throw new Error();
             var sessions = await response.json();
             if (request !== sessionListRequest) return;
-            if (initial && sessionId === "default" && !streaming && !sessionChanging &&
-                    !sessions.some(function (session) { return session.session_id === "default"; })) {
-                newSession();
+            if (initial) restoreSession(sessions);
+            if (!temporaryChat && !archiveList && !sessionArchived && sessions.some(function (session) { return session.session_id === sessionId; })) {
+                sessionDraft = false;
+                rememberSession(sessionId);
             }
             renderSessionList(sessions);
         } catch (e) {
@@ -770,7 +888,7 @@
         var listEl = $("chatSessionList");
         if (!listEl) return;
         var items = sessions.slice();
-        if (!archiveList && !sessionArchived &&
+        if (sessionDraft && !archiveList && !sessionArchived &&
                 !items.some(function (session) { return session.session_id === sessionId; })) {
             items.unshift({ session_id: sessionId, title: "新会话（未保存）", pending: true });
         }
@@ -787,10 +905,11 @@
             var btn = document.createElement("button");
             btn.type = "button";
             btn.className = "chat-session-item" +
-                (session.session_id === sessionId && archiveList === sessionArchived ? " is-active" : "") +
+                (!temporaryChat && session.session_id === sessionId && archiveList === sessionArchived ? " is-active" : "") +
                 (session.pending ? " is-pending" : "");
             btn.setAttribute("data-sid", session.session_id);
             var title = session.title || "未命名会话";
+            btn.title = title;
             var viewport = document.createElement("span");
             viewport.className = "chat-session-title";
             var label = document.createElement("span");
@@ -800,24 +919,6 @@
             btn.appendChild(viewport);
             li.appendChild(btn);
             if (!session.pending) {
-                var titleScroll;
-                li.addEventListener("mouseenter", function () {
-                    if (!window.matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)").matches) return;
-                    var distance = label.offsetWidth - viewport.clientWidth;
-                    if (distance <= 1) return;
-                    viewport.classList.add("is-scrolling");
-                    var end = "translateX(-" + distance + "px)";
-                    titleScroll = label.animate([
-                        { transform: "translateX(0)", offset: 0 },
-                        { transform: "translateX(0)", offset: 0.2 },
-                        { transform: end, offset: 0.8 },
-                        { transform: end, offset: 1 }
-                    ], { duration: 1200 + distance * 30, iterations: Infinity, direction: "alternate" });
-                });
-                li.addEventListener("mouseleave", function () {
-                    if (titleScroll) titleScroll.cancel();
-                    viewport.classList.remove("is-scrolling");
-                });
                 var actions = archiveList ? [["restore", "恢复", "undo"]] : [["archive", "归档", "archive"]];
                 actions.push(["delete", "删除", "trash-alt"]);
                 actions.forEach(function (action) {
@@ -855,6 +956,7 @@
         sessionChanging = true;
         setBusy(true);
         sessionStatus("");
+        var selectRemainingSession = false;
         try {
             var response = await fetch("/api/history", {
                 method: "POST",
@@ -869,14 +971,19 @@
                     setArchiveList(false);
                     loadHistory();
                 } else {
-                    newSession();
+                    sessionId = "default";
+                    sessionDraft = false;
+                    sessionArchived = false;
+                    setArchiveList(false);
+                    selectRemainingSession = true;
                 }
             }
             sessionStatus({ archive: "已归档", restore: "已恢复到历史会话", delete: "已删除" }[action]);
         } catch (error) {
             sessionStatus(error.message || "会话操作失败，请重试");
         } finally {
-            await loadSessions();
+            await loadSessions(selectRemainingSession);
+            if (selectRemainingSession) await loadHistory();
             sessionChanging = false;
             setBusy(false);
         }
@@ -902,7 +1009,9 @@
         inputEl.value = "";
         autosize();
 
+        var temporaryAnswer = "";
         var turn = addAssistantTurn(currentAssistant);
+        scrollToBottom();
         streaming = true;
         setBusy(true);
         var controller = new AbortController();
@@ -922,10 +1031,12 @@
                 body: JSON.stringify({
                     message: text,
                     session_id: sessionId,
+                    temporary: temporaryChat,
+                    history: temporaryChat ? temporaryHistory.slice(-16) : undefined,
                     employee_id: currentAssistant ? currentAssistant.id : null,
                 }),
             });
-            if (resp.status === 401) { location.href = "/auth/login"; return; }
+            if (resp.status === 401) { turn.finish(); location.href = "/auth/login"; return; }
             if (!resp.ok) {
                 // 任务10：指定的助理已被后台停用/删除时，后端直接 400，把 detail 弹进气泡并刷一次助理清单
                 var errBody = {};
@@ -949,6 +1060,7 @@
                 for (var i = 0; i < blocks.length; i++) {
                     var frame = parseSseBlock(blocks[i]);
                     if (!frame) continue;
+                    if (frame.event === "delta") temporaryAnswer += typeof frame.data === "string" ? frame.data : (frame.data && frame.data.text) || "";
                     handleFrame(turn, frame);
                     if (frame.event === "done" || frame.event === "error") terminal = frame.event;
                 }
@@ -963,6 +1075,10 @@
             }
 
             if (terminal === "done") {
+                if (temporaryChat) {
+                    temporaryHistory.push({ role: "user", content: text }, { role: "assistant", content: temporaryAnswer.slice(0, 8000) });
+                    temporaryHistory = temporaryHistory.slice(-16);
+                }
                 turn.finish();
                 loadSessions();
             } else if (!terminal) {
@@ -976,16 +1092,19 @@
             clearTimeout(deadline);
             streaming = false;
             setBusy(false);
-            inputEl.focus();
+            inputEl.focus({ preventScroll: true });
         }
     }
 
     function handleFrame(turn, frame) {
+        var follow = isAtBottom();
         var ev = frame.event, data = frame.data;
         if (ev === "delta") {
             turn.appendDelta(typeof data === "string" ? data : (data && data.text) || "");
         } else if (ev === "tool") {
-            turn.addTool((data && data.name) || "tool", data && data.arguments);
+            turn.addTool((data && data.name) || "tool", data && data.arguments, data && data.call_id);
+        } else if (ev === "tool_result" && data) {
+            turn.finishTool(data.call_id, data.status);
         } else if (ev === "reasoning") {
             turn.appendReasoning((data && data.text) || (typeof data === "string" ? data : ""));
         } else if (ev === "assistant") {
@@ -1002,6 +1121,7 @@
         } else if (ev === "error") {
             turn.showError((data && data.message) || "未知错误");
         }
+        if (follow) scrollToBottom();
         // done 事件：正文与过程已实时渲染，这里无需额外处理（落库由后端负责）
     }
 
@@ -1088,7 +1208,6 @@
         asst.btn = $("chatAsstBtn");
         asst.panel = $("chatAsstPanel");
         asst.list = $("chatAsstList");
-        asst.count = $("chatAsstCount");
         asst.icon = $("chatAsstIcon");
         asst.name = $("chatAsstName");
         asst.tip = $("chatAsstTip");
@@ -1126,9 +1245,17 @@
         }
 
         // 成员 D（任务2）：导出当前会话 PDF（后端直下附件，不新开页）
+        $("temporaryChatBtn").addEventListener("click", function () {
+            if (streaming || sessionChanging) return;
+            newSession(true);
+            setArchiveList(false);
+            loadSessions();
+        });
+
         var exportBtn = $("exportPdfBtn");
         if (exportBtn) {
             exportBtn.addEventListener("click", function () {
+                if (temporaryChat) return;
                 location.href = "/api/chat/export?session_id=" + encodeURIComponent(sessionId) +
                     (sessionArchived ? "&archived=1" : "");
             });
@@ -1184,15 +1311,23 @@
                 var item = event.target.closest(".chat-session-item");
                 if (!item) return;
                 if (item.classList.contains("is-active") || item.classList.contains("is-pending")) return;
+                setTemporaryChat(false);
                 sessionId = item.getAttribute("data-sid");
+                sessionDraft = false;
                 sessionArchived = archiveList;
+                if (!sessionArchived) rememberSession(sessionId);
                 setBusy(false);
                 loadHistory();
                 loadSessions();
             });
         }
+        sessionChanging = true;
+        setBusy(false);
         Promise.all([loadSessions(true), loadAssistants()]).then(function () {
-            if (!streaming && historyRequest === 0) loadHistory();
+            if (historyRequest === 0) return loadHistory();
+        }).finally(function () {
+            sessionChanging = false;
+            setBusy(false);
         });
         inputEl.focus();
     }

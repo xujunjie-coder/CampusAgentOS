@@ -424,9 +424,22 @@
             var toolOptions = JSON.parse($("employeeToolOptions").dataset.options);
             var toolHtml = toolOptions.map(function (t) {
                 var on = tools.indexOf(t.id) >= 0;
-                return '<label class="emp-tool-chip' + (on ? " on" : "") + '"><input type="checkbox" value="' + esc(t.id) + '"' +
-                    (on ? " checked" : "") + '><i class="' + esc(t.icon) + '"></i> ' + esc(t.label) + "</label>";
+                return '<label class="emp-tool-chip' + (on ? " on" : "") + '"><input type="checkbox" lay-ignore value="' + esc(t.id) + '"' +
+                    (on ? " checked" : "") + '><i aria-hidden="true" class="' + esc(t.icon) + '"></i><span class="emp-tool-label">' + esc(t.label) + "</span></label>";
             }).join("");
+            var knowledgeOptions = JSON.parse($("employeeToolOptions").dataset.knowledgeOptions || "[]");
+            var knowledgeIds = (row.rag_kb_ids || []).map(String);
+            var availableKnowledgeIds = knowledgeOptions.map(function (doc) { return String(doc.id); });
+            var missingKnowledgeCount = knowledgeIds.filter(function (id, index) {
+                return knowledgeIds.indexOf(id) === index && availableKnowledgeIds.indexOf(id) < 0;
+            }).length;
+            var knowledgeHtml = knowledgeOptions.map(function (doc) {
+                var on = knowledgeIds.indexOf(String(doc.id)) >= 0;
+                return '<label class="emp-knowledge-option' + (on ? ' on' : '') + '">' +
+                    '<input type="checkbox" lay-ignore value="' + esc(doc.id) + '"' + (on ? ' checked' : '') + '>' +
+                    '<i class="fas fa-book" aria-hidden="true"></i><span class="emp-knowledge-title">' +
+                    '<span class="emp-knowledge-title-text">' + esc(doc.title) + '</span></span></label>';
+            }).join("") || '<div class="emp-knowledge-empty">暂无知识文档，<a href="/admin/knowledge" target="_blank" rel="noopener">前往知识仓库添加</a></div>';
 
             function linkedHtml() {
                 return linkFiles.map(function (f, idx) {
@@ -480,7 +493,9 @@
 
                 '  <div class="emp-section-title"><i class="fas fa-database"></i> RAG 知识库配置</div>' +
                 '  <div class="layui-form-item"><div class="layui-input-block" style="margin-left:0;">' +
-                '    <input type="text" class="layui-input" name="rag_kb_ids" placeholder="填写知识仓库文档编号，用逗号分隔" value="' + esc((row.rag_kb_ids || []).join(", ")) + '">' +
+                '    <div class="emp-knowledge-head"><span>选择此助理可检索的文档</span><span id="empKnowledgeCount" role="status" aria-live="polite"></span></div>' +
+                '    <div class="emp-knowledge-list" id="empKnowledgeOptions">' + knowledgeHtml + '</div>' +
+                (missingKnowledgeCount ? '<div class="emp-knowledge-warning">原绑定中有 ' + missingKnowledgeCount + ' 份文档已不可用，保存时将移除。</div>' : '') +
                 "  </div></div>" +
 
                 '  <div class="layui-form-item"><label class="layui-form-label">模型绑定</label><div class="layui-input-block">' +
@@ -513,6 +528,43 @@
                         if (!cb) return;
                         cb.closest(".emp-tool-chip").classList.toggle("on", cb.checked);
                     });
+                    var knowledgeBox = dom.querySelector("#empKnowledgeOptions");
+                    knowledgeBox.querySelectorAll(".emp-knowledge-option").forEach(function (option) {
+                        var title = option.querySelector(".emp-knowledge-title");
+                        var text = option.querySelector(".emp-knowledge-title-text");
+                        var scrollAnimation;
+                        option.addEventListener("mouseenter", function () {
+                            if (!window.matchMedia("(hover: hover) and (prefers-reduced-motion: no-preference)").matches) return;
+                            var distance = title.scrollWidth - title.clientWidth;
+                            if (distance <= 0) return;
+                            title.classList.add("is-scrolling");
+                            scrollAnimation = text.animate([
+                                { transform: "translateX(0)" },
+                                { transform: "translateX(-" + distance + "px)" }
+                            ], { duration: Math.max(500, distance * 25), fill: "forwards" });
+                        });
+                        option.addEventListener("mouseleave", function () {
+                            if (scrollAnimation) scrollAnimation.cancel();
+                            title.classList.remove("is-scrolling");
+                        });
+                    });
+                    function updateKnowledgeCount() {
+                        var count = knowledgeBox.querySelectorAll('input[type="checkbox"]:checked').length;
+                        var countEl = dom.querySelector("#empKnowledgeCount");
+                        countEl.textContent = '已选 ' + count + ' / 30';
+                        countEl.classList.toggle('is-over-limit', count > 30);
+                    }
+                    knowledgeBox.addEventListener("change", function (e) {
+                        var cb = e.target.closest('input[type="checkbox"]');
+                        if (!cb) return;
+                        if (cb.checked && knowledgeBox.querySelectorAll('input[type="checkbox"]:checked').length > 30) {
+                            cb.checked = false;
+                            L.layer.msg('每位助理最多绑定 30 份知识文档', { icon: 2 });
+                        }
+                        cb.closest('.emp-knowledge-option').classList.toggle('on', cb.checked);
+                        updateKnowledgeCount();
+                    });
+                    updateKnowledgeCount();
                     // 关联文件：加入 / 移除
                     function renderLinked() {
                         dom.querySelector("#empLinkedBox").innerHTML = linkedHtml();
@@ -545,6 +597,13 @@
                     dom.querySelectorAll("#empToolChips input[type=checkbox]:checked").forEach(function (cb) {
                         selectedTools.push(cb.value);
                     });
+                    var selectedKnowledge = [];
+                    dom.querySelectorAll('#empKnowledgeOptions input[type="checkbox"]:checked').forEach(function (cb) {
+                        selectedKnowledge.push(cb.value);
+                    });
+                    if (selectedKnowledge.length > 30) {
+                        L.layer.msg('每位助理最多绑定 30 份知识文档', { icon: 2 }); return false;
+                    }
                     var payload = {
                         name: val("name"),
                         description: val("description"),
@@ -553,7 +612,7 @@
                         link_files: linkFiles,
                         tools: selectedTools,
                         workspace_path: val("workspace_path") || "workspace",
-                        rag_kb_ids: val("rag_kb_ids").split(/[,，]/).map(function (id) { return id.trim(); }).filter(Boolean),
+                        rag_kb_ids: selectedKnowledge,
                         model_binding: val("model_binding"),
                         enabled: checked("enabled"),
                         enable_long_term_memory: checked("enable_long_term_memory"),

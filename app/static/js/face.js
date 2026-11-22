@@ -81,8 +81,7 @@
                 esc(data.reason || "未启用真实人脸引擎") + "。请使用密码登录。";
         } else {
             el.engine.className = "face-engine is-real";
-            el.engine.innerHTML = '<i class="fas fa-shield-alt"></i> 真实精度引擎 ' +
-                esc(data.engine) + "，判定阈值 " + esc(data.threshold) + "。";
+            el.engine.innerHTML = '<i class="fas fa-check-circle"></i> 人脸服务已就绪，可以拍照或上传照片录入。';
         }
     }
 
@@ -98,9 +97,10 @@
             return '<div class="face-row">' +
                 '<div class="face-row-main">' +
                 '<div class="face-row-label">#' + esc(f.id) + " · " + esc(f.face_label) + "</div>" +
-                '<div class="face-row-meta">质量 ' + Number(f.quality || 0).toFixed(2) +
-                " · " + (f.needs_reenrollment ? "需要重新录入" : (f.enabled ? "已启用" : "已停用")) +
-                " · " + esc(f.created_at || "") + "</div>" +
+                '<div class="face-row-meta"><span class="face-status-badge' + (f.enabled && !f.needs_reenrollment ? ' is-enabled' : '') + '">' +
+                (f.needs_reenrollment ? '需重新录入' : (f.enabled ? '已启用' : '已停用')) + '</span>' +
+                '<span>质量评分 ' + Number(f.quality || 0).toFixed(2) + '</span></div>' +
+                '<div class="face-row-date">录入于 ' + esc(f.created_at || '') + '</div>' +
                 "</div>" +
                 '<button type="button" class="layui-btn layui-btn-xs layui-btn-danger" ' +
                 'data-face-del="' + esc(f.id) + '">删除</button>' +

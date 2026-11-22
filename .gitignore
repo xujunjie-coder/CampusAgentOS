@@ -15,6 +15,7 @@ dist/
 
 # 人脸模型与本地数据库
 database/models/
+database/course-materials/
 database/*.db
 database/*.db-*
 database/*.sqlite

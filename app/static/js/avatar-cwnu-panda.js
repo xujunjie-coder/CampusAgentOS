@@ -214,8 +214,8 @@
         ctx.ellipse(W * 0.5, H * 0.70, 155, 72, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // 经典大熊猫「上收内倾、下圆外垂」倾斜梨豆形黑眼圈（八字垂感 + 绒毛柔羽化边界）
-        function drawTeardropPatch(sx, blurPx, fillCol, scaleMul, withWisps) {
+        // 倾斜梨豆形黑眼圈：连续柔边轮廓，不绘制向外伸出的毛刺。
+        function drawTeardropPatch(sx, blurPx, fillCol, scaleMul) {
             ctx.save();
             ctx.translate(W * (0.5 + sx * 0.076), H * 0.502);
             ctx.rotate(-sx * 0.44);
@@ -233,29 +233,11 @@
             ctx.fillStyle = fillCol;
             ctx.fill();
 
-            if (withWisps) {
-                ctx.lineCap = "round";
-                for (var wi = 0; wi < 120; wi++) {
-                    var ang = (wi / 120) * Math.PI * 2;
-                    var rx = 96 + Math.sin(ang * 2) * 4;
-                    var ry = 120 + (Math.sin(ang) > 0 ? 10 : -4);
-                    var sx0 = Math.cos(ang) * (rx - 4);
-                    var sy0 = Math.sin(ang) * (ry - 4);
-                    var wLen = 7 + (wi % 5) * 2.2;
-                    var jitter = ((wi % 3) - 1) * 0.12;
-                    ctx.strokeStyle = wi % 2 === 0 ? "rgba(18, 19, 24, 0.65)" : "rgba(38, 36, 40, 0.35)";
-                    ctx.lineWidth = 2.0;
-                    ctx.beginPath();
-                    ctx.moveTo(sx0, sy0);
-                    ctx.lineTo(sx0 + Math.cos(ang + jitter) * wLen, sy0 + Math.sin(ang + jitter) * wLen);
-                    ctx.stroke();
-                }
-            }
             ctx.restore();
         }
         [-1, 1].forEach(function (sx) {
-            drawTeardropPatch(sx, 7, "rgba(28, 25, 28, 0.55)", 0.95, false);
-            drawTeardropPatch(sx, 0, "#0e0f13", 0.91, true);
+            drawTeardropPatch(sx, 7, "rgba(28, 25, 28, 0.55)", 0.95);
+            drawTeardropPatch(sx, 0, "#0e0f13", 0.91);
         });
 
         // 柔暖蜜桃腮红自然衔接于黑眼圈外下侧

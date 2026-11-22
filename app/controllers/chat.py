@@ -22,12 +22,48 @@ from tornado.iostream import StreamClosedError
 from app.controllers.assistant import assistant_brief, pick_assistant
 from app.controllers.base import BaseHandler
 from app.models.message import MessageRepository
-from app.services.agent_service import stream_answer
+from app.services.agent_service import SUBAGENT_TIMEOUT_SECONDS, stream_answer
 
 
 CHAT_IDLE_TIMEOUT_SECONDS = 90
+CHAT_COLLABORATION_TIMEOUT_SECONDS = SUBAGENT_TIMEOUT_SECONDS + 30
+CHAT_TOTAL_TIMEOUT_SECONDS = 420
+CHAT_HEARTBEAT_SECONDS = 15
 _ACTIVE = set()
 _TIMEOUT_MESSAGE = "长时间没有收到新进度，已停止等待。你可以重试。"
+logger = logging.getLogger(__name__)
+
+
+async def _with_heartbeat(events):
+    """Keep the connection alive without cancelling the pending model read."""
+    queue = asyncio.Queue(maxsize=1)
+
+    async def produce():
+        try:
+            async with aclosing(events):
+                async for event in events:
+                    await queue.put((event, None))
+        except Exception as exc:
+            await queue.put((None, exc))
+        else:
+            await queue.put((None, None))
+
+    producer = asyncio.create_task(produce())
+    try:
+        while True:
+            try:
+                event, error = await asyncio.wait_for(queue.get(), timeout=CHAT_HEARTBEAT_SECONDS)
+            except TimeoutError:
+                yield {"type": "heartbeat"}
+                continue
+            if error is not None:
+                raise error
+            if event is None:
+                return
+            yield event
+    finally:
+        producer.cancel()
+        await asyncio.gather(producer, return_exceptions=True)
 
 
 def valid_session(value):
@@ -60,12 +96,23 @@ class ChatHandler(BaseHandler):
         if not valid_session(session_id):
             self.write_json({"detail": "会话编号无效"}, status=400)
             return
+        temporary = payload.get("temporary", False)
+        if not isinstance(temporary, bool):
+            self.write_json({"detail": "临时对话标记无效"}, status=400)
+            return
+        temporary_history = payload.get("history", []) if temporary else []
+        if temporary and (not isinstance(temporary_history, list) or len(temporary_history) > 16 or
+                any(not isinstance(row, dict) or row.get("role") not in ("user", "assistant") or
+                    not isinstance(row.get("content"), str) or len(row["content"]) > 8000
+                    for row in temporary_history)):
+            self.write_json({"detail": "临时对话上下文无效"}, status=400)
+            return
         username = self.current_user
         active_key = (username, session_id)
         if active_key in _ACTIVE:
             self.write_json({"detail": "该会话正在生成回复"}, status=409)
             return
-        if MessageRepository.is_archived(username, session_id):
+        if not temporary and MessageRepository.is_archived(username, session_id):
             self.write_json({"detail": "请先恢复已归档的会话"}, status=409)
             return
         # 任务10：按用户选定助理解析本轮智能体配置（显式选择会同步写入用户关联）
@@ -75,7 +122,7 @@ class ChatHandler(BaseHandler):
             return
         employee_id = employee["id"] if employee else 0
         employee_name = employee["name"] if employee else ""
-        history = [{"role": row["role"], "content": row["content"][:2000],
+        history = temporary_history if temporary else [{"role": row["role"], "content": row["content"][:2000],
                     **({"interrupted": True} if row["is_partial"] else {})}
                    for row in MessageRepository.list_recent(username, 16, session_id)]
 
@@ -85,23 +132,45 @@ class ChatHandler(BaseHandler):
         _ACTIVE.add(active_key)
         self._stream_task = asyncio.current_task()
         loop = asyncio.get_running_loop()
+        total_deadline = loop.time() + CHAT_TOTAL_TIMEOUT_SECONDS
         deadline = asyncio.timeout(CHAT_IDLE_TIMEOUT_SECONDS)
+        pending_tasks = set()
+        collaboration_deadline = None
         partial_answer = []
         saved = False
         error_message = None
         try:
             async with deadline:
                 await self.send_event("assistant", assistant_brief(employee))
-                async with aclosing(stream_answer(message, username, employee, history=history)) as events:
-                    async for event in events:
-                        deadline.reschedule(loop.time() + CHAT_IDLE_TIMEOUT_SECONDS)
+                events = stream_answer(message, username, employee, history=history)
+                async with aclosing(_with_heartbeat(events)) as updates:
+                    async for event in updates:
                         etype = event["type"]
+                        if etype == "heartbeat":
+                            await self.heartbeat(event="")
+                            continue
+                        now = loop.time()
+                        if event.get("name") == "task" and event.get("call_id"):
+                            if etype == "tool":
+                                if not pending_tasks:
+                                    collaboration_deadline = now + CHAT_COLLABORATION_TIMEOUT_SECONDS
+                                pending_tasks.add(event["call_id"])
+                            elif etype == "tool_result":
+                                pending_tasks.discard(event["call_id"])
+                                if not pending_tasks:
+                                    collaboration_deadline = None
+                        deadline.reschedule(min(total_deadline, collaboration_deadline or now + CHAT_IDLE_TIMEOUT_SECONDS))
                         if etype == "delta":
                             partial_answer.append(event["text"])
                             await self.send_event("delta", event["text"])
 
                         elif etype == "tool":
-                            await self.send_event("tool", {"name": event["name"], "arguments": event["arguments"]})
+                            await self.send_event("tool", {"name": event["name"], "arguments": event["arguments"],
+                                                           "call_id": event.get("call_id")})
+                        elif etype == "tool_result":
+                            await self.send_event("tool_result", {"name": event["name"],
+                                                                  "call_id": event.get("call_id"),
+                                                                  "status": event["status"]})
                         elif etype == "reasoning":
                             await self.send_event("reasoning", {"text": event["text"]})
                         elif etype == "notice":
@@ -112,8 +181,9 @@ class ChatHandler(BaseHandler):
                             answer = event.get("answer", "")
                             if answer:
                                 # 任务10：记录应答助理身份，历史回放时按发言人渲染
-                                MessageRepository.save_turn(username, session_id, message, answer,
-                                                            employee_id, employee_name)
+                                if not temporary:
+                                    MessageRepository.save_turn(username, session_id, message, answer,
+                                                                employee_id, employee_name)
                                 saved = True
 
 
@@ -124,11 +194,17 @@ class ChatHandler(BaseHandler):
         except (StreamClosedError, asyncio.CancelledError):
             pass
         except TimeoutError:
+            logger.info("Chat timed out request=%s pending_subagents=%d", self.request_id, len(pending_tasks))
             error_message = _TIMEOUT_MESSAGE
+            if pending_tasks:
+                error_message = "子智能体协作等待超时。"
+                if partial_answer:
+                    error_message += "已保留本轮收到的回复。"
         except Exception:
+            logger.exception("Chat stream failed request=%s", self.request_id)
             error_message = _TIMEOUT_MESSAGE if deadline.expired() else "模型暂不可用，请稍后重试"
         finally:
-            if not saved:
+            if not saved and not temporary:
                 try:
                     MessageRepository.save_turn(username, session_id, message, "".join(partial_answer),
                                                 employee_id, employee_name, partial=True)

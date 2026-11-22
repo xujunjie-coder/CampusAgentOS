@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "kind": "building-evidence-review",
+  "reviewedAt": "2026-11-22",
+  "scope": "xs-bldg-0001..xs-bldg-0014",
+  "geometryModified": false,
+  "tencent3dCompared": false,
+  "features": [
+    {
+      "id": "xs-bldg-0001",
+      "reviewStatus": "needs-review",
+      "issues": ["清单与模型名称一致，但高度为估计值，非实测。", "未完成腾讯3D或当前多角度实景核验。"],
+      "references": [],
+      "modelName": "图书馆"
+    },
+    {
+      "id": "xs-bldg-0002",
+      "reviewStatus": "needs-review",
+      "issues": ["现名与模型均为候选建筑，尚无正式楼名证据。", "位置、屋顶和高度置信度均为C。"],
+      "references": [],
+      "modelName": "南校门内侧小型多层建筑候选"
+    },
+    {
+      "id": "xs-bldg-0003",
+      "reviewStatus": "needs-review",
+      "issues": ["清单登记东五公寓，模型内部仍是礼堂旁两层宿舍楼候选，身份对应待核验。", "不能仅据清单名称生成实景立面。"],
+      "references": [],
+      "modelName": "礼堂旁两层宿舍楼候选"
+    },
+    {
+      "id": "xs-bldg-0004",
+      "reviewStatus": "needs-review",
+      "issues": ["身份冲突：清单为东四公寓，模型内部为二食堂低层建筑候选。", "须优先核对门牌、用途与位置，不据名称补建公寓。"],
+      "references": [],
+      "modelName": "二食堂低层建筑候选"
+    },
+    {
+      "id": "xs-bldg-0005",
+      "reviewStatus": "needs-review",
+      "issues": ["清单为东三楼，模型内部为东侧四层宿舍楼候选。", "历史文献描述同名历史东三楼，不能直接认定此四层宿舍就是该建筑。"],
+      "references": [{"title": "方志四川：川北人民行政公署主要办公建筑风格特色鉴赏", "url": "https://www.thepaper.cn/newsDetail_forward_25948774"}],
+      "modelName": "东侧四层宿舍楼候选"
+    },
+    {
+      "id": "xs-bldg-0006",
+      "reviewStatus": "needs-review",
+      "issues": ["名称或用途差异：清单为东二公寓，模型内部为川北行署东翼办公楼（中南段候选）。", "历史办公楼与当前用途是否对应同栋，尚待核验。"],
+      "references": [{"title": "方志四川：川北人民行政公署主要办公建筑风格特色鉴赏", "url": "https://www.thepaper.cn/newsDetail_forward_25948774"}],
+      "modelName": "川北行署东翼办公楼（中南段候选）"
+    },
+    {
+      "id": "xs-bldg-0007",
+      "reviewStatus": "needs-review",
+      "issues": ["名称差异：清单为行署办公楼，模型内部为川北行署中心会议楼。", "须区分现存中心会议楼与历史上已拆除的原行署办公大楼。"],
+      "references": [{"title": "方志四川：川北人民行政公署主要办公建筑风格特色鉴赏", "url": "https://www.thepaper.cn/newsDetail_forward_25948774"}],
+      "modelName": "川北行署中心会议楼"
+    },
+    {
+      "id": "xs-bldg-0008",
+      "reviewStatus": "needs-review",
+      "issues": ["模型为原行署办公大楼原址上的教学楼；不能用历史原楼照片替代当前建筑。", "现模型24米高度为估计值，未实测。"],
+      "references": [{"title": "方志四川：川北人民行政公署主要办公建筑风格特色鉴赏", "url": "https://www.thepaper.cn/newsDetail_forward_25948774"}],
+      "modelName": "川北行署办公大楼原址教学楼"
+    },
+    {
+      "id": "xs-bldg-0009",
+      "reviewStatus": "needs-review",
+      "issues": ["清单登记西三楼，模型内部仍为西翼办公楼中南段候选。", "文献可佐证历史建筑类型，不能替代当前节点身份核对。"],
+      "references": [{"title": "方志四川：川北人民行政公署主要办公建筑风格特色鉴赏", "url": "https://www.thepaper.cn/newsDetail_forward_25948774"}],
+      "modelName": "川北行署西翼办公楼（中南段候选）"
+    },
+    {
+      "id": "xs-bldg-0010",
+      "reviewStatus": "needs-review",
+      "issues": ["官方来源支持其位于行署校区及总体风格，但本次未完成精确位置、尺寸和现状多视角核验。", "模型5.3米高度为文献引导估计，非实测。"],
+      "references": [{"title": "中共南充市直属机关工委：胡耀邦主政川北勤政为民", "url": "https://www.ncjggw.gov.cn/shows/143/14300.html"}, {"title": "方志四川：川北人民行政公署主要办公建筑风格特色鉴赏", "url": "https://www.thepaper.cn/newsDetail_forward_25948774"}],
+      "modelName": "胡耀邦同志川北办公旧址"
+    },
+    {
+      "id": "xs-bldg-0011",
+      "reviewStatus": "needs-review",
+      "issues": ["文献支持东、西办公房的历史关系；当前节点位置、尺度仍缺独立测量核验。", "不应直接复制西侧建筑的全部细节并称为现状还原。"],
+      "references": [{"title": "方志四川：川北人民行政公署主要办公建筑风格特色鉴赏", "url": "https://www.thepaper.cn/newsDetail_forward_25948774"}],
+      "modelName": "川北行署主要领导办公房（东侧）"
+    },
+    {
+      "id": "xs-bldg-0012",
+      "reviewStatus": "needs-review",
+      "issues": ["清单登记西五楼，模型内部还带校史馆候选用途，不是确认的校史馆。", "现状用途、位置、立面细节待核验。"],
+      "references": [{"title": "方志四川：川北人民行政公署主要办公建筑风格特色鉴赏", "url": "https://www.thepaper.cn/newsDetail_forward_25948774"}],
+      "modelName": "川北行署西五楼（校史馆候选）"
+    },
+    {
+      "id": "xs-bldg-0013",
+      "reviewStatus": "needs-review",
+      "issues": ["清单登记西四楼，模型内部仍标记西四楼候选。", "历史同类型建筑资料不足以确认此节点的当前立面和尺寸。"],
+      "references": [{"title": "方志四川：川北人民行政公署主要办公建筑风格特色鉴赏", "url": "https://www.thepaper.cn/newsDetail_forward_25948774"}],
+      "modelName": "川北行署西四楼候选"
+    },
+    {
+      "id": "xs-bldg-0014",
+      "reviewStatus": "needs-review",
+      "issues": ["身份冲突：清单为浴池，模型内部为礼堂东北侧宿舍楼候选。", "须先核实当前建筑用途和对应位置，再制作真实立面。"],
+      "references": [],
+      "modelName": "礼堂东北侧宿舍楼候选"
+    }
+  ]
+}

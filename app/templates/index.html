@@ -15,33 +15,25 @@
         </div>
 
         <div class="chat-side-body">
-            <!-- 任务10：当前生效的数字助理由 chat.js 按 /api/assistants 渲染，不再是硬编码人设 -->
-            <div class="chat-agent-card">
-                <div class="chat-agent-avatar"><i class="fas fa-graduation-cap" id="sideAgentIcon"></i></div>
-                <div class="chat-agent-meta">
-                    <div class="chat-agent-name-row">
-                        <span class="chat-agent-name" id="sideAgentName">华师小助手</span>
-                        <span class="chat-agent-dot" title="在线服务中"></span>
-                    </div>
-                    <span class="chat-agent-tag">当前助手</span>
-                    <div class="chat-agent-desc" id="sideAgentDesc">正在加载可选助理…</div>
-                </div>
-            </div>
-
             <div class="chat-portal-nav" aria-label="特色校园门户">
                 <a href="/avatar" class="chat-portal-btn is-primary">
                     <span class="chat-portal-emoji" aria-hidden="true">🐼</span>
                     <span>华小竹 3D 虚拟辅导员</span>
                 </a>
-                <a href="/qa" class="chat-portal-btn is-secondary">
-                    <i class="fas fa-chart-bar" aria-hidden="true"></i>
-                    <span>校园智能问数</span>
+                <a href="/campus-map" class="chat-portal-btn is-secondary">
+                    <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
+                    <span>行署校区</span>
                 </a>
             </div>
 
             <button type="button" id="clearBtn" class="layui-btn layui-btn-fluid chat-new-btn">
                 <i class="fas fa-plus"></i> 新建对话
             </button>
+
+            <button type="button" id="temporaryChatBtn" class="layui-btn layui-btn-fluid chat-new-btn chat-temporary-btn" aria-pressed="false">
+                <i class="fas fa-user-clock"></i> 临时对话
+            </button>
+            <p id="temporaryChatHint" class="chat-temporary-hint" role="status" hidden>临时对话：不保存聊天记录，刷新或切换对话后清空。</p>
 
             <div class="chat-side-title chat-session-tabs" role="group" aria-label="会话列表">
                 <button type="button" id="chatHistoryTab" aria-pressed="true">历史会话</button>
@@ -120,14 +112,12 @@
                         <span class="chat-asst-name" id="chatAsstName">数字助理</span>
                         <i class="fas fa-chevron-up chat-asst-caret"></i>
                     </button>
-                    <span class="chat-asst-tip" id="chatAsstTip"></span>
+                    <span class="chat-asst-tip" id="chatAsstTip" hidden></span>
                     <div class="chat-asst-panel" id="chatAsstPanel" hidden role="listbox">
                         <div class="chat-asst-panel-head">
                             <span>选择数字助理</span>
-                            <span class="chat-asst-panel-count" id="chatAsstCount"></span>
                         </div>
                         <div class="chat-asst-list" id="chatAsstList"></div>
-                        <div class="chat-asst-panel-foot">切换后从下一条提问生效，选择会记住</div>
                     </div>
                 </div>
 
@@ -148,21 +138,22 @@
     <div class="face-mask" id="faceMask" hidden>
         <div class="face-dialog" role="dialog" aria-modal="true" aria-labelledby="faceTitle">
             <div class="face-dialog-head">
-                <span id="faceTitle"><i class="fas fa-camera"></i> 人脸设置</span>
+                <div><span id="faceTitle"><i class="fas fa-camera"></i> 人脸设置</span><p class="face-dialog-subtitle">录入清晰的正面照，开启便捷的人脸登录</p></div>
                 <button type="button" class="face-close" id="faceClose" aria-label="关闭人脸设置">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="face-dialog-body">
-                <div class="face-engine" id="faceEngine">正在读取引擎状态…</div>
+                <div class="face-engine" id="faceEngine">正在检查人脸服务…</div>
                 <div class="face-grid">
                     <div class="face-left">
+                        <h3 class="face-section-title">采集人脸<span>拍照或上传照片</span></h3>
                         <div class="face-stage" id="faceStage">
                             <video id="faceVideo" autoplay playsinline muted></video>
                             <img id="faceShot" alt="待录入的人脸照片">
                             <div class="face-stage-tip">
                                 <i class="fas fa-camera-retro"></i>
-                                <span>点击「打开摄像头」拍照，或上传一张正面照</span>
+                                <span><strong>让面部清晰出现在画面中</strong><span>正对镜头 · 光线均匀 · 避免遮挡</span></span>
                             </div>
                         </div>
                         <div class="face-actions">
@@ -180,10 +171,10 @@
                                 <input type="file" id="faceFile" accept="image/jpeg,image/png,image/webp" hidden>
                             </label>
                         </div>
-                        <div class="face-hint" id="faceHint"></div>
+                        <div class="face-hint" id="faceHint" role="status" aria-live="polite"></div>
                         <div class="face-submit">
-                            <input type="text" id="faceLabel" class="layui-input" maxlength="32"
-                                   placeholder="标签（可留空，默认 default）">
+                            <input type="text" aria-label="人脸备注（选填）" id="faceLabel" class="layui-input" maxlength="32"
+                                   placeholder="备注（选填，如：日常照片）">
                             <button type="button" class="layui-btn layui-btn-sm" id="faceEnroll" disabled>
                                 <i class="fas fa-check"></i> 录入人脸
                             </button>
@@ -191,11 +182,11 @@
                     </div>
                     <div class="face-right">
                         <div class="face-right-head">
-                            <span>已录入人脸</span>
+                            <span><i class="fas fa-id-card"></i> 已录入人脸</span>
                             <label class="face-switch"><input type="checkbox" id="faceEnabled"> 人脸登录</label>
                         </div>
                         <div class="face-list" id="faceList"></div>
-                        <p class="face-note">照片只在服务端内存中提取特征，不保存原图；特征加密入库，接口不会返回特征数据。</p>
+                        <p class="face-note"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>保护你的隐私</strong>照片仅用于提取人脸特征，不保存原图；特征加密存储。</span></p>
                     </div>
                 </div>
             </div>

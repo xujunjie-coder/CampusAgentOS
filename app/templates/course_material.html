@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ material['title'] }}</title>
+    <style>
+        body { margin: 0; min-height: 100dvh; display: flex; flex-direction: column; background: #f4f7fb; color: #172a45; font: 15px system-ui, sans-serif; }
+        header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; background: white; }
+        h1 { font-size: 17px; margin: 0; }
+        a { color: #003087; }
+        .download { border-radius: 6px; background: #003087; color: white; padding: 8px 14px; text-decoration: none; }
+        iframe { width: 100%; flex: 1; min-height: 65dvh; border: 0; }
+        details { background: white; padding: 8px 20px; }
+        summary { cursor: pointer; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{ material['title'] }}</h1>
+        {% if external %}
+        <a class="download" href="{{ external }}" target="_blank" rel="noopener noreferrer">打开原站文件</a>
+        {% else %}
+        <a class="download" href="/api/course-materials/{{ slug }}/download" download>下载原文件</a>
+        {% end %}
+    </header>
+    <iframe src="{{ external or ('/api/course-materials/' + slug + '/file') }}" title="{{ material['title'] }} PDF 预览" referrerpolicy="no-referrer"></iframe>
+    <details><summary>资料来源</summary>
+        <p>{{ material['credit'] }} · {{ material['license'] }}
+        {% if material.get('source_url') %}<a href="{{ material['source_url'] }}" target="_blank" rel="noopener noreferrer">原始来源</a>{% end %}</p>
+    </details>
+</body>
+</html>

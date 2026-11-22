@@ -10,6 +10,15 @@ def documents():
             "SELECT id, title, created_at FROM knowledge_documents ORDER BY id DESC LIMIT 100")]
 
 
+def document_options():
+    """All indexed documents for binding; the management page's 100-row cap is unrelated."""
+    with get_connection() as conn:
+        return [dict(row) for row in conn.execute(
+            "SELECT d.id, d.title FROM knowledge_documents d "
+            "WHERE EXISTS (SELECT 1 FROM knowledge_chunks c WHERE c.document_id = d.id) "
+            "ORDER BY d.id DESC")]
+
+
 def save_document(title, model, chunks):
     with get_connection() as conn:
         doc_id = conn.execute(

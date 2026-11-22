@@ -2,13 +2,14 @@
 {% extends "base.html" %}
 
 {% block admin_styles %}
-<link rel='stylesheet' href='/static/css/employees.css?v=20261119a'>
+<link rel="stylesheet" href="{{ static_url('css/employees.css') }}">
 {% end %}
 
 {% block admin_content %}
 <!-- 功能区 -->
 <div class="layui-form admin-toolbar emp-toolbar" id="employeeToolOptions"
-     data-options="{{ json_encode(tool_options) }}">
+     data-options="{{ json_encode(tool_options) }}"
+     data-knowledge-options="{{ json_encode(knowledge_options) }}">
     <div class="layui-input-wrap admin-search">
         <div class="layui-input-prefix"><i class="fas fa-search"></i></div>
         <input type="text" id="empKeyword" placeholder="按名称 / 简介 / 提示词搜索" autocomplete="off" class="layui-input" lay-affix="clear">
@@ -40,5 +41,5 @@
 {% end %}
 
 {% block admin_scripts %}
-<script src="/static/js/employees.js"></script>
+<script src="{{ static_url('js/employees.js') }}"></script>
 {% end %}

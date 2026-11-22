@@ -1,0 +1,419 @@
+{
+  "schemaVersion": 1,
+  "scope": "xs-bldg-0029..xs-bldg-0042",
+  "reviewedAt": "2026-11-22",
+  "basis": "本地manifest与GLB节点extras及POSITION accessor边界；未完成腾讯3D或全景实景比对。",
+  "features": [
+    {
+      "id": "xs-bldg-0029",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "模型身份置信度为C，候选身份未确认。",
+        "高度包含临时或类比估计，不能据此声称实景层数。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "北侧中轴东部组合建筑候选",
+      "manifestName": "北侧中轴东部组合建筑候选",
+      "isMeasured": false,
+      "heightMode": "cluster-context-placeholder-estimate",
+      "modelBoundsSizeM": {
+        "eastWest": 57.53,
+        "height": 11.4,
+        "northSouth": 56.58
+      },
+      "referenceSceneIds": [
+        "pano-024",
+        "pano-025",
+        "pano-032"
+      ],
+      "sourceIds": [
+        "SRC-MAP-001",
+        "SRC-PANO-002"
+      ]
+    },
+    {
+      "id": "xs-bldg-0030",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "清单名称与模型内名称不同，需核对对应建筑。",
+        "位置与高度未实测，当前状态待核验。",
+        "模型身份置信度为C，候选身份未确认。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "第二教学楼南侧建筑候选",
+      "manifestName": "第二教学楼",
+      "isMeasured": false,
+      "heightMode": "panorama-guided-estimate",
+      "modelBoundsSizeM": {
+        "eastWest": 84.14,
+        "height": 11.4,
+        "northSouth": 46.43
+      },
+      "referenceSceneIds": [
+        "pano-017",
+        "pano-018",
+        "pano-019"
+      ],
+      "sourceIds": [
+        "SRC-MAP-001",
+        "SRC-PANO-002"
+      ]
+    },
+    {
+      "id": "xs-bldg-0031",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "模型身份置信度为C，候选身份未确认。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "实训楼北侧附属房候选",
+      "manifestName": "实训楼北侧附属房候选",
+      "isMeasured": false,
+      "heightMode": "panorama-guided-estimate",
+      "modelBoundsSizeM": {
+        "eastWest": 21.21,
+        "height": 4.8,
+        "northSouth": 23.88
+      },
+      "referenceSceneIds": [
+        "pano-019",
+        "pano-038"
+      ],
+      "sourceIds": [
+        "SRC-MAP-001",
+        "SRC-PANO-002"
+      ]
+    },
+    {
+      "id": "xs-bldg-0032",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "清单名称与模型内名称不同，需核对对应建筑。",
+        "位置与高度未实测，当前状态待核验。",
+        "模型身份置信度为C，候选身份未确认。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "乒乓球场旁红砖楼候选",
+      "manifestName": "车队",
+      "isMeasured": false,
+      "heightMode": "panorama-guided-estimate",
+      "modelBoundsSizeM": {
+        "eastWest": 60.23,
+        "height": 8.7,
+        "northSouth": 40.89
+      },
+      "referenceSceneIds": [
+        "pano-017",
+        "pano-038"
+      ],
+      "sourceIds": [
+        "SRC-MAP-001",
+        "SRC-PANO-002"
+      ]
+    },
+    {
+      "id": "xs-bldg-0033",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "模型身份置信度为C，候选身份未确认。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "西门侧八层建筑候选",
+      "manifestName": "西门侧八层建筑候选",
+      "isMeasured": false,
+      "heightMode": "osm-levels-estimate",
+      "modelBoundsSizeM": {
+        "eastWest": 44.3,
+        "height": 29.5,
+        "northSouth": 91.53
+      },
+      "referenceSceneIds": [
+        "pano-001",
+        "pano-002"
+      ],
+      "sourceIds": [
+        "SRC-MAP-001",
+        "SRC-PANO-002"
+      ]
+    },
+    {
+      "id": "xs-bldg-0034",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "模型身份置信度为C，候选身份未确认。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "礼堂北侧小型多层建筑候选",
+      "manifestName": "礼堂北侧小型多层建筑候选",
+      "isMeasured": false,
+      "heightMode": "panorama-guided-estimate",
+      "modelBoundsSizeM": {
+        "eastWest": 28.33,
+        "height": 15.1,
+        "northSouth": 15.0
+      },
+      "referenceSceneIds": [
+        "pano-024",
+        "pano-025",
+        "pano-030",
+        "pano-032"
+      ],
+      "sourceIds": [
+        "SRC-MAP-001",
+        "SRC-PANO-002"
+      ]
+    },
+    {
+      "id": "xs-bldg-0035",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "高度包含临时或类比估计，不能据此声称实景层数。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "木工房",
+      "manifestName": "木工房",
+      "isMeasured": false,
+      "heightMode": "conservative-unmeasured-one-storey-placeholder",
+      "modelBoundsSizeM": {
+        "eastWest": 28.35,
+        "height": 4.8,
+        "northSouth": 20.94
+      },
+      "referenceSceneIds": [],
+      "sourceIds": [
+        "SRC-MAP-003"
+      ]
+    },
+    {
+      "id": "xs-bldg-0036",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "清单名称与模型内名称不同，需核对对应建筑。",
+        "位置与高度未实测，当前状态待核验。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "锅炉房",
+      "manifestName": "锅炉房与老烟囱",
+      "isMeasured": false,
+      "heightMode": "public-text-chimney-height-with-unmeasured-building-envelope",
+      "modelBoundsSizeM": {
+        "eastWest": 28.8,
+        "height": 29.78,
+        "northSouth": 29.62
+      },
+      "referenceSceneIds": [],
+      "sourceIds": [
+        "SRC-MAP-003",
+        "SRC-TEXT-002"
+      ]
+    },
+    {
+      "id": "xs-bldg-0037",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "高度包含临时或类比估计，不能据此声称实景层数。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "西七楼",
+      "manifestName": "西七楼",
+      "isMeasured": false,
+      "heightMode": "provisional-two-storey-white-model",
+      "modelBoundsSizeM": {
+        "eastWest": 31.11,
+        "height": 8.2,
+        "northSouth": 18.46
+      },
+      "referenceSceneIds": [],
+      "sourceIds": [
+        "SRC-MAP-003"
+      ]
+    },
+    {
+      "id": "xs-bldg-0038",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "高度包含临时或类比估计，不能据此声称实景层数。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "校一幢",
+      "manifestName": "校一幢",
+      "isMeasured": false,
+      "heightMode": "provisional-two-storey-white-model",
+      "modelBoundsSizeM": {
+        "eastWest": 52.71,
+        "height": 8,
+        "northSouth": 20.97
+      },
+      "referenceSceneIds": [],
+      "sourceIds": [
+        "SRC-MAP-003"
+      ]
+    },
+    {
+      "id": "xs-bldg-0039",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "高度包含临时或类比估计，不能据此声称实景层数。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "校二幢",
+      "manifestName": "校二幢",
+      "isMeasured": false,
+      "heightMode": "provisional-two-storey-white-model",
+      "modelBoundsSizeM": {
+        "eastWest": 24.3,
+        "height": 8,
+        "northSouth": 13.88
+      },
+      "referenceSceneIds": [],
+      "sourceIds": [
+        "SRC-MAP-003"
+      ]
+    },
+    {
+      "id": "xs-bldg-0040",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "高度包含临时或类比估计，不能据此声称实景层数。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "西华师大宾馆",
+      "manifestName": "西华师大宾馆",
+      "isMeasured": false,
+      "heightMode": "secondary-sixth-floor-reference-provisional",
+      "modelBoundsSizeM": {
+        "eastWest": 29.65,
+        "height": 22.4,
+        "northSouth": 40.32
+      },
+      "referenceSceneIds": [],
+      "sourceIds": [
+        "SRC-MAP-003",
+        "SRC-WEB-001"
+      ]
+    },
+    {
+      "id": "xs-bldg-0041",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "高度包含临时或类比估计，不能据此声称实景层数。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "国资楼",
+      "manifestName": "国资楼",
+      "isMeasured": false,
+      "heightMode": "provisional-two-storey-white-model",
+      "modelBoundsSizeM": {
+        "eastWest": 37.84,
+        "height": 8,
+        "northSouth": 14.33
+      },
+      "referenceSceneIds": [],
+      "sourceIds": [
+        "SRC-MAP-003"
+      ]
+    },
+    {
+      "id": "xs-bldg-0042",
+      "reviewStatus": "needs-review",
+      "issues": [
+        "位置与高度未实测，当前状态待核验。",
+        "高度包含临时或类比估计，不能据此声称实景层数。"
+      ],
+      "references": [
+        {
+          "title": "SCSWiki 行署校区三维地图（原模型说明，非独立核验）",
+          "url": "https://scswiki.com/start/xingshu-campus-map"
+        }
+      ],
+      "modelName": "南三公寓",
+      "manifestName": "南三公寓",
+      "isMeasured": false,
+      "heightMode": "south-two-massing-analogy-provisional-five-storey-white-model",
+      "modelBoundsSizeM": {
+        "eastWest": 54.29,
+        "height": 18.8,
+        "northSouth": 26.16
+      },
+      "referenceSceneIds": [],
+      "sourceIds": [
+        "SRC-MAP-003"
+      ]
+    }
+  ]
+}
