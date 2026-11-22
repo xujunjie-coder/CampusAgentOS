@@ -18,6 +18,9 @@ class TestCampusMap(ApiCase):
         assert b"OpenStreetMap" in page.body
         assert b'id="mapLabelLayer"' in page.body
         assert b'id="mapSearchForm"' in page.body
+        assert b'id="mapScale"' in page.body
+        assert b'id="mapMeasureResult"' in page.body
+        assert b"https://scswiki.com/start/xingshu-campus-map" in page.body
         assert b'href="/campus-map"' in self.fetch("/").body
         assert self.fetch("/static/js/campus-map.js").code == 200
         response = self.fetch("/static/maps/xingshu-campus/xingshu-campus.glb")
