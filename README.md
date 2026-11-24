@@ -6,7 +6,7 @@
 
 **技术栈：** Python · Tornado · Agentica · OpenAI 兼容接口 · SQLite / MySQL · Playwright · BeautifulSoup · Crawl4AI · Three.js · ECharts · Layui。
 
-[功能与技术](#功能与对应技术) · [快速运行](#快速运行) · [项目讲解与面试准备](docs/project-showcase.md) · [验证记录](docs/validation-2026-11-24.md)
+[功能与技术](#功能与对应技术) · [快速运行](#快速运行) · [验证记录](docs/validation-2026-11-24.md)
 
 ## 功能与对应技术
 
@@ -48,7 +48,7 @@ flowchart TD
 
 采集链路为 **信源配置 → 搜索/抓取 → 去重与存储 → 按需读取全文、图片和评论 → 初筛 → 人工核实**。摘要、正文和评论保留各自来源范围，避免把摘要当作已核实全文。
 
-## 值得展开讲的工程设计
+## 工程设计
 
 1. **长任务可观察：** 对话工具调用和子任务通过事件反馈；采集具有等待、运行、停止、失败和重启中断等状态。
 2. **受限智能体执行：** 子任务只用允许的查询工具，共享查询预算并设置超时，不继承完整主会话上下文，也不继续派发子任务。
@@ -57,7 +57,6 @@ flowchart TD
 5. **外部依赖有边界：** 对模型、登录、数据源和人脸引擎故障给出错误或降级行为；地图保留名称来源及待核验信息。
 6. **持久层可替换：** SQLite / MySQL 访问层统一占位符、行结构与异常，上层业务复用 Repository 查询。
 
-更多技术取舍、面试演示步骤和可按实际职责改写的简历表述见 [项目讲解](docs/project-showcase.md)。
 
 ## 快速运行
 
@@ -110,5 +109,3 @@ node tests/test_campus_map_labels.cjs
 ## 文档与资源来源
 
 [项目讲解](docs/project-showcase.md) · [架构](docs/architecture.md) · [API](docs/api.md) · [部署](docs/deploy.md) · [QQ 频道实现](docs/qq-channel-implementation.md) · [校园地图](docs/campus-map/README.md) · [数字员工](docs/cwnu-employees.md) · [校园信源](docs/cwnu-sources.md)
-
-地图及第三方资源遵循各自实际许可，详见资源目录的 NOTICE / LICENSE 文件。`.env`、业务数据库、浏览器登录资料、人脸模型和本地输出已通过 `.gitignore` 排除。
