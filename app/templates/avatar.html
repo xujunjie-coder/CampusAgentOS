@@ -11,11 +11,14 @@
         <a href="/" class="avatar-back"><i class="fas fa-arrow-left"></i> 返回对话大厅</a>
         <span class="avatar-top-title"><i class="fas fa-graduation-cap"></i> 西华师大 · 虚拟辅导员</span>
         <div class="avatar-switcher" id="avatarSwitcher" role="tablist" aria-label="切换数字人形象">
-            <button type="button" class="avatar-switch-btn is-active" data-avatar-model="cwnu-panda">
-                <span>🐼</span> 西华师大 · 华小竹
+            <button type="button" class="avatar-switch-btn is-active" data-avatar-model="cwnu-panda" role="tab" aria-selected="true">
+                <span>🐼</span> 华小竹
             </button>
-            <button type="button" class="avatar-switch-btn" data-avatar-model="vrm">
-                <i class="fas fa-user"></i> 虚拟主播
+            <button type="button" class="avatar-switch-btn" data-avatar-model="vrm" role="tab" aria-selected="false">
+                <span>✨</span> Live3D 主播
+            </button>
+            <button type="button" class="avatar-switch-btn" data-avatar-model="live2d" role="tab" aria-selected="false">
+                <span>🎀</span> Live2D 看板娘
             </button>
         </div>
         <span class="avatar-assistant" id="avatarAssistant">数字助理加载中…</span>
@@ -25,11 +28,13 @@
         <!-- three.js 渲染画布（WebGL 不可用时降级提示） -->
         <div class="avatar-stage" id="avatarStage">
             <div class="avatar-model-tag" id="avatarModelTag">西华师范大学 · 华小竹（拖拽旋转视角，双击复位）</div>
-            <div class="avatar-stage-actions" id="avatarGestureBar" role="group" aria-label="华小竹互动动作">
+            <div class="avatar-stage-actions" id="avatarGestureBar" role="group" aria-label="数字人互动动作">
                 <button type="button" class="avatar-stage-btn" data-gesture="wave" title="挥手问好">👋 挥手</button>
                 <button type="button" class="avatar-stage-btn" data-gesture="nod" title="温和点头">😊 点头</button>
-                <button type="button" class="avatar-stage-btn" data-gesture="book" title="翻阅校园手册">📖 托书</button>
-                <button type="button" class="avatar-stage-btn" data-gesture="reset" title="视角回正">↺ 复位</button>
+                <button type="button" class="avatar-stage-btn" id="avatarSpecialBtn" data-gesture="book" title="特色互动">📖 托书</button>
+                <button type="button" class="avatar-stage-btn" id="avatarVrmUploadBtn" title="导入本地 .vrm 虚拟皮套" hidden>📁 导入 VRM</button>
+                <input type="file" id="avatarVrmInput" accept=".vrm,.glb" hidden>
+                <button type="button" class="avatar-stage-btn" data-gesture="reset" title="视角与表情回正">↺ 复位</button>
             </div>
             <div class="avatar-loading" id="avatarLoading">
                 <i class="fas fa-spinner fa-spin"></i> 数字人模型加载中…
@@ -90,6 +95,10 @@
 {% block scripts %}
 <script src="/static/vendor/three/three.min.js"></script>
 <script src="/static/vendor/three/GLTFLoader.js"></script>
+<script src="/static/vendor/live2d/pixi.min.js"></script>
+<script src="/static/vendor/live2d/live2dcubismcore.min.js"></script>
+<script src="/static/vendor/live2d/cubism4.min.js"></script>
 <script src="{{ static_url('js/avatar-cwnu-panda.js') }}"></script>
+<script src="{{ static_url('js/avatar-live2d.js') }}"></script>
 <script src="{{ static_url('js/avatar.js') }}"></script>
 {% end %}

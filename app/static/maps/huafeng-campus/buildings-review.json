@@ -1,0 +1,1230 @@
+{
+  "schemaVersion": 1,
+  "kind": "building-evidence-review",
+  "reviewedAt": "2026-11-22",
+  "scope": "hf-bldg-0001..hf-bldg-0115",
+  "geometryModified": false,
+  "tencent3dCompared": false,
+  "features": [
+    {
+      "id": "hf-bldg-0001",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178474",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "11公寓"
+    },
+    {
+      "id": "hf-bldg-0002",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178472",
+      "issues": [
+        "OSM 中有 2 栋楼均标注为「12公寓」（可能为相邻楼栋笔误或分馆），请结合现场校对。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "12公寓"
+    },
+    {
+      "id": "hf-bldg-0003",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178473",
+      "issues": [
+        "OSM 中有 2 栋楼均标注为「12公寓」（可能为相邻楼栋笔误或分馆），请结合现场校对。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "12公寓"
+    },
+    {
+      "id": "hf-bldg-0004",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178475",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "14公寓"
+    },
+    {
+      "id": "hf-bldg-0005",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178476",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "15公寓"
+    },
+    {
+      "id": "hf-bldg-0006",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178477",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "16公寓"
+    },
+    {
+      "id": "hf-bldg-0007",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178480",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "17公寓"
+    },
+    {
+      "id": "hf-bldg-0008",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178479",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "18公寓"
+    },
+    {
+      "id": "hf-bldg-0009",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178478",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "19公寓"
+    },
+    {
+      "id": "hf-bldg-0010",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741911",
+      "issues": [
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "20公寓"
+    },
+    {
+      "id": "hf-bldg-0011",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741912",
+      "issues": [
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "21公寓"
+    },
+    {
+      "id": "hf-bldg-0012",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741913",
+      "issues": [
+        "楼高按 OSM 标注层数（8 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "22公寓"
+    },
+    {
+      "id": "hf-bldg-0013",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180873",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "八公寓"
+    },
+    {
+      "id": "hf-bldg-0014",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349747269",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "办公大楼"
+    },
+    {
+      "id": "hf-bldg-0015",
+      "reviewStatus": "needs-review",
+      "osmRef": "relation/19323481",
+      "issues": [
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "博物馆（校史馆）"
+    },
+    {
+      "id": "hf-bldg-0016",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349747311",
+      "issues": [
+        "楼高按 OSM 标注层数（10 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "朝阳楼"
+    },
+    {
+      "id": "hf-bldg-0017",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180886",
+      "issues": [
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "锅炉房"
+    },
+    {
+      "id": "hf-bldg-0018",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180884",
+      "issues": [
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "华凤园餐厅"
+    },
+    {
+      "id": "hf-bldg-0019",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178509",
+      "issues": [
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "化学楼"
+    },
+    {
+      "id": "hf-bldg-0020",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180899",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "进德楼"
+    },
+    {
+      "id": "hf-bldg-0021",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180872",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "九公寓"
+    },
+    {
+      "id": "hf-bldg-0022",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180885",
+      "issues": [
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "开水房"
+    },
+    {
+      "id": "hf-bldg-0023",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178470",
+      "issues": [
+        "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "李园餐厅（二期食堂）"
+    },
+    {
+      "id": "hf-bldg-0024",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180874",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "六公寓"
+    },
+    {
+      "id": "hf-bldg-0025",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178492",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "美术楼"
+    },
+    {
+      "id": "hf-bldg-0026",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180901",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "宁静楼"
+    },
+    {
+      "id": "hf-bldg-0027",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180870",
+      "issues": [
+        "OSM 中有 2 栋楼均标注为「配电室」（可能为相邻楼栋笔误或分馆），请结合现场校对。",
+        "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "配电室"
+    },
+    {
+      "id": "hf-bldg-0028",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180898",
+      "issues": [
+        "OSM 中有 2 栋楼均标注为「配电室」（可能为相邻楼栋笔误或分馆），请结合现场校对。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "配电室"
+    },
+    {
+      "id": "hf-bldg-0029",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180875",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "七公寓"
+    },
+    {
+      "id": "hf-bldg-0030",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180880",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "三公寓"
+    },
+    {
+      "id": "hf-bldg-0031",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385689",
+      "issues": [
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "生物科学学院（生物楼）"
+    },
+    {
+      "id": "hf-bldg-0032",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180871",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "十公寓"
+    },
+    {
+      "id": "hf-bldg-0033",
+      "reviewStatus": "needs-review",
+      "osmRef": "relation/19323339",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "实训楼"
+    },
+    {
+      "id": "hf-bldg-0034",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180879",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "四公寓"
+    },
+    {
+      "id": "hf-bldg-0035",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178488",
+      "issues": [
+        "OSM 中有 2 栋楼均标注为「体育中心」（可能为相邻楼栋笔误或分馆），请结合现场校对。",
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "体育中心"
+    },
+    {
+      "id": "hf-bldg-0036",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/228941785",
+      "issues": [
+        "OSM 中有 2 栋楼均标注为「体育中心」（可能为相邻楼栋笔误或分馆），请结合现场校对。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "体育中心"
+    },
+    {
+      "id": "hf-bldg-0037",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412363724",
+      "issues": [
+        "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "天文台"
+    },
+    {
+      "id": "hf-bldg-0038",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178499",
+      "issues": [
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "图书馆"
+    },
+    {
+      "id": "hf-bldg-0039",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350866721",
+      "issues": [
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "文科楼"
+    },
+    {
+      "id": "hf-bldg-0040",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180876",
+      "issues": [
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "五公寓"
+    },
+    {
+      "id": "hf-bldg-0041",
+      "reviewStatus": "needs-review",
+      "osmRef": "relation/18526501",
+      "issues": [
+        "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "校医院"
+    },
+    {
+      "id": "hf-bldg-0042",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412377390",
+      "issues": [
+        "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "新食堂"
+    },
+    {
+      "id": "hf-bldg-0043",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385688",
+      "issues": [
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "新闻传播学院"
+    },
+    {
+      "id": "hf-bldg-0044",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180900",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "修业楼"
+    },
+    {
+      "id": "hf-bldg-0045",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180878",
+      "issues": [
+        "OSM 中有 2 栋楼均标注为「一公寓」（可能为相邻楼栋笔误或分馆），请结合现场校对。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一公寓"
+    },
+    {
+      "id": "hf-bldg-0046",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180877",
+      "issues": [
+        "OSM 中有 2 栋楼均标注为「一公寓」（可能为相邻楼栋笔误或分馆），请结合现场校对。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一公寓"
+    },
+    {
+      "id": "hf-bldg-0047",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178493",
+      "issues": [
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "音乐楼"
+    },
+    {
+      "id": "hf-bldg-0048",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350866719",
+      "issues": [
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "钟鼓楼"
+    },
+    {
+      "id": "hf-bldg-0049",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741924",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "专家楼（二）"
+    },
+    {
+      "id": "hf-bldg-0050",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741925",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "专家楼（三）"
+    },
+    {
+      "id": "hf-bldg-0051",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741926",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "专家楼（四）"
+    },
+    {
+      "id": "hf-bldg-0052",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741927",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "专家楼（五）"
+    },
+    {
+      "id": "hf-bldg-0053",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741923",
+      "issues": [
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "专家楼（一）"
+    },
+    {
+      "id": "hf-bldg-0054",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180890",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 54"
+    },
+    {
+      "id": "hf-bldg-0055",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180891",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 55"
+    },
+    {
+      "id": "hf-bldg-0056",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385719",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 56"
+    },
+    {
+      "id": "hf-bldg-0057",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385718",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 57"
+    },
+    {
+      "id": "hf-bldg-0058",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385716",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 58"
+    },
+    {
+      "id": "hf-bldg-0059",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385717",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 59"
+    },
+    {
+      "id": "hf-bldg-0060",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385715",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 60"
+    },
+    {
+      "id": "hf-bldg-0061",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385721",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 61"
+    },
+    {
+      "id": "hf-bldg-0062",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412377403",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（1 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 62"
+    },
+    {
+      "id": "hf-bldg-0063",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385686",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 63"
+    },
+    {
+      "id": "hf-bldg-0064",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385714",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 64"
+    },
+    {
+      "id": "hf-bldg-0065",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385720",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 65"
+    },
+    {
+      "id": "hf-bldg-0066",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385713",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 66"
+    },
+    {
+      "id": "hf-bldg-0067",
+      "reviewStatus": "needs-review",
+      "osmRef": "relation/18526503",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 67"
+    },
+    {
+      "id": "hf-bldg-0068",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385722",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 68"
+    },
+    {
+      "id": "hf-bldg-0069",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412363727",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（1 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 69"
+    },
+    {
+      "id": "hf-bldg-0070",
+      "reviewStatus": "needs-review",
+      "osmRef": "relation/18526502",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 70"
+    },
+    {
+      "id": "hf-bldg-0071",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412363728",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（1 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 71"
+    },
+    {
+      "id": "hf-bldg-0072",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385710",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 72"
+    },
+    {
+      "id": "hf-bldg-0073",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385711",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 73"
+    },
+    {
+      "id": "hf-bldg-0074",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385712",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 74"
+    },
+    {
+      "id": "hf-bldg-0075",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385708",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 75"
+    },
+    {
+      "id": "hf-bldg-0076",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385709",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 76"
+    },
+    {
+      "id": "hf-bldg-0077",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385707",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 77"
+    },
+    {
+      "id": "hf-bldg-0078",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349747270",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 78"
+    },
+    {
+      "id": "hf-bldg-0079",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412377406",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 79"
+    },
+    {
+      "id": "hf-bldg-0080",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349747271",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（6 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 80"
+    },
+    {
+      "id": "hf-bldg-0081",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385706",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 81"
+    },
+    {
+      "id": "hf-bldg-0082",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349747268",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 82"
+    },
+    {
+      "id": "hf-bldg-0083",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385705",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 83"
+    },
+    {
+      "id": "hf-bldg-0084",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1354345691",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 84"
+    },
+    {
+      "id": "hf-bldg-0085",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385704",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 85"
+    },
+    {
+      "id": "hf-bldg-0086",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412377393",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 86"
+    },
+    {
+      "id": "hf-bldg-0087",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412377391",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 87"
+    },
+    {
+      "id": "hf-bldg-0088",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412377394",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（1 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 88"
+    },
+    {
+      "id": "hf-bldg-0089",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412377392",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（1 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 89"
+    },
+    {
+      "id": "hf-bldg-0090",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350866723",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 90"
+    },
+    {
+      "id": "hf-bldg-0091",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385703",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 91"
+    },
+    {
+      "id": "hf-bldg-0092",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350866722",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 92"
+    },
+    {
+      "id": "hf-bldg-0093",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385702",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 93"
+    },
+    {
+      "id": "hf-bldg-0094",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385701",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 94"
+    },
+    {
+      "id": "hf-bldg-0095",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350866725",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 95"
+    },
+    {
+      "id": "hf-bldg-0096",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385700",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 96"
+    },
+    {
+      "id": "hf-bldg-0097",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385698",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 97"
+    },
+    {
+      "id": "hf-bldg-0098",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385699",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（7 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "一期（北区）未命名建筑 98"
+    },
+    {
+      "id": "hf-bldg-0099",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385691",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 99"
+    },
+    {
+      "id": "hf-bldg-0100",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385690",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 100"
+    },
+    {
+      "id": "hf-bldg-0101",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385692",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 101"
+    },
+    {
+      "id": "hf-bldg-0102",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178469",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 102"
+    },
+    {
+      "id": "hf-bldg-0103",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741928",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 103"
+    },
+    {
+      "id": "hf-bldg-0104",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741914",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 104"
+    },
+    {
+      "id": "hf-bldg-0105",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1349741915",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 105"
+    },
+    {
+      "id": "hf-bldg-0106",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180905",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 106"
+    },
+    {
+      "id": "hf-bldg-0107",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180902",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（5 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 107"
+    },
+    {
+      "id": "hf-bldg-0108",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385696",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 108"
+    },
+    {
+      "id": "hf-bldg-0109",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180903",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 109"
+    },
+    {
+      "id": "hf-bldg-0110",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1350180904",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 110"
+    },
+    {
+      "id": "hf-bldg-0111",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412385697",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（1 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 111"
+    },
+    {
+      "id": "hf-bldg-0112",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412364015",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 112"
+    },
+    {
+      "id": "hf-bldg-0113",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412363732",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（1 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 113"
+    },
+    {
+      "id": "hf-bldg-0114",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/1412364014",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 114"
+    },
+    {
+      "id": "hf-bldg-0115",
+      "reviewStatus": "needs-review",
+      "osmRef": "way/551178471",
+      "issues": [
+        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "OSM 未标注层数，楼高按占地面积估算，非实测值。"
+      ],
+      "references": [],
+      "modelName": "二期（南区）未命名建筑 115"
+    }
+  ]
+}

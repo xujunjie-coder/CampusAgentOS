@@ -1,0 +1,8 @@
+华凤校区三维地图（一期 + 二期）
+数据来源：OpenStreetMap（relation/19478636 西华师范大学(华凤校区) 及周边矢量要素）
+数据许可：© OpenStreetMap contributors，Open Database License 1.0
+https://www.openstreetmap.org/copyright
+模型说明：由 CampusAgentOS 基于 OSM 矢量轮廓与 EPSG:32648 局部米坐标自动生成白模（huafeng-campus.glb）。
+楼高依据 OSM building:levels（按 3.4m/层估算）或占地面积估算，非实测建筑立面。
+未命名建筑、重复楼名（如相邻公寓楼号）与出入口点位均标注待核验，请以现场指示为准。
+本页未调用腾讯或高德商业地图服务，未抓取商业卫星瓦片或 3D 模型。

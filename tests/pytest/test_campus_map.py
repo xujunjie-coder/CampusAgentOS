@@ -25,6 +25,9 @@ class TestCampusMap(ApiCase):
         assert self.fetch("/static/js/campus-map.js").code == 200
         response = self.fetch("/static/maps/xingshu-campus/xingshu-campus.glb")
         assert response.code == 200 and response.body[:4] == b"glTF"
+        huafeng_response = self.fetch("/static/maps/huafeng-campus/huafeng-campus.glb")
+        assert huafeng_response.code == 200 and huafeng_response.body[:4] == b"glTF"
+        assert b'id="mapCampusSwitch"' in page.body
 
     def test_all_buildings_have_review_records_without_claiming_real_3d(self):
         self.login()
@@ -51,6 +54,26 @@ def test_model_matches_manifest_and_has_every_selectable_building():
     names = {node.get("name") for node in gltf["nodes"]}
     assert all("feature__" + feature["id"] in names for feature in manifest["features"])
     assert not gltf.get("extensionsRequired")  # compatible with bundled GLTFLoader
+
+
+def test_huafeng_model_matches_manifest_and_has_review_records():
+    root = Path(__file__).resolve().parents[2] / "app/static/maps/huafeng-campus"
+    manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+    data = (root / "huafeng-campus.glb").read_bytes()
+    assert hashlib.sha256(data).hexdigest() == manifest["model"]["sha256"]
+    size, kind = struct.unpack_from("<II", data, 12)
+    assert kind == 0x4E4F534A
+    gltf = json.loads(data[20:20 + size])
+    names = {node.get("name") for node in gltf["nodes"]}
+    assert all("feature__" + feature["id"] in names for feature in manifest["features"])
+    assert not gltf.get("extensionsRequired")
+    review = json.loads((root / "buildings-review.json").read_text(encoding="utf-8"))
+    review_ids = [f["id"] for f in review["features"]]
+    assert len(review_ids) == len(set(review_ids)) == len(manifest["features"])
+    assert all(f["reviewStatus"] == "needs-review" and isinstance(f["issues"], list) for f in review["features"])
+    landmarks = json.loads((root / "landmarks.json").read_text(encoding="utf-8"))
+    assert len(landmarks["landmarks"]) >= 1
+    assert all(gate["status"] == "approximate" for gate in landmarks["landmarks"])
 
 
 def test_gate_markers_follow_reference_registration():

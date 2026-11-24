@@ -1,6 +1,8 @@
-# 行署校区三维地图
+# 校园三维地图（行署校区 / 华凤校区）
 
-平台入口 `/campus-map`，侧栏“行署校区三维地图”进入，须登录。使用 [SCSWiki 行署校区三维地图](https://scswiki.com/start/xingshu-campus-map) 的学生整理白模和 OpenStreetMap 矢量数据。
+平台入口 `/campus-map`，侧栏“校园三维地图”进入，须登录。支持顶部一键切换 **行署校区（老区）** 与 **华凤校区（新区，一期 + 二期）**（亦支持通过 `?campus=huafeng` 直达华凤校区）：
+- **行署校区**：使用 [SCSWiki 行署校区三维地图](https://scswiki.com/start/xingshu-campus-map) 的学生整理白模和 OpenStreetMap 矢量数据。
+- **华凤校区**：基于 OpenStreetMap（`relation/19478636 西华师范大学(华凤校区)`，ODbL 1.0）矢量轮廓与 `EPSG:32648` 局部米坐标，经 [build_huafeng_campus_map.mjs](../../scripts/build_huafeng_campus_map.mjs) 自动生成白模（115 栋建筑轮廓、53 栋已命名、62 栋待核验候选、5 处水体、53+ 块运动场、校内外道路与步行路），所有未命名楼块、重复楼名及出入口均登记在 `app/static/maps/huafeng-campus/buildings-review.json` 与 `landmarks.json` 中待核验。
 
 ## 本次实现
 

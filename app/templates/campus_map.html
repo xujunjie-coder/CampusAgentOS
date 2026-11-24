@@ -5,38 +5,65 @@
 {% block content %}
 <main class="campus-map-page">
     <header class="map-header">
-        <div>
+        <div class="map-header-main">
             <a class="map-back" href="/"><i class="fas fa-arrow-left" aria-hidden="true"></i> 对话大厅</a>
-            <h1>行署校区 <span>三维地图</span></h1>
+            <div class="map-title-row">
+                <h1 id="mapTitle">行署校区 <span>三维地图</span></h1>
+                <div id="mapCampusSwitch" class="map-campus-switch" role="group" aria-label="切换校区">
+                    <button id="mapCampusXingshu" type="button" data-campus="xingshu" aria-pressed="true">行署校区（老区）</button>
+                    <button id="mapCampusHuafeng" type="button" data-campus="huafeng" aria-pressed="false">华凤校区（新区）</button>
+                </div>
+            </div>
         </div>
-        <p class="map-notice">本地图由学生绘制，非官方。<br>建筑与校门信息待核验，请以现场指示为准。</p>
+        <p id="mapNotice" class="map-notice">本地图由学生绘制，非官方。<br>建筑与校门信息待核验，请以现场指示为准。</p>
     </header>
     <section id="campusMapShell" class="map-shell" aria-label="可交互校园地图">
         <div class="map-toolbar">
             <form id="mapSearchForm" class="map-search" role="search">
-                <label class="sr-only" for="mapSearch">搜索建筑或校门</label>
+                <label class="sr-only" for="mapSearch">搜索建筑、教学楼、湖泊广场或校门</label>
                 <i class="fas fa-search map-search-icon" aria-hidden="true"></i>
-                <input id="mapSearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mapSearchOptions" placeholder="搜索建筑、校门…" autocomplete="off" disabled>
+                <input id="mapSearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mapSearchOptions" placeholder="搜索教学楼、图书馆、湖泊广场、校门…" autocomplete="off" disabled>
                 <button id="mapSearchToggle" type="button" aria-label="展开建筑列表" aria-controls="mapSearchOptions" aria-expanded="false" disabled><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
-                <div id="mapSearchOptions" class="map-search-options" role="listbox" aria-label="建筑与校门" hidden></div>
+                <div id="mapSearchOptions" class="map-search-options" role="listbox" aria-label="建筑与重要地点" hidden></div>
             </form>
             <div class="map-view-switch" role="group" aria-label="地图视角">
                 <button id="mapPerspective" type="button" aria-pressed="true" disabled><i class="fas fa-cube" aria-hidden="true"></i> 三维</button>
                 <button id="mapTop" type="button" aria-pressed="false" disabled><i class="fas fa-map" aria-hidden="true"></i> 北向俯视</button>
             </div>
             <div class="map-toolbar-actions">
+                <button id="mapGuideToggle" type="button" aria-controls="mapGuidePanel" aria-pressed="false" disabled><i class="fas fa-list-ul" aria-hidden="true"></i> 导览目录</button>
                 <button id="mapMeasure" type="button" aria-controls="mapMeasurePanel" aria-pressed="false" disabled><i class="fas fa-ruler" aria-hidden="true"></i> 测距</button>
+                <button id="mapReset" type="button" title="恢复全校视角 (快捷键 0)" disabled><i class="fas fa-compress-arrows-alt" aria-hidden="true"></i> <span>复位</span></button>
                 <button id="mapFullscreen" type="button"><i class="fas fa-expand" aria-hidden="true"></i> <span>全屏</span></button>
             </div>
+        </div>
+        <div id="mapCategoryBar" class="map-category-bar" role="group" aria-label="按地点类别筛选高亮">
+            <button type="button" class="map-cat-pill is-active" data-category="all" aria-pressed="true"><span class="map-cat-dot is-all"></span>重点全景</button>
+            <button type="button" class="map-cat-pill" data-category="teaching" aria-pressed="false"><span class="map-cat-dot is-teaching"></span>主要教学楼 <em data-count="teaching">0</em></button>
+            <button type="button" class="map-cat-pill" data-category="landmark" aria-pressed="false"><span class="map-cat-dot is-landmark"></span>核心地标 <em data-count="landmark">0</em></button>
+            <button type="button" class="map-cat-pill" data-category="place" aria-pressed="false"><span class="map-cat-dot is-place"></span>湖泊广场 <em data-count="place">0</em></button>
+            <button type="button" class="map-cat-pill" data-category="canteen" aria-pressed="false"><span class="map-cat-dot is-canteen"></span>食堂餐饮 <em data-count="canteen">0</em></button>
+            <button type="button" class="map-cat-pill" data-category="dorm" aria-pressed="false"><span class="map-cat-dot is-dorm"></span>学生公寓 <em data-count="dorm">0</em></button>
+            <button type="button" class="map-cat-pill" data-category="gate" aria-pressed="false"><span class="map-cat-dot is-gate"></span>校门通道 <em data-count="gate">0</em></button>
         </div>
         <div id="mapStage" class="map-stage">
             <p id="mapStatus" role="status">正在加载三维地图…</p>
             <svg id="mapLabelLines" class="map-label-lines" aria-hidden="true"></svg>
-            <div id="mapLabelLayer" class="map-label-layer" aria-label="建筑名称标注"></div>
+            <div id="mapLabelLayer" class="map-label-layer" aria-label="建筑与重要地点名称标注"></div>
             <div id="mapStageBadge" class="map-stage-badge">
                 <i class="fas fa-layer-group" aria-hidden="true"></i>
                 <div><strong id="mapCount">三维视角</strong><span id="mapViewHint">拖动旋转 · 滚轮缩放</span></div>
             </div>
+            <aside id="mapGuidePanel" class="map-guide-panel" aria-label="重点地点导览目录" hidden>
+                <div class="map-guide-header">
+                    <div>
+                        <strong id="mapGuideTitle">重点地点导览</strong>
+                        <span id="mapGuideSubtitle">点击任意地点平滑聚焦</span>
+                    </div>
+                    <button id="mapGuideClose" type="button" aria-label="关闭导览目录">×</button>
+                </div>
+                <div id="mapGuideList" class="map-guide-list"></div>
+            </aside>
             <div id="mapControls" class="map-controls" aria-label="地图视角控制">
                 <button type="button" id="mapNorth" title="恢复模型北向俯视" aria-label="恢复模型北向俯视"><span id="mapCompass" aria-hidden="true">▲</span><small aria-hidden="true">N</small></button>
                 <div class="map-zoom">
@@ -46,8 +73,14 @@
             </div>
             <aside id="mapBuildingDetail" class="map-building-detail" aria-labelledby="mapDetailName" hidden>
                 <div class="map-detail-heading">
-                    <span class="map-detail-icon"><i id="mapDetailIcon" class="fas fa-building" aria-hidden="true"></i></span>
-                    <div><strong id="mapDetailName"></strong><span id="mapDetailReview" class="map-review-chip"></span></div>
+                    <span id="mapDetailIconWrap" class="map-detail-icon"><i id="mapDetailIcon" class="fas fa-building" aria-hidden="true"></i></span>
+                    <div>
+                        <strong id="mapDetailName"></strong>
+                        <div class="map-detail-tags">
+                            <span id="mapDetailCategory" class="map-cat-badge"></span>
+                            <span id="mapDetailReview" class="map-review-chip"></span>
+                        </div>
+                    </div>
                     <button id="mapCloseDetail" type="button" aria-label="关闭建筑详情">×</button>
                 </div>
                 <dl class="map-detail-stats">
@@ -55,7 +88,13 @@
                     <div id="mapDetailHeightRow"><dt>模型高度</dt><dd id="mapDetailHeight"></dd></div>
                 </dl>
                 <p id="mapDetailNote"></p>
-                <div class="map-detail-actions"><button id="mapDetailFocus" type="button"><i class="fas fa-crosshairs" aria-hidden="true"></i> 靠近查看</button><span id="mapDetailId"></span></div>
+                <div class="map-detail-actions">
+                    <div class="map-detail-btn-group">
+                        <button id="mapDetailFocus" type="button"><i class="fas fa-crosshairs" aria-hidden="true"></i> 靠近查看</button>
+                        <button id="mapDetailMeasure" type="button" class="is-secondary"><i class="fas fa-ruler" aria-hidden="true"></i> 从此测距</button>
+                    </div>
+                    <span id="mapDetailId"></span>
+                </div>
             </aside>
             <aside id="mapMeasurePanel" class="map-measure-panel" aria-label="模型内直线测距" hidden>
                 <div class="map-measure-heading"><i class="fas fa-ruler" aria-hidden="true"></i><strong>模型内直线距离</strong><button id="mapClearMeasure" type="button" disabled>清除</button></div>
@@ -65,19 +104,20 @@
         </div>
         <div class="map-footer">
             <ul class="map-legend" aria-label="地图图例">
-                <li><span class="map-swatch map-swatch-building"></span>建筑</li>
+                <li><span class="map-swatch map-swatch-teaching"></span>教学楼</li>
+                <li><span class="map-swatch map-swatch-landmark"></span>核心地标</li>
+                <li><span class="map-swatch map-swatch-building"></span>公寓/其他</li>
                 <li><span class="map-swatch map-swatch-road"></span>道路</li>
-                <li><span class="map-swatch map-swatch-path"></span>步行路</li>
                 <li><span class="map-swatch map-swatch-sports"></span>运动场</li>
                 <li><span class="map-swatch map-swatch-water"></span>水体</li>
-                <li><span class="map-swatch map-swatch-gate"></span>示意校门</li>
+                <li><span class="map-swatch map-swatch-gate"></span>校门/广场</li>
             </ul>
             <span id="mapSelection" aria-live="polite">点击楼块或搜索名称查看详情</span>
         </div>
     </section>
     <footer class="map-credit">
-        <span>学生整理白模与名称来自 <a href="https://scswiki.com/start/xingshu-campus-map" target="_blank" rel="noopener noreferrer">SCSWiki</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>）。道路与地面数据 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors（ODbL）</a>。</span>
-        <a href="/static/maps/xingshu-campus/NOTICE.txt">资源与许可说明</a>
+        <span id="mapCreditText">学生整理白模与名称来自 <a href="https://scswiki.com/start/xingshu-campus-map" target="_blank" rel="noopener noreferrer">SCSWiki</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>）。道路与地面数据 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors（ODbL）</a>。</span>
+        <a id="mapNoticeLink" href="/static/maps/xingshu-campus/NOTICE.txt">资源与许可说明</a>
     </footer>
 </main>
 {% end %}
