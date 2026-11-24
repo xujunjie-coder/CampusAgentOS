@@ -94,7 +94,7 @@ class TestChannelSentiment(ApiCase):
         assert any('光线不足' in i['summary'] for i in calls)
         assert qq.comment_job(qq.items(run,posts_only=True)['list'][0]['id']) is None
         page=self.fetch('/admin/sentiment')
-        assert page.code==200 and '分析频道帖子'.encode() in page.body
+        assert page.code==200 and b'id="btnReviewQQ"' in page.body
 
     def test_invalid_evidence_is_retryable_not_normal(self):
         run=self.make_run('RiskEvidence')
