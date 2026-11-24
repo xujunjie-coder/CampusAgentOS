@@ -1,9 +1,5 @@
 const assert = require('node:assert/strict');
-const { place, isTopView } = require('../app/static/js/campus-map-labels.js');
-assert.equal(isTopView(0.001),true);
-assert.equal(isTopView(0.1),false,'tilting away from overhead hides names');
-assert.equal(isTopView(0.95),false);
-assert.equal(isTopView(NaN),false);
+const { place, scaleDistance, planDistance } = require('../app/static/js/campus-map-labels.js');
 const a = {id:'a',x:200,y:200,w:90,h:26,priority:0};
 const b = {...a,id:'b',priority:1000};
 const result = place([a,b],600,400,'smart',[]);
@@ -17,5 +13,9 @@ const cluster = Array.from({length:42},(_,i)=>({...a,id:String(i).padStart(2,'0'
 assert.equal(place(cluster,600,400,'all',[]).length,42,'all mode retains every onscreen building name');
 const reserved = {x:100,y:100,w:200,h:200};
 assert.deepEqual(place([a],600,400,'smart',[reserved]),[],'detail panel space must stay free');
+assert.deepEqual(place([{...a,alwaysShow:true}],600,400,'smart',[reserved]),[],'landmarks cannot cover controls');
+assert.equal(place([{...a,x:10}],600,400,'smart',[])[0].x,5,'labels stay inside the viewport near an edge');
 assert.deepEqual(place(cluster,600,400,'smart',[]),place(cluster,600,400,'smart',[]),'placement is deterministic');
-console.log('Campus map label placement checks passed.');
+assert.deepEqual([0, 0.48, 9, 20, 149, 782].map(scaleDistance), [0, 0.2, 5, 20, 100, 500]);
+assert.equal(planDistance({x: 12, y: 30, z: -40}, {x: 42, y: 0, z: 0}), 50);
+console.log('Campus map label placement, scale and plan distance checks passed.');

@@ -1,0 +1,2479 @@
+{
+  "schemaVersion": 1,
+  "datasetId": "cwnu-huafeng",
+  "releaseId": "osm-huafeng-v1",
+  "status": "needs-review",
+  "generatedAt": "2026-11-22T13:49:15.893Z",
+  "coordinateSystem": {
+    "unit": "m",
+    "axes": {
+      "x": "east",
+      "y": "up",
+      "z": "south"
+    },
+    "north": [
+      0,
+      0,
+      -1
+    ],
+    "logicalGroundZ": 0,
+    "sourceCrs": "EPSG:32648",
+    "originWgs84": {
+      "longitude": 106.0606474,
+      "latitude": 30.8196104,
+      "height": null
+    }
+  },
+  "presentation": {
+    "style": "campus-white-box",
+    "renderedRoofCards": false
+  },
+  "model": {
+    "uri": "huafeng-campus.glb",
+    "bytes": 762748,
+    "sha256": "c40fd180deb3b55ee14e827d4d0d32d8883155e670ab6cee80e16fd9c19374e3",
+    "triangles": 8111,
+    "nodes": 122,
+    "meshes": 122,
+    "featureCount": 115
+  },
+  "referenceMap": {
+    "source": "OpenStreetMap relation/19478636 (ODbL 1.0)",
+    "defaultVisible": false,
+    "campusBoundaryLocalEN": [
+      [
+        -394.346,
+        105.704
+      ],
+      [
+        -400.351,
+        -66.744
+      ],
+      [
+        452.765,
+        4.707
+      ],
+      [
+        959.567,
+        659.567
+      ],
+      [
+        811.353,
+        774.089
+      ],
+      [
+        -82.497,
+        502.873
+      ],
+      [
+        -158.469,
+        415.076
+      ],
+      [
+        -211.788,
+        314.947
+      ],
+      [
+        -275.679,
+        202.792
+      ],
+      [
+        -321.501,
+        168.486
+      ],
+      [
+        -373.224,
+        162.388
+      ],
+      [
+        -509.046,
+        -119.998
+      ],
+      [
+        -483.456,
+        -173.714
+      ],
+      [
+        -424.289,
+        -429.918
+      ],
+      [
+        -8.827,
+        -465.867
+      ],
+      [
+        25.203,
+        -511.466
+      ],
+      [
+        695.6,
+        -728.353
+      ],
+      [
+        718.232,
+        -721.054
+      ],
+      [
+        465.243,
+        -56.935
+      ],
+      [
+        418.888,
+        -22.051
+      ]
+    ]
+  },
+  "semanticLayers": [
+    {
+      "id": "campus-ground",
+      "nodeName": "layer__campus-ground",
+      "label": "校园地面",
+      "triangles": 16,
+      "sourceWayCount": 2
+    },
+    {
+      "id": "grass",
+      "nodeName": "layer__grass",
+      "label": "绿地与林地",
+      "triangles": 266,
+      "sourceWayCount": 40
+    },
+    {
+      "id": "internal-roads",
+      "nodeName": "layer__internal-roads",
+      "label": "校内车行道路",
+      "triangles": 2218,
+      "sourceWayCount": 81
+    },
+    {
+      "id": "footpaths",
+      "nodeName": "layer__footpaths",
+      "label": "步行路与台阶",
+      "triangles": 1318,
+      "sourceWayCount": 35
+    },
+    {
+      "id": "external-roads",
+      "nodeName": "layer__external-roads",
+      "label": "校园外围道路",
+      "triangles": 1258,
+      "sourceWayCount": 53
+    },
+    {
+      "id": "water",
+      "nodeName": "layer__water",
+      "label": "水体与泳池",
+      "triangles": 89,
+      "sourceWayCount": 5
+    },
+    {
+      "id": "sports",
+      "nodeName": "layer__sports",
+      "label": "运动场地",
+      "triangles": 155,
+      "sourceWayCount": 53
+    }
+  ],
+  "features": [
+    {
+      "id": "hf-bldg-0001",
+      "name": "11公寓",
+      "osmRef": "way/551178474",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        523.454,
+        -524.339
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0002",
+      "name": "12公寓",
+      "osmRef": "way/551178472",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        393.331,
+        -482.967
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0003",
+      "name": "12公寓",
+      "osmRef": "way/551178473",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        462.329,
+        -526.968
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0004",
+      "name": "14公寓",
+      "osmRef": "way/551178475",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        539.179,
+        -563.011
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0005",
+      "name": "15公寓",
+      "osmRef": "way/551178476",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        454.169,
+        -572.587
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0006",
+      "name": "16公寓",
+      "osmRef": "way/551178477",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        367.77,
+        -518.632
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0007",
+      "name": "17公寓",
+      "osmRef": "way/551178480",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        558.41,
+        -603.977
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0008",
+      "name": "18公寓",
+      "osmRef": "way/551178479",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        443.429,
+        -610.861
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0009",
+      "name": "19公寓",
+      "osmRef": "way/551178478",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        350.317,
+        -560.449
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0010",
+      "name": "20公寓",
+      "osmRef": "way/1349741911",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        286.276,
+        -561.441
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0011",
+      "name": "21公寓",
+      "osmRef": "way/1349741912",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        292.055,
+        -486.056
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0012",
+      "name": "22公寓",
+      "osmRef": "way/1349741913",
+      "campusZone": "二期（南区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        254.58,
+        -448.059
+      ],
+      "levels": 8
+    },
+    {
+      "id": "hf-bldg-0013",
+      "name": "八公寓",
+      "osmRef": "way/1350180873",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        764.032,
+        457.662
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0014",
+      "name": "办公大楼",
+      "osmRef": "way/1349747269",
+      "campusZone": "一期（北区）",
+      "category": "landmark",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        532.212,
+        151.331
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0015",
+      "name": "博物馆（校史馆）",
+      "osmRef": "relation/19323481",
+      "campusZone": "二期（南区）",
+      "category": "landmark",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        317.903,
+        -156.234
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0016",
+      "name": "朝阳楼",
+      "osmRef": "way/1349747311",
+      "campusZone": "一期（北区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        414.8,
+        351.657
+      ],
+      "levels": 10
+    },
+    {
+      "id": "hf-bldg-0017",
+      "name": "锅炉房",
+      "osmRef": "way/1350180886",
+      "campusZone": "一期（北区）",
+      "category": "service",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        632.61,
+        642.685
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0018",
+      "name": "华凤园餐厅",
+      "osmRef": "way/1350180884",
+      "campusZone": "一期（北区）",
+      "category": "canteen",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        669.721,
+        628.999
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0019",
+      "name": "化学楼",
+      "osmRef": "way/551178509",
+      "campusZone": "一期（北区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        596.545,
+        230.65
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0020",
+      "name": "进德楼",
+      "osmRef": "way/1350180899",
+      "campusZone": "二期（南区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        376.021,
+        -379.618
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0021",
+      "name": "九公寓",
+      "osmRef": "way/1350180872",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        726.979,
+        409.923
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0022",
+      "name": "开水房",
+      "osmRef": "way/1350180885",
+      "campusZone": "一期（北区）",
+      "category": "service",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        609.048,
+        626.654
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0023",
+      "name": "李园餐厅（二期食堂）",
+      "osmRef": "way/551178470",
+      "campusZone": "二期（南区）",
+      "category": "canteen",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        601.039,
+        -510.667
+      ],
+      "levels": 4
+    },
+    {
+      "id": "hf-bldg-0024",
+      "name": "六公寓",
+      "osmRef": "way/1350180874",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        806.628,
+        510.316
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0025",
+      "name": "美术楼",
+      "osmRef": "way/551178492",
+      "campusZone": "一期（北区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        350.849,
+        183.9
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0026",
+      "name": "宁静楼",
+      "osmRef": "way/1350180901",
+      "campusZone": "二期（南区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        324.487,
+        -304.895
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0027",
+      "name": "配电室",
+      "osmRef": "way/1350180870",
+      "campusZone": "一期（北区）",
+      "category": "service",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        664.867,
+        340.559
+      ],
+      "levels": 2
+    },
+    {
+      "id": "hf-bldg-0028",
+      "name": "配电室",
+      "osmRef": "way/1350180898",
+      "campusZone": "二期（南区）",
+      "category": "service",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        32.262,
+        -184.343
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0029",
+      "name": "七公寓",
+      "osmRef": "way/1350180875",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        782.107,
+        480.212
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0030",
+      "name": "三公寓",
+      "osmRef": "way/1350180880",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        739.406,
+        687.199
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0031",
+      "name": "生物科学学院（生物楼）",
+      "osmRef": "way/1412385689",
+      "campusZone": "二期（南区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        283.578,
+        -65.259
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0032",
+      "name": "十公寓",
+      "osmRef": "way/1350180871",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        694.501,
+        368.803
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0033",
+      "name": "实训楼",
+      "osmRef": "relation/19323339",
+      "campusZone": "二期（南区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        156.287,
+        -408.966
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0034",
+      "name": "四公寓",
+      "osmRef": "way/1350180879",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        777.419,
+        599.503
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0035",
+      "name": "体育中心",
+      "osmRef": "way/551178488",
+      "campusZone": "一期（北区）",
+      "category": "landmark",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        545.717,
+        552.296
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0036",
+      "name": "体育中心",
+      "osmRef": "way/228941785",
+      "campusZone": "二期（南区）",
+      "category": "landmark",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        485.355,
+        -416.45
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0037",
+      "name": "天文台",
+      "osmRef": "way/1412363724",
+      "campusZone": "一期（北区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        196.964,
+        352.237
+      ],
+      "levels": 2
+    },
+    {
+      "id": "hf-bldg-0038",
+      "name": "图书馆",
+      "osmRef": "way/551178499",
+      "campusZone": "一期（北区）",
+      "category": "landmark",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        246.144,
+        248.301
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0039",
+      "name": "文科楼",
+      "osmRef": "way/1350866721",
+      "campusZone": "一期（北区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        267.342,
+        17.598
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0040",
+      "name": "五公寓",
+      "osmRef": "way/1350180876",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        833.256,
+        554.982
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0041",
+      "name": "校医院",
+      "osmRef": "relation/18526501",
+      "campusZone": "一期（北区）",
+      "category": "landmark",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        632.558,
+        296.233
+      ],
+      "levels": 4
+    },
+    {
+      "id": "hf-bldg-0042",
+      "name": "新食堂",
+      "osmRef": "way/1412377390",
+      "campusZone": "二期（南区）",
+      "category": "canteen",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        -315.647,
+        -266.005
+      ],
+      "levels": 2
+    },
+    {
+      "id": "hf-bldg-0043",
+      "name": "新闻传播学院",
+      "osmRef": "way/1412385688",
+      "campusZone": "一期（北区）",
+      "category": "teaching",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        219.109,
+        29.182
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0044",
+      "name": "修业楼",
+      "osmRef": "way/1350180900",
+      "campusZone": "二期（南区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        349.881,
+        -336.586
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0045",
+      "name": "一公寓",
+      "osmRef": "way/1350180878",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        798.391,
+        659.113
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0046",
+      "name": "一公寓",
+      "osmRef": "way/1350180877",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        850.78,
+        618.329
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0047",
+      "name": "音乐楼",
+      "osmRef": "way/551178493",
+      "campusZone": "一期（北区）",
+      "category": "teaching",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        366.54,
+        132.206
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0048",
+      "name": "钟鼓楼",
+      "osmRef": "way/1350866719",
+      "campusZone": "二期（南区）",
+      "category": "landmark",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        184.114,
+        -173.577
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0049",
+      "name": "专家楼（二）",
+      "osmRef": "way/1349741924",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        9.897,
+        125.861
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0050",
+      "name": "专家楼（三）",
+      "osmRef": "way/1349741925",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        36.885,
+        153.908
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0051",
+      "name": "专家楼（四）",
+      "osmRef": "way/1349741926",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        63.501,
+        185.828
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0052",
+      "name": "专家楼（五）",
+      "osmRef": "way/1349741927",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        92.295,
+        219.284
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0053",
+      "name": "专家楼（一）",
+      "osmRef": "way/1349741923",
+      "campusZone": "一期（北区）",
+      "category": "dorm",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "named",
+      "centerLocalEN": [
+        -17.974,
+        93.087
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0054",
+      "name": "一期（北区）未命名建筑 54",
+      "osmRef": "way/1350180890",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        807.701,
+        732.859
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0055",
+      "name": "一期（北区）未命名建筑 55",
+      "osmRef": "way/1350180891",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        906.95,
+        661.183
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0056",
+      "name": "一期（北区）未命名建筑 56",
+      "osmRef": "way/1412385719",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        54.266,
+        485.953
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0057",
+      "name": "一期（北区）未命名建筑 57",
+      "osmRef": "way/1412385718",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -24.899,
+        458.664
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0058",
+      "name": "一期（北区）未命名建筑 58",
+      "osmRef": "way/1412385716",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        57.747,
+        451.052
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0059",
+      "name": "一期（北区）未命名建筑 59",
+      "osmRef": "way/1412385717",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -9.652,
+        426.521
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0060",
+      "name": "一期（北区）未命名建筑 60",
+      "osmRef": "way/1412385715",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        45.079,
+        411.816
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0061",
+      "name": "一期（北区）未命名建筑 61",
+      "osmRef": "way/1412385721",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -74.511,
+        408.379
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0062",
+      "name": "一期（北区）未命名建筑 62",
+      "osmRef": "way/1412377403",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        512.102,
+        401.27
+      ],
+      "levels": 1
+    },
+    {
+      "id": "hf-bldg-0063",
+      "name": "一期（北区）未命名建筑 63",
+      "osmRef": "way/1412385686",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        411.631,
+        382.184
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0064",
+      "name": "一期（北区）未命名建筑 64",
+      "osmRef": "way/1412385714",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        66.682,
+        380.024
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0065",
+      "name": "一期（北区）未命名建筑 65",
+      "osmRef": "way/1412385720",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -59.876,
+        374.409
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0066",
+      "name": "一期（北区）未命名建筑 66",
+      "osmRef": "way/1412385713",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        88.461,
+        352.229
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0067",
+      "name": "一期（北区）未命名建筑 67",
+      "osmRef": "relation/18526503",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        463.855,
+        351.371
+      ],
+      "levels": 4
+    },
+    {
+      "id": "hf-bldg-0068",
+      "name": "一期（北区）未命名建筑 68",
+      "osmRef": "way/1412385722",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -129.478,
+        350.29
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0069",
+      "name": "一期（北区）未命名建筑 69",
+      "osmRef": "way/1412363727",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        190.682,
+        337.622
+      ],
+      "levels": 1
+    },
+    {
+      "id": "hf-bldg-0070",
+      "name": "一期（北区）未命名建筑 70",
+      "osmRef": "relation/18526502",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        368.533,
+        337.299
+      ],
+      "levels": 4
+    },
+    {
+      "id": "hf-bldg-0071",
+      "name": "一期（北区）未命名建筑 71",
+      "osmRef": "way/1412363728",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        188.067,
+        325.18
+      ],
+      "levels": 1
+    },
+    {
+      "id": "hf-bldg-0072",
+      "name": "一期（北区）未命名建筑 72",
+      "osmRef": "way/1412385710",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -70.69,
+        321.315
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0073",
+      "name": "一期（北区）未命名建筑 73",
+      "osmRef": "way/1412385711",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -41.753,
+        311.841
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0074",
+      "name": "一期（北区）未命名建筑 74",
+      "osmRef": "way/1412385712",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -22.12,
+        277.068
+      ],
+      "levels": 2
+    },
+    {
+      "id": "hf-bldg-0075",
+      "name": "一期（北区）未命名建筑 75",
+      "osmRef": "way/1412385708",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -126.091,
+        260.374
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0076",
+      "name": "一期（北区）未命名建筑 76",
+      "osmRef": "way/1412385709",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -113.12,
+        217.469
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0077",
+      "name": "一期（北区）未命名建筑 77",
+      "osmRef": "way/1412385707",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -168.58,
+        182.81
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0078",
+      "name": "一期（北区）未命名建筑 78",
+      "osmRef": "way/1349747270",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        548.757,
+        178.946
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0079",
+      "name": "一期（北区）未命名建筑 79",
+      "osmRef": "way/1412377406",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        336.21,
+        155.117
+      ],
+      "levels": 2
+    },
+    {
+      "id": "hf-bldg-0080",
+      "name": "一期（北区）未命名建筑 80",
+      "osmRef": "way/1349747271",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        529.775,
+        149.912
+      ],
+      "levels": 6
+    },
+    {
+      "id": "hf-bldg-0081",
+      "name": "一期（北区）未命名建筑 81",
+      "osmRef": "way/1412385706",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -181.512,
+        143.522
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0082",
+      "name": "一期（北区）未命名建筑 82",
+      "osmRef": "way/1349747268",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        510.384,
+        128.062
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0083",
+      "name": "一期（北区）未命名建筑 83",
+      "osmRef": "way/1412385705",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -185.248,
+        113.482
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0084",
+      "name": "一期（北区）未命名建筑 84",
+      "osmRef": "way/1354345691",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        379.553,
+        112.434
+      ],
+      "levels": 2
+    },
+    {
+      "id": "hf-bldg-0085",
+      "name": "一期（北区）未命名建筑 85",
+      "osmRef": "way/1412385704",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -190.086,
+        81.874
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0086",
+      "name": "一期（北区）未命名建筑 86",
+      "osmRef": "way/1412377393",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        459.711,
+        80.4
+      ],
+      "levels": 2
+    },
+    {
+      "id": "hf-bldg-0087",
+      "name": "一期（北区）未命名建筑 87",
+      "osmRef": "way/1412377391",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        431.89,
+        77.644
+      ],
+      "levels": 2
+    },
+    {
+      "id": "hf-bldg-0088",
+      "name": "一期（北区）未命名建筑 88",
+      "osmRef": "way/1412377394",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        468.331,
+        77.324
+      ],
+      "levels": 1
+    },
+    {
+      "id": "hf-bldg-0089",
+      "name": "一期（北区）未命名建筑 89",
+      "osmRef": "way/1412377392",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        424.051,
+        73.801
+      ],
+      "levels": 1
+    },
+    {
+      "id": "hf-bldg-0090",
+      "name": "一期（北区）未命名建筑 90",
+      "osmRef": "way/1350866723",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        334.131,
+        63.669
+      ],
+      "levels": 4
+    },
+    {
+      "id": "hf-bldg-0091",
+      "name": "一期（北区）未命名建筑 91",
+      "osmRef": "way/1412385703",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -194.716,
+        51.831
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0092",
+      "name": "一期（北区）未命名建筑 92",
+      "osmRef": "way/1350866722",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        229.487,
+        40.344
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0093",
+      "name": "一期（北区）未命名建筑 93",
+      "osmRef": "way/1412385702",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -307.587,
+        35.42
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0094",
+      "name": "一期（北区）未命名建筑 94",
+      "osmRef": "way/1412385701",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -212.783,
+        25.429
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0095",
+      "name": "一期（北区）未命名建筑 95",
+      "osmRef": "way/1350866725",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        235.791,
+        17.502
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0096",
+      "name": "一期（北区）未命名建筑 96",
+      "osmRef": "way/1412385700",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -317.998,
+        2.873
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0097",
+      "name": "一期（北区）未命名建筑 97",
+      "osmRef": "way/1412385698",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -228.355,
+        -23.2
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0098",
+      "name": "一期（北区）未命名建筑 98",
+      "osmRef": "way/1412385699",
+      "campusZone": "一期（北区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -310.571,
+        -30.864
+      ],
+      "levels": 7
+    },
+    {
+      "id": "hf-bldg-0099",
+      "name": "二期（南区）未命名建筑 99",
+      "osmRef": "way/1412385691",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        270.756,
+        -98.37
+      ],
+      "levels": 4
+    },
+    {
+      "id": "hf-bldg-0100",
+      "name": "二期（南区）未命名建筑 100",
+      "osmRef": "way/1412385690",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        286.589,
+        -124.824
+      ],
+      "levels": 2
+    },
+    {
+      "id": "hf-bldg-0101",
+      "name": "二期（南区）未命名建筑 101",
+      "osmRef": "way/1412385692",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        276.247,
+        -133.277
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0102",
+      "name": "二期（南区）未命名建筑 102",
+      "osmRef": "way/551178469",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        408.858,
+        -164.779
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0103",
+      "name": "二期（南区）未命名建筑 103",
+      "osmRef": "way/1349741928",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        16.696,
+        -261.088
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0104",
+      "name": "二期（南区）未命名建筑 104",
+      "osmRef": "way/1349741914",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        423.094,
+        -270.378
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0105",
+      "name": "二期（南区）未命名建筑 105",
+      "osmRef": "way/1349741915",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        413.817,
+        -275.205
+      ],
+      "levels": null
+    },
+    {
+      "id": "hf-bldg-0106",
+      "name": "二期（南区）未命名建筑 106",
+      "osmRef": "way/1350180905",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        301.316,
+        -297.546
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0107",
+      "name": "二期（南区）未命名建筑 107",
+      "osmRef": "way/1350180902",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        264.804,
+        -299.167
+      ],
+      "levels": 5
+    },
+    {
+      "id": "hf-bldg-0108",
+      "name": "二期（南区）未命名建筑 108",
+      "osmRef": "way/1412385696",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        352.468,
+        -307.903
+      ],
+      "levels": 4
+    },
+    {
+      "id": "hf-bldg-0109",
+      "name": "二期（南区）未命名建筑 109",
+      "osmRef": "way/1350180903",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        327.092,
+        -329.16
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0110",
+      "name": "二期（南区）未命名建筑 110",
+      "osmRef": "way/1350180904",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        355.671,
+        -365.252
+      ],
+      "levels": 3
+    },
+    {
+      "id": "hf-bldg-0111",
+      "name": "二期（南区）未命名建筑 111",
+      "osmRef": "way/1412385697",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        170.259,
+        -367.647
+      ],
+      "levels": 1
+    },
+    {
+      "id": "hf-bldg-0112",
+      "name": "二期（南区）未命名建筑 112",
+      "osmRef": "way/1412364015",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -349.807,
+        -391.602
+      ],
+      "levels": 4
+    },
+    {
+      "id": "hf-bldg-0113",
+      "name": "二期（南区）未命名建筑 113",
+      "osmRef": "way/1412363732",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -98.8,
+        -394.804
+      ],
+      "levels": 1
+    },
+    {
+      "id": "hf-bldg-0114",
+      "name": "二期（南区）未命名建筑 114",
+      "osmRef": "way/1412364014",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M2",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "B",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        -222.125,
+        -401.336
+      ],
+      "levels": 4
+    },
+    {
+      "id": "hf-bldg-0115",
+      "name": "二期（南区）未命名建筑 115",
+      "osmRef": "way/551178471",
+      "campusZone": "二期（南区）",
+      "category": "candidate",
+      "modelGrade": "M1+",
+      "status": "needs-review",
+      "confidence": {
+        "xy": "B",
+        "z": "C",
+        "roof": "C"
+      },
+      "verification": "candidate",
+      "centerLocalEN": [
+        598.876,
+        -646.645
+      ],
+      "levels": null
+    }
+  ]
+}

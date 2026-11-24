@@ -40,6 +40,24 @@ class TestAvatarVtuber(ApiCase):
         assert resp.code == 200
         assert resp.body[:4] == b"glTF", "VRM/glTF 二进制魔数损坏"
         assert len(resp.body) > 1000000, "模型文件过小，疑似下载不完整"
+        vroid = self.fetch("/static/vendor/three/models/vroid-sample-b.vrm", raise_error=False)
+        assert vroid.code == 200 and vroid.body[:4] == b"glTF"
+
+    def test_live2d_local_vendor(self):
+        prefix = "/static/vendor/live2d/"
+        model = prefix + "models/Haru/"
+        config = self.fetch(model + "Haru.model3.json", raise_error=False)
+        assert config.code == 200
+        files = self._json(config)["FileReferences"]
+        assert files["Motions"]["Wave"][0]["File"] == "motions/haru_g_m12.motion3.json"
+        assert self.fetch(model + files["Moc"]).body.startswith(b"MOC3")
+        wave = self._json(self.fetch(model + files["Motions"]["Wave"][0]["File"]))
+        wrist_curves = [curve for curve in wave["Curves"] if curve["Id"] in ("ParamHandAngleL", "ParamHandAngleR")]
+        assert len(wrist_curves) == 2 and all(len(curve["Segments"]) > 10 for curve in wrist_curves)
+        html = self.fetch("/avatar").body.decode("utf-8")
+        for filename in ("pixi.min.js", "live2dcubismcore.min.js", "cubism4.min.js"):
+            assert prefix + filename in html
+            assert self.fetch(prefix + filename, raise_error=False).code == 200
 
     def test_page_and_js_reference_local_model(self):
         resp = self.fetch("/static/js/avatar.js", raise_error=False)
