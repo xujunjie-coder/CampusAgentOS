@@ -1,0 +1,4 @@
+<nav class="collect-tabs" aria-label="采集类型">
+    <a href="/collect/web" class="collect-tab{% if collect_mode == 'web' %} is-active{% end %}" {% if collect_mode == 'web' %}aria-current="page"{% end %}><i class="fas fa-globe"></i> 网页采集</a>
+    <a href="/collect/qq" class="collect-tab{% if collect_mode == 'qq' %} is-active{% end %}" {% if collect_mode == 'qq' %}aria-current="page"{% end %}><i class="fab fa-qq"></i> QQ 频道</a>
+</nav>

@@ -121,6 +121,17 @@
                     </div>
                 </div>
 
+                <details class="chat-collaboration" id="collaborationGuide">
+                    <summary><i class="fas fa-project-diagram"></i> 子智能体协同 · 什么时候用？</summary>
+                    <p>适合把复杂问题分成 2–3 路查资料，再由当前助理汇总。例如比较升学与就业方案，或分别查申请条件和材料。简单问答、一次班车查询直接提问即可。</p>
+                    <p>子智能体使用当前助理已启用的查询工具和绑定知识库，每个子任务最多等待 120 秒；协同会增加模型调用量。它不会自动联系其他数字员工，也不会代办申请。</p>
+                    <label><input type="checkbox" id="collaborationPreferred"> 本轮协同优先</label>
+                    <span id="collaborationHint" role="status"></span>
+                    <div class="chat-collaboration-examples">
+                        <button type="button" data-collaboration-example="请分两路检索奖学金的申请条件和申请材料，保留资料年份，最后汇总成核对清单，并标出需要向学院确认的事项。">奖学金申请核对</button>
+                        <button type="button" data-collaboration-example="我正在比较考研和就业，请分别梳理准备事项与时间安排，再汇总成对照表。开始前请先询问我的年级、专业和目标。">升学就业方案比较</button>
+                    </div>
+                </details>
                 <form id="composerForm" class="layui-form">
                     {% module xsrf_form_html() %}
                     <div class="chat-composer-box">

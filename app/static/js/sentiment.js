@@ -15,7 +15,7 @@
     var C = window.Console;
     var LABELS = { high: '高风险', watch: '关注', normal: '常规', error: '待重试' };
     var state = {
-        ws: null, reviews: null, filter: '', sound: localStorage.getItem('ck_sentiment_sound') === '1',
+        ws: null, reviews: null, filter: '', qqOnly:false, sound: localStorage.getItem('ck_sentiment_sound') === '1',
         notify: false, knownHigh: {}, retry: 0, firstPush: true
     };
 
@@ -71,7 +71,7 @@
             ? '<a href="' + C.esc(r.url) + '" target="_blank" rel="noopener">' + C.esc(r.title || '（无标题）') + '</a>'
             : C.esc(r.title || '（无标题）');
         return '<div class="ck-stream-row' + (level === 'high' ? ' is-high' : '') +
-            '" data-level="' + C.esc(level) + '" data-id="' + C.esc(r.id) + '">' +
+            '" data-level="' + C.esc(level) + '" data-source="' + C.esc(r.source_name || '') + '" data-id="' + C.esc(r.id) + '">' +
             '<div class="ck-stream-main">' +
             '<div class="ck-stream-title">' + title + '</div>' +
             '<div class="ck-stream-meta">' +
@@ -79,10 +79,9 @@
             '<span><i class="fas fa-rss"></i> ' + C.esc(r.source_name || '未知信源') + '</span>' +
             '<span><i class="fas fa-clock"></i> ' + C.esc(C.fmtTime(r.reviewed_at)) + '</span>' +
             '</div>' +
-            (r.reason ? '<div class="ck-stream-reason"><b>分析结论：</b>' + C.esc(r.reason) +
-                (r.evidence ? '<br><b>证据片段：</b>' + C.esc(r.evidence) : '') + '</div>' : '') +
+            (r.reason ? '<div class="ck-stream-reason">' + C.esc(r.reason) +
+                (r.evidence ? '<details class="sentiment-evidence"><summary>原文依据</summary><blockquote>' + C.esc(r.evidence) + '</blockquote></details>' : '') + '</div>' : '') +
             '</div>' +
-            '<div class="ck-stream-side"><span class="ck-badge ' + C.esc(level) + '">#' + C.esc(r.id) + '</span></div>' +
             '</div>';
     }
 
@@ -94,6 +93,7 @@
     function countsFromDom() {
         var counts = { high: 0, watch: 0, normal: 0, error: 0 };
         domRows().forEach(function (row) {
+            if (state.qqOnly && (row.getAttribute('data-source') || '').indexOf('QQ频道 · ') !== 0) return;
             var lv = row.getAttribute('data-level');
             counts[lv] = (counts[lv] || 0) + 1;
         });
@@ -110,7 +110,7 @@
         var failed = counts.error || 0;
         warning.hidden = !failed;
         warning.textContent = failed
-            ? '当前列表有 ' + C.fmtNum(failed) + ' 条舆情分析待重试。点击「分析待处理条目」可重新分析。'
+            ? '点击「开始分析」重试'
             : '';
     }
 
@@ -120,7 +120,8 @@
         if (state.reviews === null) {
             var shown = 0;
             domRows().forEach(function (row) {
-                var hit = !state.filter || row.getAttribute('data-level') === state.filter;
+                var hit = (!state.filter || row.getAttribute('data-level') === state.filter) &&
+                    (!state.qqOnly || (row.getAttribute('data-source') || '').indexOf('QQ频道 · ') === 0);
                 row.style.display = hit ? '' : 'none';
                 if (hit) { shown += 1; }
             });
@@ -139,7 +140,8 @@
             return;
         }
         var rows = state.reviews.filter(function (r) {
-            return !state.filter || r.level === state.filter;
+            return (!state.filter || r.level === state.filter) &&
+                (!state.qqOnly || (r.source_name || '').indexOf('QQ频道 · ') === 0);
         });
         if (!rows.length) {
             box.innerHTML = '<div style="padding:32px;text-align:center;color:#9aa4b2;">' +
@@ -151,12 +153,14 @@
 
     function updateCounts() {
         if (state.reviews === null) {
-            applyCounts(countsFromDom(), domRows().length);
+            var counts=countsFromDom();
+            applyCounts(counts,Object.keys(counts).reduce(function(n,key){return n+counts[key];},0));
             return;
         }
         var counts = { high: 0, watch: 0, normal: 0, error: 0 };
-        state.reviews.forEach(function (r) { counts[r.level] = (counts[r.level] || 0) + 1; });
-        applyCounts(counts, state.reviews.length);
+        var rows=state.reviews.filter(function(r){return !state.qqOnly || (r.source_name || '').indexOf('QQ频道 · ')===0;});
+        rows.forEach(function (r) { counts[r.level] = (counts[r.level] || 0) + 1; });
+        applyCounts(counts, rows.length);
     }
 
     /* ---------------- 新高风险提醒 ---------------- */
@@ -206,6 +210,7 @@
             try { payload = JSON.parse(e.data); } catch (err) { return; }
             if (!payload || !Array.isArray(payload.reviews)) { return; }
             state.reviews = payload.reviews;
+            updateQQCounts(payload.qq_status);
             updateCounts();
             renderList();
             detectNewHigh(payload.reviews);
@@ -254,12 +259,43 @@
     }
 
     /* ---------------- 绑定 ---------------- */
+    function updateQQCounts(counts) {
+        if (!counts || !id('qqReviewCounts')) return;
+        id('qqReviewCounts').textContent=(counts.total || 0)+' 篇 · '+(counts.pending || 0)+
+            ' 待分析 · '+(counts.error || 0)+' 待重试';
+    }
     function bind() {
+        function selectLevel(level) {
+            state.filter=level;
+            C.tabSwitch(id('levelFilter'),'data-level',level);
+            document.querySelectorAll('.sentiment-page [data-filter]').forEach(function(card){
+                var active=card.getAttribute('data-filter')===level;
+                card.classList.toggle('is-selected',active);card.setAttribute('aria-pressed',String(active));
+            });
+            renderList();
+        }
+        document.querySelectorAll('.sentiment-page [data-filter]').forEach(function(card){
+            card.addEventListener('click',function(){selectLevel(card.getAttribute('data-filter'));});
+            card.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click();}});
+        });
+        if(id('qqOnlyFilter')) id('qqOnlyFilter').addEventListener('change',function(){
+            state.qqOnly=this.checked;updateCounts();renderList();
+        });
+        var qqButton=id('btnReviewQQ');
+        if (qqButton) qqButton.addEventListener('click',function(){
+            qqButton.disabled=true;
+            id('qqReviewStatus').textContent='正在分析频道帖子，完成后自动更新…';
+            C.api('POST','/admin/sentiment',{action:'qq'}).then(function(res){
+                updateQQCounts(res.qq_status);
+                id('qqReviewStatus').textContent=res.busy ? '已有分析正在运行，请稍后重试。' :
+                    '本次分析 '+res.result.processed+' 篇，'+res.result.failed+' 篇待重试。';
+                loadSnapshot();
+            }).catch(function(){id('qqReviewStatus').textContent='分析请求失败，请重试。';})
+              .finally(function(){qqButton.disabled=false;});
+        });
         Array.prototype.forEach.call(id('levelFilter').querySelectorAll('button'), function (btn) {
             btn.addEventListener('click', function () {
-                state.filter = btn.getAttribute('data-level') || '';
-                C.tabSwitch(id('levelFilter'), 'data-level', state.filter);
-                renderList();
+                selectLevel(btn.getAttribute('data-level') || '');
             });
         });
         id('soundToggle').addEventListener('click', function () { setSound(!state.sound); });

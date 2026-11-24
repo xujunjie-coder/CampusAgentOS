@@ -86,7 +86,10 @@
     <!-- 内容区 -->
     <div class="layui-body admin-body">
         <div class="admin-page-head">
-            <span class="admin-page-title"><i class="fas fa-layer-group"></i> {{ page_name }}</span>
+            <div class="admin-page-heading">
+                <span class="admin-page-title"><i class="fas fa-layer-group"></i> {{ page_name }}</span>
+                {% block admin_title_actions %}{% end %}
+            </div>
             <span class="layui-breadcrumb" lay-separator="/">
                 <a href="/admin">首页</a>
                 <a><cite>{{ page_name }}</cite></a>

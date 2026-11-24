@@ -942,6 +942,12 @@
     box-shadow: 0 8px 28px rgba(0, 48, 135, .11), 0 0 0 3px rgba(0, 48, 135, .08);
 }
 .chat-composer form { margin: 0; }
+.chat-collaboration { margin: 4px 0 10px; color: #475569; font-size: 12px; line-height: 1.7; }
+.chat-collaboration summary { cursor: pointer; color: var(--cwnu-navy); }
+.chat-collaboration p { margin: 8px 0; }
+.chat-collaboration label { display: inline-flex; align-items: center; gap: 6px; margin-right: 10px; }
+.chat-collaboration-examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.chat-collaboration-examples button { border: 1px solid #cbd5e1; border-radius: 8px; padding: 4px 10px; background: #f8fafc; color: var(--cwnu-navy); cursor: pointer; }
 .chat-composer-box {
     display: flex;
     align-items: flex-end;

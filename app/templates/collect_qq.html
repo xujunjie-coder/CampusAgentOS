@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+{% block admin_styles %}
+<link rel="stylesheet" href="{{ static_url('css/collect.css') }}">
+{% end %}
+{% block admin_title_actions %}
+<div class="collect-page collect-header-tabs">{% include "collect_tabs.html" %}</div>
+{% end %}
+{% block admin_content %}
+<div class="collect-page"><main class="collect-main">
+        <section class="panel qq-panel" id="qqChannelSection" aria-labelledby="qqTitle">
+            <div class="qq-heading"><div class="panel-title" id="qqTitle"><i class="fas fa-comments"></i> 频道检索</div>
+            <div class="qq-connection"><span id="qqConnectionStatus" role="status">检查连接…</span><button type="button" class="pager-btn" id="qqConnectBtn">连接 QQ</button></div></div>
+            <form id="qqForm" class="qq-form">
+                <label>频道号<input id="qqChannel" value="CWNUpindao" maxlength="64" required autocomplete="off"></label>
+                <label class="qq-search-field">关键词<input id="qqKeywords" maxlength="500" placeholder="搜索话题，如：食堂，校园跑" required></label>
+                <div class="qq-actions"><button type="submit" class="run-btn" id="qqRunBtn"><i class="fas fa-search" aria-hidden="true"></i> 搜索</button><button type="button" class="pager-btn" id="qqStopBtn" disabled>停止</button></div>
+                <details class="qq-filters"><summary><i class="fas fa-sliders-h" aria-hidden="true"></i> 筛选</summary><div class="qq-filter-fields">
+                <label>开始日期<input id="qqStartDate" type="date"></label>
+                <label>结束日期<input id="qqEndDate" type="date"></label>
+                <label>结果数量<input id="qqMaxPosts" type="number" min="1" max="100" value="20" required></label>
+                <label>翻页上限<input id="qqMaxScrolls" type="number" min="1" max="100" value="10" required></label>
+                </div></details>
+            </form>
+            <div class="qq-toolbar">
+                <label>检索记录<select id="qqHistory" aria-label="选择历史采集任务"><option value="">暂无任务</option></select></label>
+                <label>审核状态<select id="qqReviewFilter"><option value="">全部</option><option value="pending">待审核</option><option value="feedback">普通反馈 / 无需处理</option><option value="concern">需要核实</option></select></label>
+                <button type="button" class="pager-btn" id="qqRefreshBtn" title="刷新记录" aria-label="刷新记录"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+            </div>
+            <div id="qqProgress" class="qq-progress" role="status" aria-live="polite">尚未启动频道采集。</div>
+            <div id="qqCoverage" class="qq-coverage"></div>
+            <div id="qqResults" class="qq-results"></div>
+            <nav class="pager" id="qqPager" aria-label="频道帖子分页"></nav>
+        </section>
+
+
+</main></div>
+{% end %}
+{% block admin_overlays %}
+<div class="collect-page collect-overlay-root">
+<dialog id="qqReviewDialog" class="qq-review-dialog" aria-labelledby="qqReviewTitle">
+    <div class="qq-dialog-header"><h2 id="qqReviewTitle">帖子人工审核</h2><button type="button" class="pager-btn" id="qqReviewClose" aria-label="关闭帖子审核">关闭</button></div>
+    <div id="qqReviewContent"></div>
+</dialog>
+</div>
+{% end %}
+{% block admin_scripts %}
+<script src="{{ static_url('js/qq-channel.js') }}"></script>
+{% end %}

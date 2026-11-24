@@ -78,6 +78,12 @@ def _validate_and_normalize(b: dict):
             params = json.loads(params or "{}")
         except (ValueError, TypeError):
             params = {}
+    if task_type == 'qq_channel_daily':
+        from app.services.qq_daily_service import validate_params
+        try:
+            validate_params(params if isinstance(params,dict) else {})
+        except ValueError as exc:
+            return None,str(exc)
     fields = ScheduledTaskRepository.normalize(
         task_type, schedule_type, b.get("interval_seconds"), cron_expr,
         (b.get("notify_on") or "fail").strip(), (b.get("notify_channel") or "none").strip(),

@@ -8,7 +8,8 @@ from tornado.websocket import WebSocketClosedError, WebSocketHandler
 
 from app.controllers.admin import AdminBaseHandler, AdminGuard, backend_required
 from app.models import intelligence
-from app.services.intelligence_service import index_document, review_pending
+from app.services.intelligence_service import index_document, review_pending, review_channel_pending
+from app.models import qq_channel
 
 
 def _extract_doc_text(raw_bytes: bytes) -> str:
@@ -161,16 +162,25 @@ class SentimentHandler(AdminBaseHandler):
     page_name = "智能舆情"
 
     def get_context(self):
-        return {"reviews": intelligence.reviews()}
+        qq_channel.sync_sentiment_posts()
+        return {"reviews": intelligence.reviews(),"qq_status":qq_channel.sentiment_status()}
 
     @tornado.web.authenticated
     @backend_required
     async def post(self):
         if not self.require_menu(self.nav_url):
             return
-        result = await review_pending()
+        action = self.get_body_argument('action','')
+        if self.request.headers.get('Content-Type','').startswith('application/json'):
+            import json
+            try:
+                action = json.loads(self.request.body or '{}').get('action','')
+            except (ValueError,AttributeError):
+                raise tornado.web.HTTPError(400)
+        result = await review_channel_pending() if action == 'qq' else await review_pending()
         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            self.write_json({"ok": True, "busy": result is None, "result": result})
+            self.write_json({"ok": True, "busy": result is None, "result": result,
+                             "qq_status":qq_channel.sentiment_status()})
             return
         self.redirect(self.nav_url, status=303)
 
@@ -194,13 +204,15 @@ class SentimentSocket(WebSocketHandler, AdminGuard):
 
     async def publish(self):
         rows = intelligence.reviews()
-        if rows == self.last_rows:
+        qq_status = qq_channel.sentiment_status()
+        snapshot = (rows,qq_status)
+        if snapshot == self.last_rows:
             return
         try:
-            await self.write_message({"reviews": rows})
+            await self.write_message({"reviews": rows,"qq_status":qq_status})
         except WebSocketClosedError:
             return
-        self.last_rows = rows
+        self.last_rows = snapshot
 
     def on_close(self):
         if hasattr(self, "refresh"):

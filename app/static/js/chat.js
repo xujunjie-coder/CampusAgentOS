@@ -399,7 +399,7 @@
             },
             addTool: function (name, args, callId) {
                 if (state.finished) return;
-                setProgress("正在处理工具请求 · " + name);
+                setProgress(name === "task" ? "正在分配协同子任务" : "正在处理工具请求 · " + name);
                 ensureProcessVisible();
                 state.processCount++;
                 processCountEl.textContent = "(" + state.processCount + ")";
@@ -414,6 +414,15 @@
                     "</span>";
                 processListEl.appendChild(item);
                 if (name === "task" && callId) {
+                    var taskArgs = args;
+                    if (typeof taskArgs === "string") {
+                        try { taskArgs = JSON.parse(taskArgs); } catch (e) { taskArgs = {}; }
+                    }
+                    item.querySelector(".chat-proc-tag").textContent = "协同";
+                    item.querySelector(".chat-proc-text").textContent = (taskArgs && taskArgs.description) || "校园资料查询";
+                    processEl.classList.remove("collapsed");
+                    processListEl.style.display = "";
+                    processHeadEl.querySelector(".chat-process-caret").style.transform = "rotate(180deg)";
                     var status = document.createElement("span");
                     status.className = "chat-proc-args";
                     status.textContent = "执行中";
@@ -425,7 +434,7 @@
             finishTool: function (callId, status) {
                 var label = state.pendingTasks.get(callId);
                 if (!label || state.finished) return;
-                var statusLabels = { completed: "已返回结果", timeout: "已超时", partial: "已返回部分结果", failed: "执行失败" };
+                var statusLabels = { completed: "已返回结果", timeout: "等待超时，主助理将汇总已有资料", partial: "已返回部分结果，主助理继续汇总", failed: "执行失败，主助理将说明资料缺口" };
                 label.textContent = statusLabels[status] || "已结束";
                 state.pendingTasks.delete(callId);
                 setProgress(state.pendingTasks.size ? state.pendingTasks.size + " 个子智能体协作中" : "正在整理协作结果");
@@ -637,6 +646,15 @@
 
     // 三处同步：输入区按钮、侧栏人设卡、旁侧提示
     function paintCurrentAssistant() {
+        var preferred = $("collaborationPreferred");
+        var hint = $("collaborationHint");
+        var tools = currentAssistant && currentAssistant.tools;
+        var available = !tools || !tools.length || tools.indexOf("task") !== -1;
+        if (preferred) {
+            preferred.disabled = !available;
+            if (!available) preferred.checked = false;
+        }
+        if (hint) hint.textContent = available ? "不勾选时由助理按需决定；示例只填入输入框。" : "当前助理未启用协同，可切换助理或到数字员工工具配置中启用。";
         var a = currentAssistant;
         var name = a ? a.name : "数字助理";
         asst.name.textContent = name;
@@ -1034,6 +1052,7 @@
                     temporary: temporaryChat,
                     history: temporaryChat ? temporaryHistory.slice(-16) : undefined,
                     employee_id: currentAssistant ? currentAssistant.id : null,
+                    collaboration: !!($("collaborationPreferred") && $("collaborationPreferred").checked),
                 }),
             });
             if (resp.status === 401) { turn.finish(); location.href = "/auth/login"; return; }
@@ -1045,6 +1064,8 @@
                 if (resp.status === 400) loadAssistants();
                 return;
             }
+
+            if ($("collaborationPreferred")) $("collaborationPreferred").checked = false;
 
             var reader = resp.body.getReader();
             var decoder = new TextDecoder();
@@ -1232,6 +1253,16 @@
             }
         });
         inputEl.addEventListener("input", autosize);
+        var collaborationGuide = $("collaborationGuide");
+        if (collaborationGuide) collaborationGuide.addEventListener("click", function (event) {
+            var example = event.target.closest("[data-collaboration-example]");
+            if (!example || streaming || sessionChanging || sessionArchived) return;
+            inputEl.value = example.getAttribute("data-collaboration-example");
+            var preferred = $("collaborationPreferred");
+            if (preferred && !preferred.disabled) preferred.checked = true;
+            autosize();
+            inputEl.focus();
+        });
 
         // 新会话：保留历史，后续消息写入新编号
         var clearBtn = $("clearBtn");

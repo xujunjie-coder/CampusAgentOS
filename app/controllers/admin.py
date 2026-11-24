@@ -46,6 +46,8 @@ def allowed_ids_for(role_code):
 
 def build_nav(active_path: str, allowed_ids) -> list:
     """从 menus 表读启用导航树，按角色权限过滤 + 当前路径打高亮/展开标记"""
+    if active_path in ('/collect/web','/collect/qq'):
+        active_path='/collect'
     nav = []
     for top in MenuRepository.get_nav_tree():
         children = []

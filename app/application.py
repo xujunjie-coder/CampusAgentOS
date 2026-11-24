@@ -34,10 +34,14 @@ from app.controllers.assistant import (
 
 from app.controllers.page import IndexHandler, CampusMapHandler
 from app.controllers.collect import (
-    CollectPageHandler,
+    CollectPageHandler, CollectQQPageHandler,
     CollectSourcesApiHandler,
     CollectRunApiHandler,
     CollectItemsApiHandler,
+)
+from app.controllers.qq_channel import (
+    QQChannelRunsHandler, QQChannelRunHandler, QQChannelReviewHandler, QQChannelAnalyzeHandler,
+    QQChannelConnectionHandler, QQChannelCommentsHandler,
 )
 from app.controllers.warehouse import (
     WarehousePageHandler,
@@ -259,9 +263,17 @@ def make_app():
 
             # 采集管理（任务6：独立采集主页，无 layui；关键词 + 选源参数配置 + 橱窗列表 12/页）
             (r"/collect", CollectPageHandler),
+            (r"/collect/web", CollectPageHandler),
+            (r"/collect/qq", CollectQQPageHandler),
             (r"/api/collect/sources", CollectSourcesApiHandler),
             (r"/api/collect/run", CollectRunApiHandler),
             (r"/api/collect/items", CollectItemsApiHandler),
+            (r"/api/collect/qq/runs", QQChannelRunsHandler),
+            (r"/api/collect/qq/connection", QQChannelConnectionHandler),
+            (r"/api/collect/qq/runs/(\d+)", QQChannelRunHandler),
+            (r"/api/collect/qq/runs/(\d+)/items/(\d+)/review", QQChannelReviewHandler),
+            (r"/api/collect/qq/runs/(\d+)/items/(\d+)/analyze", QQChannelAnalyzeHandler),
+            (r"/api/collect/qq/runs/(\d+)/items/(\d+)/comments", QQChannelCommentsHandler),
 
             # 数据仓库（任务7：深采正文仓库 CRUD 20/页 + 单一/批量深采 SSE 执行面板）
             (r"/api/admin/warehouse", WarehouseListApiHandler),

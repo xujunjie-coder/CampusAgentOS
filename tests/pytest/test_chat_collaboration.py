@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock, patch
 
 from agentica.run.response import RunEvent, RunResponse, ToolCallInfo
 from tornado.testing import gen_test
+from agentica import Agent, OpenAIChat
+from agentica.subagents import SubagentRegistry, get_subagent_config
 
 from app.controllers import chat
 from app.services import agent_service
@@ -63,7 +65,66 @@ class TestChatCollaboration(ApiCase):
             for requested, expected in [(None, 120), (0, 120), (999, 120), (25, 25)]:
                 await tool.task("research", timeout=requested)
                 assert delegate.call_args.kwargs["timeout"] == expected
+                assert delegate.call_args.args[1] == "campus_research"
         assert tool.functions["task"].manages_own_timeout
+
+    @gen_test
+    async def test_campus_child_inherits_queries_but_cannot_spawn_or_write(self):
+        tools = agent_service._tools_for({"tools": '["task", "campus_calendar", "todo"]',
+                                          "rag_kb_ids": '["bound-kb"]'})
+        registry = SubagentRegistry()
+        children = registry._select_child_tools(tools, get_subagent_config("campus_research"))
+        names = {name for tool in children for name in registry._tool_names(tool)}
+        assert {"campus_calendar", "campus_knowledge"} <= names
+        assert "task" not in names and "write_todos" not in names
+        lookup = next(tool for tool in children if getattr(tool, "__name__", "") == "campus_knowledge")
+        with patch.object(agent_service, "retrieve", new_callable=AsyncMock, return_value=[]) as retrieve:
+            await lookup("奖学金")
+        retrieve.assert_awaited_once_with("奖学金", ["bound-kb"])
+
+    @gen_test
+    async def test_sdk_spawns_campus_child_and_returns_findings(self):
+        parent = Agent(model=OpenAIChat(id="test", api_key="test"), tools=[CampusTaskTool()],
+                       enable_session_log=False)
+        tool = next(t for t in parent.tools if isinstance(t, CampusTaskTool))
+        tool.set_parent_agent(parent)
+        seen = []
+
+        async def child_reply(child, *args, **kwargs):
+            seen.append(child.name)
+            yield RunResponse(content="已找到申请材料，须核对适用年份")
+
+        with patch.object(Agent, "run_stream", child_reply):
+            result = json.loads(await tool.task("检索申请材料"))
+        assert result["success"] is True, result
+        assert result["subagent_type"] == "campus_research"
+        assert "申请材料" in result["result"] and len(seen) == 1
+
+    def test_collaboration_option_validates_availability(self):
+        response = self.post_json("/api/chat", {"message": "查资料", "collaboration": "yes"})
+        assert response.code == 400
+        with patch.object(chat, "collaboration_available", return_value=False):
+            response = self.post_json("/api/chat", {"message": "查资料", "collaboration": True})
+        assert response.code == 400
+        assert "未启用" in response.body.decode()
+
+    def test_chat_page_renders_collaboration_guide(self):
+        response = self.get_json("/")
+        assert response.code == 200
+        assert 'id="collaborationPreferred"' in response.body.decode()
+        assert "什么时候用" in response.body.decode()
+
+    def test_collaboration_preference_reaches_stream(self):
+        seen = []
+
+        async def reply(*args, **kwargs):
+            seen.append(kwargs.get("collaboration"))
+            yield {"type": "delta", "text": "汇总完成"}
+            yield {"type": "done", "answer": "汇总完成"}
+
+        with patch.object(chat, "stream_answer", reply), patch.object(chat, "collaboration_available", return_value=True):
+            response = self.post_json("/api/chat", {"message": "查资料", "collaboration": True})
+        assert b"event: done" in response.body and seen == [True]
 
     @gen_test
     async def test_agentica_partial_timeout_is_reported_without_stopping_parent(self):

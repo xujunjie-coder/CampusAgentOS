@@ -378,6 +378,8 @@
     border-bottom: 1px solid var(--border-subtle, #e5eaf2);
 }
 
+.admin-page-heading { display:flex; align-items:center; gap:20px; min-width:0; flex-wrap:wrap; }
+
 .admin-page-title {
     font-size: 15px;
     font-weight: 700;

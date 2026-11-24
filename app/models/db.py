@@ -128,7 +128,7 @@ def to_placeholders(sql: str, driver: str = None) -> str:
 LONG_TEXT_COLUMNS = {
     "content", "content_md", "content_text", "instructions", "ai_summary",
     "summary", "feature", "message", "vector", "evidence", "reason",
-    "result", "detail",
+    "result", "detail", "metadata",
 }
 
 
@@ -982,6 +982,8 @@ def init_db():
             collected_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
             UNIQUE(source_id, title))''')
         conn.execute('''CREATE INDEX IF NOT EXISTS idx_collect_items_source ON collect_items (source_id)''')
+        from app.models.qq_channel import init_tables as init_qq_channel_tables
+        init_qq_channel_tables(conn)
         #存量库补种采集管理菜单（独立主页 /collect）
         _seed_collect_menu(conn)
         #任务7：数据仓库表（深度采集抽取的详细正文与分析结果，UNIQUE(collect_item_id) 与原数据一一对应）

@@ -63,6 +63,16 @@ def pending_review_ids(item_ids):
     return {row["id"] for row in rows}
 
 
+def pending_channel_reviews(limit=100):
+    with get_connection() as conn:
+        return [dict(row) for row in conn.execute(
+            "SELECT c.id,c.title,c.summary FROM collect_items c "
+            "JOIN qq_channel_sentiment_links q ON q.collect_item_id=c.id "
+            "LEFT JOIN risk_reviews r ON r.item_id=c.id "
+            "WHERE r.item_id IS NULL OR r.level='error' "
+            "ORDER BY (r.item_id IS NOT NULL),c.id DESC LIMIT ?",(limit,))]
+
+
 def save_review(item_id, level, reason, evidence):
     with get_connection() as conn:
         conn.execute(
@@ -75,10 +85,18 @@ def save_review(item_id, level, reason, evidence):
 
 def reviews():
     with get_connection() as conn:
-        return [dict(row) for row in conn.execute(
-            """SELECT c.id, c.title, c.url, c.source_name, r.level, r.reason, r.evidence, r.reviewed_at
+        rows = [dict(row) for row in conn.execute(
+            """SELECT c.id, c.title, c.url, c.source_name, r.level, r.reason, r.evidence, r.reviewed_at,
+                      q.post_id AS channel_post_id
                FROM risk_reviews r JOIN collect_items c ON c.id = r.item_id
+               LEFT JOIN qq_channel_sentiment_links q ON q.collect_item_id = c.id
                ORDER BY r.reviewed_at DESC, c.id DESC LIMIT 100""")]
+        for row in rows:
+            post_id = row.pop('channel_post_id', None)
+            suffix = ' [' + post_id + ']' if post_id else ''
+            if suffix and row['title'].endswith(suffix):
+                row['title'] = row['title'][:-len(suffix)].rstrip()
+        return rows
 
 
 def search_warehouse(keyword):

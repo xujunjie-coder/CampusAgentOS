@@ -36,6 +36,7 @@ _scheduler = None            # APScheduler BackgroundScheduler 实例
 _started = False
 _fallback_handles = {}       # task_id -> IOLoop timeout handle（降级引擎用）
 _FALLBACK_TICK = 30          # 降级引擎轮询粒度（秒）：到点即触发到期任务
+SCHEDULE_TIMEZONE = 'Asia/Shanghai'
 
 
 def _try_import_apscheduler():
@@ -62,6 +63,7 @@ def status() -> Dict:
     engine = detect_engine()
     return {
         "engine": engine,
+        "timezone": SCHEDULE_TIMEZONE,
         "apscheduler_available": _try_import_apscheduler(),
         "started": _started and engine != ENGINE_DISABLED,
         "enabled_tasks": ScheduledTaskRepository.count_enabled(),
@@ -111,6 +113,14 @@ _HANDLERS = {
 }
 
 
+def _run_qq_daily(params):
+    from app.services.qq_daily_service import run_daily
+    return run_daily(params)
+
+
+_HANDLERS['qq_channel_daily'] = _run_qq_daily
+
+
 def execute_task(task_id: int, trigger: str = "schedule") -> Dict:
     """执行一个任务（同步阻塞）：写流水 → 派发处理 → 回写状态 → 依策略通知。
 
@@ -137,13 +147,23 @@ def execute_task(task_id: int, trigger: str = "schedule") -> Dict:
             logger.exception("定时任务执行异常 task=%s", task["name"])
             outcome = {"status": STATUS_FAILED, "result": "执行异常", "detail": str(exc)[:500]}
 
+    notify_result = _maybe_notify(task, outcome, trigger)
+    if task['task_type']=='qq_channel_daily' and not notify_result.get('skipped') and not notify_result.get('ok'):
+        outcome['status']=STATUS_FAILED
+        outcome['result']=outcome.get('result','')+'；日报投递失败，请检查通知配置和任务日志'
+    if task['task_type']=='qq_channel_daily':
+        try:
+            detail=json.loads(outcome.get('detail') or '{}')
+        except ValueError:
+            detail={'error':outcome.get('detail','')}
+        detail['notification']={key:notify_result.get(key) for key in ('ok','skipped','degraded')}
+        outcome['detail']=json.dumps(detail,ensure_ascii=False)
     started_at = now_str()
     TaskLogRepository.finish(log_id, outcome["status"], outcome.get("result", ""),
                              outcome.get("detail", ""))
     ScheduledTaskRepository.mark_run(task_id, started_at, outcome["status"],
                                      next_run_at=_next_run_text(task))
 
-    notify_result = _maybe_notify(task, outcome, trigger)
     return {"ok": outcome["status"] == STATUS_SUCCESS, "status": outcome["status"],
             "result": outcome.get("result", ""), "log_id": log_id, "notify": notify_result}
 
@@ -158,8 +178,11 @@ def _maybe_notify(task: Dict, outcome: Dict, trigger: str) -> Dict:
         return {"skipped": True, "reason": "通知策略为 never 或渠道为 none"}
     if notify_on == "fail" and outcome["status"] == STATUS_SUCCESS:
         return {"skipped": True, "reason": "任务成功且策略为仅失败通知"}
-    report = notify_service.build_task_report(
-        task, outcome["status"], outcome.get("result", ""), outcome.get("detail", ""))
+    if outcome.get('notify_body'):
+        report={'subject':outcome['notify_subject'],'body':outcome['notify_body']}
+    else:
+        report = notify_service.build_task_report(
+            task, outcome["status"], outcome.get("result", ""), outcome.get("detail", ""))
     return notify_service.notify(channel, report["subject"], report["body"])
 
 
@@ -167,6 +190,14 @@ def _next_run_text(task: Dict) -> str:
     """估算下次运行时间文本（interval 精确；cron 交由 apscheduler 计算，这里给近似值）"""
     if task.get("schedule_type") == SCHEDULE_INTERVAL and task.get("interval_seconds"):
         return now_str(datetime.now() + timedelta(seconds=int(task["interval_seconds"])))
+    if task.get('schedule_type') == SCHEDULE_CRON and _try_import_apscheduler():
+        from apscheduler.triggers.cron import CronTrigger
+        from zoneinfo import ZoneInfo
+        try:
+            stamp=datetime.now(ZoneInfo(SCHEDULE_TIMEZONE))
+            return now_str(CronTrigger.from_crontab(task['cron_expr'],timezone=SCHEDULE_TIMEZONE).get_next_fire_time(None,stamp))
+        except (ValueError,TypeError):
+            return ''
     return ""
 
 
@@ -230,11 +261,11 @@ def _start_apscheduler() -> None:
             _scheduler.shutdown(wait=False)
         except Exception:
             pass
-    _scheduler = BackgroundScheduler(daemon=True)
+    _scheduler = BackgroundScheduler(daemon=True,timezone=SCHEDULE_TIMEZONE)
     for task in ScheduledTaskRepository.get_all(enabled_only=True):
         if task["schedule_type"] == SCHEDULE_CRON and task["cron_expr"]:
             try:
-                trigger = CronTrigger.from_crontab(task["cron_expr"])
+                trigger = CronTrigger.from_crontab(task["cron_expr"],timezone=SCHEDULE_TIMEZONE)
             except Exception:
                 logger.warning("cron 表达式非法，跳过自动排程 task=%s expr=%r",
                                task["name"], task["cron_expr"])
@@ -245,6 +276,8 @@ def _start_apscheduler() -> None:
                            trigger, id="task_%s" % task["id"], replace_existing=True,
                            max_instances=1, coalesce=True)
     _scheduler.start()
+    for job in _scheduler.get_jobs():
+        ScheduledTaskRepository.set_next_run(int(job.id.removeprefix('task_')),now_str(job.next_run_time))
 
 
 def _start_tornado_fallback() -> None:

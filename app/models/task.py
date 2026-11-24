@@ -30,6 +30,7 @@ PAGE_SIZE = 20
 TASK_TYPES = {
     "log_cleanup": "日志清理",
     "auto_archive": "自动归档",
+    "qq_channel_daily": "频道热门话题日报",
 }
 
 # 调度方式
@@ -197,6 +198,11 @@ class ScheduledTaskRepository:
         with get_connection() as conn:
             return conn.execute(
                 "SELECT COUNT(*) AS c FROM scheduled_tasks WHERE enabled = 1").fetchone()["c"]
+
+    @staticmethod
+    def set_next_run(task_id,stamp):
+        with get_connection() as conn:
+            conn.execute('UPDATE scheduled_tasks SET next_run_at=? WHERE id=?',(stamp,task_id))
 
 
 class TaskLogRepository:

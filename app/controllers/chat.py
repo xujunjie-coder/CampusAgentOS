@@ -22,7 +22,7 @@ from tornado.iostream import StreamClosedError
 from app.controllers.assistant import assistant_brief, pick_assistant
 from app.controllers.base import BaseHandler
 from app.models.message import MessageRepository
-from app.services.agent_service import SUBAGENT_TIMEOUT_SECONDS, stream_answer
+from app.services.agent_service import SUBAGENT_TIMEOUT_SECONDS, stream_answer, collaboration_available
 
 
 CHAT_IDLE_TIMEOUT_SECONDS = 90
@@ -121,6 +121,13 @@ class ChatHandler(BaseHandler):
             self.write_json({"detail": err}, status=400)
             return
         employee_id = employee["id"] if employee else 0
+        collaboration = payload.get("collaboration", False)
+        if not isinstance(collaboration, bool):
+            self.write_json({"detail": "协同优先标记无效"}, status=400)
+            return
+        if collaboration and not collaboration_available(employee):
+            self.write_json({"detail": "当前数字助理未启用子智能体协同，请选择支持协同的助理，或在数字员工工具配置中启用子智能体工具"}, status=400)
+            return
         employee_name = employee["name"] if employee else ""
         history = temporary_history if temporary else [{"role": row["role"], "content": row["content"][:2000],
                     **({"interrupted": True} if row["is_partial"] else {})}
@@ -142,7 +149,8 @@ class ChatHandler(BaseHandler):
         try:
             async with deadline:
                 await self.send_event("assistant", assistant_brief(employee))
-                events = stream_answer(message, username, employee, history=history)
+                options = {"collaboration": True} if collaboration else {}
+                events = stream_answer(message, username, employee, history=history, **options)
                 async with aclosing(_with_heartbeat(events)) as updates:
                     async for event in updates:
                         etype = event["type"]

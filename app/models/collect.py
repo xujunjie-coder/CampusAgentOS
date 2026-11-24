@@ -61,13 +61,15 @@ class CollectRepository:
 
     @staticmethod
     def paginate(keyword: str = None, source_id: int = None, page: int = 1,
-                 limit: int = PAGE_SIZE) -> Dict:
+                 limit: int = PAGE_SIZE, exclude_channels: bool = False) -> Dict:
         """分页拉取采集数据（新采集在前）：支持按标题/采集关键词模糊搜索与信源过滤，
         返回 {total, list}"""
         page = max(1, int(page))
         limit = max(1, int(limit))
         offset = (page - 1) * limit
         where, params = [], []
+        if exclude_channels:
+            where.append('NOT EXISTS (SELECT 1 FROM qq_channel_sentiment_links q WHERE q.collect_item_id=collect_items.id)')
         if keyword:
             where.append("(title LIKE ? OR keyword LIKE ?)")
             params += ["%{}%".format(keyword)] * 2

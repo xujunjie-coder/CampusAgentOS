@@ -19,7 +19,7 @@ apscheduler==3.11.3         # 周期任务调度（cron/interval）；缺失时�
 requests==2.34.2            # 信源抓取 / 深度采集回退通道
 beautifulsoup4==4.15.0      # 启发式解析与正文抽取
 Crawl4AI==0.9.5             # 深度采集主引擎（需 playwright 浏览器内核）
-playwright==1.64.1          # Crawl4AI 依赖（python -m playwright install chromium）
+playwright==1.65.2          # Crawl4AI / QQ 频道网页采集（python -m playwright install chromium）
 playwright-stealth==2.0.3   # 反爬场景的浏览器指纹处理
 
 # ----- 人脸识别（任务12）-----

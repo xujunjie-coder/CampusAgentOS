@@ -269,7 +269,7 @@
                     var p = {};
                     dom.querySelectorAll("[data-param]").forEach(function (el) {
                         var v = el.value.trim();
-                        if (v !== "") p[el.getAttribute("data-param")] = parseInt(v, 10);
+                        if (v !== "") p[el.getAttribute("data-param")] = el.type === 'number' ? parseInt(v, 10) : v;
                     });
                     var payload = {
                         name: name,
@@ -376,6 +376,12 @@
         ],
         auto_archive: [
             { key: "keep_days", label: "会话消息保留天数", def: 90 }
+        ],
+        qq_channel_daily: [
+            {key:'channel',label:'频道号',def:'CWNUpindao',type:'text'},
+            {key:'max_posts',label:'分析热门帖数',def:20},
+            {key:'sample_posts',label:'热门候选样本数',def:50},
+            {key:'max_scrolls',label:'热门翻页上限',def:15}
         ]
     };
     function renderParams(dom, taskType, params) {
@@ -390,7 +396,7 @@
             var v = params[def.key] != null ? params[def.key] : def.def;
             return '<div class="layui-form-item"><label class="layui-form-label">' + esc(def.label) + '</label>' +
                 '<div class="layui-input-inline" style="width:160px;">' +
-                '<input type="number" min="1" class="layui-input" data-param="' + esc(def.key) + '" value="' + esc(v) + '"></div></div>';
+                '<input type="' + (def.type || 'number') + '" ' + (def.type==='text' ? '' : 'min="1" ') + 'class="layui-input" data-param="' + esc(def.key) + '" value="' + esc(v) + '"></div></div>';
         }).join("");
     }
     function syncSched(dom, scheduleType) {

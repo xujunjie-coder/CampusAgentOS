@@ -42,6 +42,17 @@ class CollectPageHandler(AdminBaseHandler):
     page_name = "采集管理"
     nav_url = URL_COLLECT
 
+    def get_context(self):
+        return {'collect_mode':'web'}
+
+
+class CollectQQPageHandler(CollectPageHandler):
+    template_name = 'collect_qq.html'
+    page_name = '采集管理'
+
+    def get_context(self):
+        return {'collect_mode':'qq'}
+
 
 class CollectApiHandler(AdminGuard):
     """采集数据接口基类：api=True（错误走 JSON），统一菜单鉴权"""
@@ -158,6 +169,6 @@ class CollectItemsApiHandler(CollectApiHandler):
         except ValueError:
             page = 1
         data = CollectRepository.paginate(keyword=keyword, source_id=source_id,
-                                          page=page, limit=PAGE_SIZE)
+                                          page=page, limit=PAGE_SIZE, exclude_channels=True)
         self.write_json({"ok": True, "total": data["total"], "page": max(1, page),
                          "page_size": PAGE_SIZE, "list": data["list"]})

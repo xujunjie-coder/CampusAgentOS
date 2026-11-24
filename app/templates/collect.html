@@ -4,6 +4,10 @@
 <link rel="stylesheet" href="{{ static_url('css/collect.css') }}">
 {% end %}
 
+{% block admin_title_actions %}
+<div class="collect-page collect-header-tabs">{% include "collect_tabs.html" %}</div>
+{% end %}
+
 {% block admin_content %}
 <div class="collect-page">
     <main class="collect-main">

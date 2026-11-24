@@ -29,6 +29,8 @@ def _setup_logging() -> None:
 def main() -> None:
     _setup_logging()
     webapp = make_app()
+    from app.models.qq_channel import recover_interrupted
+    recover_interrupted()
     # 绑定地址来自配置：DEBUG 默认 127.0.0.1，生产可设 0.0.0.0
     sockets = tornado.netutil.bind_sockets(config.APP_PORT, address=config.APP_HOST)
     server = tornado.httpserver.HTTPServer(webapp)

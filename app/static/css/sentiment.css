@@ -1,0 +1,32 @@
+.sentiment-page .admin-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.sentiment-page .admin-toolbar-count { margin-left:auto; font-size:12px; }
+.sentiment-page .sentiment-channel-tools { flex-basis:100%; display:flex; align-items:center; flex-wrap:wrap; gap:10px 14px; border-top:1px solid #edf0f4; padding-top:12px; color:#64748b; font-size:12px; }
+.sentiment-page .sentiment-source { display:inline-flex; align-items:center; gap:6px; font-weight:600; }
+.sentiment-page .sentiment-channel-filter { display:inline-flex; align-items:center; gap:6px; margin:0; cursor:pointer; }
+.sentiment-page .sentiment-channel-tools .sentiment-help { margin:0 0 0 auto; position:relative; }
+.sentiment-page .sentiment-channel-tools .sentiment-help[open] { flex-basis:100%; }
+.sentiment-page .sentiment-channel-tools #qqReviewStatus:empty { display:none; }
+.sentiment-page .sentiment-retry-hint { display:block; margin-top:8px; color:#64748b; font-size:11px; font-weight:400; }
+.sentiment-page .sentiment-retry-hint[hidden] { display:none; }
+.sentiment-page .ck-note { border-radius:10px; padding:14px 16px; font-size:13px; }
+.sentiment-page .ck-kpi { cursor:pointer; border:1px solid transparent; transition:border-color .15s,box-shadow .15s; }
+.sentiment-page .ck-kpi:hover,.sentiment-page .ck-kpi:focus-visible { border-color:#94a3b8; outline:2px solid #dce9f8; outline-offset:2px; }
+.sentiment-page .ck-kpi.is-selected { border-color:#0f766e; box-shadow:0 0 0 2px #0f766e18; }
+.sentiment-page .ck-kpi-k::after { content:' ↗'; font-size:12px; opacity:.45; }
+.sentiment-page .ck-panel-head { flex-wrap:wrap; gap:10px; }
+.sentiment-page .ck-panel-tools { max-width:100%; }
+.sentiment-page .ck-seg { flex-wrap:wrap; }
+.sentiment-page .ck-stream-row { padding:20px; }
+.sentiment-page .ck-stream-title { font-size:15px; line-height:1.65; }
+.sentiment-page .ck-stream-meta { font-size:11px; gap:12px; margin-top:8px; }
+.sentiment-page .ck-stream-reason { margin-top:12px; font-size:13px; line-height:1.8; }
+.sentiment-page .sentiment-evidence { margin-top:10px; }
+.sentiment-page .sentiment-evidence summary,.sentiment-page .sentiment-help summary { cursor:pointer; width:fit-content; color:#64748b; font-size:12px; }
+.sentiment-page .sentiment-evidence blockquote { margin:10px 0 0; padding:10px 14px; border-left:3px solid #cbd5e1; background:#f8fafc; color:#475569; white-space:pre-wrap; }
+.sentiment-page .sentiment-help { margin-top:10px; }
+.sentiment-page .sentiment-help p { color:#64748b; font-size:12px; line-height:1.8; margin:8px 0 0; }
+@media(max-width:600px) {
+    .sentiment-page .admin-toolbar-count { margin-left:0; }
+    .sentiment-page .ck-panel-tools { width:100%; }
+    .sentiment-page .ck-stream-row { padding:14px; }
+}
