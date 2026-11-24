@@ -51,15 +51,12 @@ async def main():
         await page.route("**/*", route)
         await page.goto("http://campus.test/")
         await page.locator("#sendBtn:not([disabled])").wait_for()
-        await page.locator("#collaborationGuide summary").click()
-        await page.locator("[data-collaboration-example]").first.click()
-        assert await page.locator("#collaborationPreferred").is_checked()
-        assert "奖学金" in await page.locator("#chatInput").input_value()
-        assert not requests, "Example must not submit automatically"
+        assert await page.locator("#collaborationGuide").count() == 0
+        assert await page.locator("#collaborationPreferred").count() == 0
+        await page.locator("#chatInput").fill("请分两路查询奖学金申请条件和申请材料，再汇总。")
         await page.locator("#sendBtn").click()
         await page.get_by_text("已汇总可靠资料，申请材料仍需确认。", exact=True).wait_for()
-        assert requests[0]["collaboration"] is True
-        assert not await page.locator("#collaborationPreferred").is_checked()
+        assert requests[0]["collaboration"] is False
         await page.get_by_text("已超时", exact=True).wait_for()
         assert await page.locator(".chat-child-card").count() == 2
         assert await page.locator(".chat-team-count").inner_text() == "2 个子智能体"
@@ -73,7 +70,6 @@ async def main():
         result_box = await page.locator(".chat-child-detail").first.bounding_box()
         assert result_box["y"] >= summary_box["y"] + summary_box["height"]
         await page.locator(".chat-child-card summary").first.click()
-        await page.locator("#collaborationGuide summary").click()
         output = ROOT / "outputs/collaboration-ui"
         output.mkdir(parents=True, exist_ok=True)
         await page.screenshot(path=str(output / "desktop.png"), full_page=True)
@@ -87,7 +83,7 @@ async def main():
         assert result_box["y"] >= summary_box["y"] + summary_box["height"]
         assert await page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         await browser.close()
-    print("PASS: example, one-turn preference, independent agents, deduplication, statuses, safe findings, mobile layout")
+    print("PASS: guide removed, automatic collaboration, independent agents, deduplication, statuses, safe findings, mobile layout")
 
 
 if __name__ == "__main__":
