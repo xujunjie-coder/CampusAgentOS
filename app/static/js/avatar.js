@@ -14,6 +14,11 @@
 
     var SESSION_ID = "avatar3d";
     var MODEL_URL = "/static/vendor/three/models/three-vrm-girl.glb";
+    var VRM_PRESETS = [
+        { id: "vroid-b", label: "VRoid 学院女主播", url: "/static/vendor/three/models/vroid-sample-b.vrm" },
+        { id: "classic", label: "经典三渲二主播", url: MODEL_URL }
+    ];
+    var LIVE2D_MODEL_URL = "/static/vendor/live2d/models/Haru/Haru.model3.json";
     var streaming = false;
     var gotDelta = false;
 
@@ -232,27 +237,37 @@
         return content;
     }
 
-    // ---------- three.js 场景 ----------
-    var scene, camera, renderer, gridHelper, ambientLight, keyLight;
-    var MODE = "none";              // panda | vrm | procedural
+    // ---------- three.js & Live2D 场景 ----------
+    var scene, camera, renderer, gridHelper, ambientLight, hemiLight, keyLight;
+    var MODE = "none";              // panda | vrm | live2d | procedural
     var MODEL_CHOICE_KEY = "campusagent.avatar.model";
     var LEGACY_MODEL_CHOICE_KEY = "govcheck.avatar.model";
     var wantedModel = "cwnu-panda";
     var pandaAvatar = null;
+    var live2dAvatar = null;
+    var live2dLoading = false;
+    var live2dFailed = false;
+    var activeVrmPresetIndex = 0;
+    var vrmCustomUrl = null;
+    var vrmCustomLabel = "";
     var vrmLoading = false;
     var vrmReady = false;
     var vrmFailed = false;
+    var vrmLoadToken = 0;
     var rig = {};                   // 程序化降级形象
-    var vtuber = { root: null, faces: [], bones: {}, base: {}, gridScale: 1, camPos: null, camLook: null };
+    var vtuber = {
+        root: null, faces: [], bones: {}, base: {}, arms: null, gridScale: 1, camPos: null, camLook: null,
+        baseYaw: Math.PI, yaw: 0, idx: { a: 32, i: 33, u: 34, e: 35, o: 36, blink: 12, joy: 2 },
+        gesture: { kind: null, start: 0, duration: 1.6 }
+    };
     var thinking = false;
     var mouthPulse = 0;             // 文字驱动口型的脉冲强度
     var pointerNX = 0, pointerNY = 0; // 鼠标视线 [-1,1]
     var nextBlinkAt = 2, blinkPhase = -1;
-    var dragging = false, dragLastX = 0;
+    var dragging = false, dragLastX = 0, dragMoved = false;
 
-    // three-vrm-girl blendShape 索引（解析自模型 blendShapeMaster）
+    // 默认 blendShape 索引（动态 VRM 解析失败时兜底）
     var IDX = { a: 32, i: 33, u: 34, e: 35, o: 36, blink: 12, joy: 2 };
-    var VISEME = [IDX.a, IDX.i, IDX.u, IDX.e, IDX.o];
 
     function initRenderer() {
         var stage = $("avatarStage");
@@ -270,6 +285,8 @@
 
         ambientLight = new THREE.AmbientLight(0xdde4ff, 1.0);
         scene.add(ambientLight);
+        hemiLight = new THREE.HemisphereLight(0xf6f9ff, 0x3a486e, 0.0);
+        scene.add(hemiLight);
         keyLight = new THREE.DirectionalLight(0xffffff, 0.8);
         keyLight.position.set(2, 4, 3);
         scene.add(keyLight);
@@ -288,23 +305,40 @@
         gridHelper = grid;
 
         window.addEventListener("resize", function () {
-            if (!renderer) return;
-            var w = stage.clientWidth, h = stage.clientHeight;
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-            renderer.setSize(w, h);
+            if (renderer) {
+                var w = stage.clientWidth, h = stage.clientHeight;
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+                renderer.setSize(w, h);
+            }
+            if (live2dAvatar) live2dAvatar.resize();
         });
         function updateStageDrag(clientX, clientY) {
             var r = stage.getBoundingClientRect();
             pointerNX = ((clientX - r.left) / r.width - 0.5) * 2;
             pointerNY = ((clientY - r.top) / r.height - 0.5) * 2;
-            if (dragging && MODE === "panda" && pandaAvatar) {
+            if (MODE === "live2d" && live2dAvatar) {
+                live2dAvatar.focus(clientX, clientY);
+                return;
+            }
+            if (dragging) {
                 var dx = clientX - dragLastX;
+                if (Math.abs(dx) > 2) dragMoved = true;
                 dragLastX = clientX;
-                pandaAvatar.addYaw(dx * 0.008);
+                if (MODE === "panda" && pandaAvatar) {
+                    pandaAvatar.addYaw(dx * 0.008);
+                } else if (MODE === "vrm" && vtuber.root) {
+                    vtuber.yaw = Math.max(-1.4, Math.min(1.4, vtuber.yaw + dx * 0.008));
+                }
             }
         }
-        function stopStageDrag() { dragging = false; }
+        function stopStageDrag(e) {
+            if (dragging && !dragMoved && MODE === "live2d" && live2dAvatar && e && typeof e.clientX === "number") {
+                live2dAvatar.onTap(e.clientX, e.clientY);
+            }
+            dragging = false;
+            dragMoved = false;
+        }
 
         if (window.PointerEvent) {
             stage.addEventListener("pointermove", function (e) {
@@ -314,6 +348,7 @@
                 if (e.pointerType === "mouse" && e.button !== 0) return;
                 if (e.target && e.target.closest && e.target.closest(".avatar-stage-actions")) return;
                 dragging = true;
+                dragMoved = false;
                 dragLastX = e.clientX;
                 if (stage.setPointerCapture) {
                     try { stage.setPointerCapture(e.pointerId); } catch (err) {}
@@ -329,43 +364,90 @@
                 if (e.button !== 0) return;
                 if (e.target && e.target.closest && e.target.closest(".avatar-stage-actions")) return;
                 dragging = true;
+                dragMoved = false;
                 dragLastX = e.clientX;
             });
             window.addEventListener("mouseup", stopStageDrag);
         }
         stage.addEventListener("dblclick", function () {
             if (MODE === "panda" && pandaAvatar) pandaAvatar.resetYaw();
+            else if (MODE === "vrm") vtuber.yaw = 0;
+            else if (MODE === "live2d" && live2dAvatar) live2dAvatar.triggerGesture("reset");
         });
         return true;
     }
 
-    // ---------- 主形象：VRM 虚拟主播 ----------
-    function loadVrmModel(onDone) {
-        if (!window.THREE || !THREE.GLTFLoader) { onDone(false); return; }
-        var loader = new THREE.GLTFLoader();
-        loader.load(MODEL_URL, function (gltf) {
-            try {
-                setupVrm(gltf.scene);
-                onDone(true);
-            } catch (e) {
-                onDone(false);
+    // ---------- 通用 Live3D (VRM 0.x / 1.0) 虚拟主播 ----------
+    function disposeVrmRoot() {
+        if (!vtuber.root) return;
+        scene.remove(vtuber.root);
+        vtuber.root.traverse(function (obj) {
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                var mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+                mats.forEach(function (m) {
+                    if (!m) return;
+                    if (m.map) m.map.dispose();
+                    m.dispose();
+                });
             }
-        }, undefined, function () { onDone(false); });
+        });
+        vtuber.root = null;
+        vtuber.faces = [];
+        vtuber.bones = {};
+        vtuber.base = {};
+        vtuber.arms = null;
+        vtuber.yaw = 0;
+        vrmReady = false;
     }
 
-    // three-vrm-girl 节点名是 Unity Humanoid 风（J_Bip_L_UpperArm），与 VRM humanoid 映射名不同，
-    // 故用别名表匹配，两种命名都能拿到同一批骨骼
+    function currentVrmTarget() {
+        if (vrmCustomUrl) return { label: vrmCustomLabel || "自定义 VRM 皮套", url: vrmCustomUrl };
+        return VRM_PRESETS[activeVrmPresetIndex % VRM_PRESETS.length];
+    }
+
+    function loadVrmModel(url, onDone) {
+        if (typeof url === "function") { onDone = url; url = currentVrmTarget().url; }
+        if (!window.THREE || !THREE.GLTFLoader) { onDone(false); return; }
+        var token = ++vrmLoadToken;
+        var loader = new THREE.GLTFLoader();
+        loader.load(url, function (gltf) {
+            if (token !== vrmLoadToken) return;
+            try {
+                disposeVrmRoot();
+                setupVrm(gltf);
+                onDone(true);
+            } catch (e) {
+                console.error("VRM setup failed:", e);
+                onDone(false);
+            }
+        }, undefined, function (err) {
+            if (token !== vrmLoadToken) return;
+            console.error("VRM load failed:", url, err);
+            onDone(false);
+        });
+    }
+
+    // 兼容 Unity Humanoid / VRoid / Mixamo 骨骼命名
     var BONE_ALIASES = {
-        head: ["head", "J_Bip_C_Head"],
-        neck: ["neck", "J_Bip_C_Neck"],
-        chest: ["chest", "J_Bip_C_Chest"],
-        upperChest: ["upperChest", "J_Bip_C_UpperChest"],
-        spine: ["spine", "J_Bip_C_Spine"],
-        hips: ["hips", "J_Bip_C_Hips"],
-        leftUpperArm: ["leftUpperArm", "J_Bip_L_UpperArm"],
-        rightUpperArm: ["rightUpperArm", "J_Bip_R_UpperArm"],
-        leftLowerArm: ["leftLowerArm", "J_Bip_L_LowerArm"],
-        rightLowerArm: ["rightLowerArm", "J_Bip_R_LowerArm"]
+        head: ["head", "J_Bip_C_Head", "Head"],
+        neck: ["neck", "J_Bip_C_Neck", "Neck"],
+        chest: ["chest", "J_Bip_C_Chest", "Chest"],
+        upperChest: ["upperChest", "J_Bip_C_UpperChest", "UpperChest"],
+        spine: ["spine", "J_Bip_C_Spine", "Spine"],
+        hips: ["hips", "J_Bip_C_Hips", "Hips"],
+        leftUpperArm: ["leftUpperArm", "J_Bip_L_UpperArm", "LeftUpperArm"],
+        rightUpperArm: ["rightUpperArm", "J_Bip_R_UpperArm", "RightUpperArm"],
+        leftLowerArm: ["leftLowerArm", "J_Bip_L_LowerArm", "LeftLowerArm"],
+        rightLowerArm: ["rightLowerArm", "J_Bip_R_LowerArm", "RightLowerArm"],
+        leftHand: ["leftHand", "J_Bip_L_Hand", "LeftHand"],
+        rightHand: ["rightHand", "J_Bip_R_Hand", "RightHand"],
+        leftMiddleProximal: ["leftMiddleProximal", "J_Bip_L_Middle1"],
+        rightMiddleProximal: ["rightMiddleProximal", "J_Bip_R_Middle1"],
+        leftIndexProximal: ["leftIndexProximal", "J_Bip_L_Index1"],
+        rightIndexProximal: ["rightIndexProximal", "J_Bip_R_Index1"],
+        leftLittleProximal: ["leftLittleProximal", "J_Bip_L_Little1"],
+        rightLittleProximal: ["rightLittleProximal", "J_Bip_R_Little1"]
     };
 
     function boneCanonical(name) {
@@ -375,23 +457,115 @@
         return null;
     }
 
-    function setupVrm(root) {
+    function parseVrmBindings(gltf) {
+        var json = (gltf.parser && gltf.parser.json) || {};
+        var ext = json.extensions || {};
+        var vrm0 = ext.VRM || null;
+        var vrm1 = ext.VRMC_vrm || null;
+        var idx = { a: -1, i: -1, u: -1, e: -1, o: -1, blink: -1, joy: -1 };
+        var boneNodeNames = {};
+
+        // 1. 解析 VRM 0.x blendShapeMaster 与 humanoid 骨骼名
+        if (vrm0) {
+            var groups = (vrm0.blendShapeMaster && vrm0.blendShapeMaster.blendShapeGroups) || [];
+            groups.forEach(function (g) {
+                var p = String(g.presetName || g.name || "").toLowerCase();
+                var bind = (g.binds && g.binds[0]) || null;
+                if (!bind || typeof bind.index !== "number") return;
+                if (p === "a") idx.a = bind.index;
+                else if (p === "i") idx.i = bind.index;
+                else if (p === "u") idx.u = bind.index;
+                else if (p === "e") idx.e = bind.index;
+                else if (p === "o") idx.o = bind.index;
+                else if (p === "blink") idx.blink = bind.index;
+                else if (p === "joy" || p === "fun") { if (idx.joy < 0 || p === "joy") idx.joy = bind.index; }
+            });
+            var hb0 = (vrm0.humanoid && vrm0.humanoid.humanBones) || [];
+            hb0.forEach(function (b) {
+                var nodeDef = json.nodes && json.nodes[b.node];
+                if (nodeDef && nodeDef.name) boneNodeNames[nodeDef.name] = b.bone;
+            });
+        }
+
+        // 2. 解析 VRM 1.0 expressions 与 humanoid 骨骼名
+        if (vrm1) {
+            var presets = (vrm1.expressions && vrm1.expressions.preset) || {};
+            var map1 = { aa: "a", ih: "i", ou: "u", ee: "e", oh: "o", blink: "blink", happy: "joy" };
+            Object.keys(map1).forEach(function (k) {
+                var expr = presets[k];
+                var bind = expr && expr.morphTargetBinds && expr.morphTargetBinds[0];
+                if (bind && typeof bind.index === "number") idx[map1[k]] = bind.index;
+            });
+            var hb1 = (vrm1.humanoid && vrm1.humanoid.humanBones) || {};
+            Object.keys(hb1).forEach(function (boneKey) {
+                var nodeIdx = hb1[boneKey] && hb1[boneKey].node;
+                var nodeDef = typeof nodeIdx === "number" && json.nodes && json.nodes[nodeIdx];
+                if (nodeDef && nodeDef.name) boneNodeNames[nodeDef.name] = boneKey;
+            });
+        }
+
+        return { idx: idx, boneNodeNames: boneNodeNames, isVrm1: !!vrm1 && !vrm0 };
+    }
+
+    function setupVrm(gltf) {
+        var root = gltf.scene || gltf;
+        var parsed = parseVrmBindings(gltf);
         vtuber.root = root;
+        vtuber.faces = [];
+        vtuber.bones = {};
+        vtuber.base = {};
+        vtuber.yaw = 0;
+        vtuber.baseYaw = parsed.isVrm1 ? 0 : Math.PI;
+        vtuber.gesture = { kind: null, start: 0, duration: 1.6 };
+
+        var resolvedIdx = Object.assign({}, parsed.idx);
+        var maxMorphCount = 0;
+        var candidateFaces = [];
         root.traverse(function (obj) {
-            // Face 按材质拆成 8 个 primitive（皮肤/瞳孔/眉毛…）但共用同一套 43 morph，
-            // 必须全部收集同驱，否则眨眼/口型只有皮肤动、五官掉队
-            if (obj.isSkinnedMesh && obj.morphTargetInfluences &&
-                obj.morphTargetInfluences.length > IDX.o) {
-                vtuber.faces.push(obj);
+            if (obj.isSkinnedMesh && obj.morphTargetInfluences && obj.morphTargetInfluences.length >= 6) {
+                candidateFaces.push(obj);
+                if (obj.morphTargetInfluences.length > maxMorphCount) {
+                    maxMorphCount = obj.morphTargetInfluences.length;
+                }
             }
             if (obj.isBone) {
-                var canon = boneCanonical(obj.name);
-                if (canon) vtuber.bones[canon] = obj;
+                var canon = parsed.boneNodeNames[obj.name] || boneCanonical(obj.name);
+                if (canon && !vtuber.bones[canon]) vtuber.bones[canon] = obj;
             }
         });
+
+        // 兜底：若扩展里未解析出 morph 索引，则从 morphTargetDictionary 按名称匹配
+        if (candidateFaces.length && (resolvedIdx.a < 0 || resolvedIdx.blink < 0)) {
+            var dict = candidateFaces[0].morphTargetDictionary || {};
+            var keys = Object.keys(dict);
+            function findMorph(re) {
+                for (var i = 0; i < keys.length; i++) {
+                    if (re.test(keys[i])) return dict[keys[i]];
+                }
+                return -1;
+            }
+            if (resolvedIdx.a < 0) resolvedIdx.a = findMorph(/mth_a$|vrc\.v_aa|_a$|^aa$|^a$/i);
+            if (resolvedIdx.i < 0) resolvedIdx.i = findMorph(/mth_i$|vrc\.v_ih|_i$|^ih$|^i$/i);
+            if (resolvedIdx.u < 0) resolvedIdx.u = findMorph(/mth_u$|vrc\.v_ou|_u$|^ou$|^u$/i);
+            if (resolvedIdx.e < 0) resolvedIdx.e = findMorph(/mth_e$|vrc\.v_e|_e$|^ee$|^e$/i);
+            if (resolvedIdx.o < 0) resolvedIdx.o = findMorph(/mth_o$|vrc\.v_oh|_o$|^oh$|^o$/i);
+            if (resolvedIdx.blink < 0) resolvedIdx.blink = findMorph(/eye_close$|blink$|^blink/i);
+            if (resolvedIdx.joy < 0) resolvedIdx.joy = findMorph(/all_joy$|joy$|happy$|smile/i);
+        }
+        // 最后兜底到默认索引（仅当在合法范围内）
+        Object.keys(IDX).forEach(function (k) {
+            if (resolvedIdx[k] < 0 && IDX[k] < maxMorphCount) resolvedIdx[k] = IDX[k];
+        });
+        vtuber.idx = resolvedIdx;
+
+        // 收集所有拥有最大 morph 集（脸部各材质 primitive）的 SkinnedMesh，同驱避免五官错位
+        var minFaceMorphs = Math.max(6, Math.floor(maxMorphCount * 0.7));
+        candidateFaces.forEach(function (mesh) {
+            if (mesh.morphTargetInfluences.length >= minFaceMorphs) vtuber.faces.push(mesh);
+        });
+
         scene.add(root);
-        // 实测该模型面朝 -Z（背对 +Z 机位），转 180° 正对镜头
-        root.rotation.y = Math.PI;
+        root.rotation.y = vtuber.baseYaw;
 
         // 按包围盒自适应机位：不同导出单位（米/厘米级）都能正确取景，脚底对齐网格
         var box = new THREE.Box3().setFromObject(root);
@@ -402,37 +576,113 @@
         vtuber.gridScale = h / 1.5;
         if (gridHelper) gridHelper.scale.setScalar(vtuber.gridScale);
 
-        // 绑定姿态是 T-pose 平举：用几何四元数把上臂旋到世界下方，免猜旋转符号
         root.updateMatrixWorld(true);
-        lowerArm("leftUpperArm", "leftLowerArm");
-        lowerArm("rightUpperArm", "rightLowerArm");
+        vtuber.arms = bindVrmArms(root, vtuber.bones);
+        applyVrmArmPose(1.0, 0, null, 0, 0, false);
 
-        // 基准姿态在垂手之后捕获，idle/手势叠加都以此为原点
+        // 捕获头部/躯干基准欧拉角（仅用于呼吸、视线跟随与点头）
         for (var name in vtuber.bones) {
             var r = vtuber.bones[name].rotation;
             vtuber.base[name] = { x: r.x, y: r.y, z: r.z };
         }
 
-        // 虚拟主播半身机位：头顶到胸口入镜
-        var headY = h * 0.86;
-        vtuber.camPos = [0, headY, h * 0.8];
-        vtuber.camLook = [0, headY * 0.96, 0];
+        // 虚拟主播半身机位：留出两侧挥手空间，头顶到腰部舒适入镜
+        var headY = h * 0.82;
+        vtuber.camPos = [0, headY, h * 0.92];
+        vtuber.camLook = [0, headY * 0.91, 0];
         applyVrmCamera();
         vrmReady = true;
         MODE = "vrm";
     }
 
-    function lowerArm(upperName, lowerName) {
-        var upper = vtuber.bones[upperName], lower = vtuber.bones[lowerName];
-        if (!upper || !lower || !lower.position.lengthSq()) return;
-        // 肘方向（bone 局部→父空间）与世界下方（→父空间）的夹角四元数
-        var elbow = new THREE.Vector3().copy(lower.position).normalize().applyQuaternion(upper.quaternion);
-        var down = new THREE.Vector3(0, -1, 0);
-        var pq = new THREE.Quaternion();
-        if (upper.parent) { upper.parent.getWorldQuaternion(pq); down.applyQuaternion(pq.invert()); }
-        var q = new THREE.Quaternion().setFromUnitVectors(elbow.normalize(), down.normalize());
-        q.slerp(new THREE.Quaternion(), 0.12);   // 留余量，手臂不完全绷直
-        upper.quaternion.premultiply(q);
+    function setBoneQuat(bone, q, alpha) {
+        if (alpha >= 0.999) bone.quaternion.copy(q);
+        else bone.quaternion.slerp(q, alpha);
+    }
+
+    function armBasis(axis, hint, target, scratch) {
+        var side = scratch.side.copy(hint).addScaledVector(axis, -axis.dot(hint));
+        if (side.lengthSq() < 1e-6) {
+            side.set(0, 0, 1).addScaledVector(axis, -axis.z);
+            if (side.lengthSq() < 1e-6) side.set(0, 1, 0).addScaledVector(axis, -axis.y);
+        }
+        side.normalize();
+        return target.setFromRotationMatrix(scratch.matrix.makeBasis(
+            axis, side, scratch.normal.crossVectors(axis, side)));
+    }
+
+    function bindVrmArms(root, bones) {
+        var scratch = {
+            matrix: new THREE.Matrix4(), side: new THREE.Vector3(), normal: new THREE.Vector3(),
+            upper: new THREE.Vector3(), lower: new THREE.Vector3(), hint: new THREE.Vector3(),
+            forward: new THREE.Vector3(0, 0, 1),
+            target: new THREE.Quaternion(), parent: new THREE.Quaternion(), facing: new THREE.Quaternion(),
+            restFacing: root.getWorldQuaternion(new THREE.Quaternion()).invert(), limbs: []
+        };
+        var fwd = scratch.forward;
+
+        function pos(bone) { return bone.getWorldPosition(new THREE.Vector3()); }
+        function offset(bone, direction, hint) {
+            return armBasis(direction, hint, new THREE.Quaternion(), scratch).invert()
+                .multiply(bone.getWorldQuaternion(new THREE.Quaternion()));
+        }
+
+        ["right", "left"].forEach(function (side) {
+            var upper = bones[side + "UpperArm"], lower = bones[side + "LowerArm"], hand = bones[side + "Hand"];
+            if (!upper || !lower || !hand) return;
+            var elbow = pos(lower), wrist = pos(hand);
+            var upperDir = elbow.clone().sub(pos(upper)).normalize();
+            var lowerDir = wrist.clone().sub(elbow).normalize();
+            var middle = bones[side + "MiddleProximal"];
+            var index = bones[side + "IndexProximal"], little = bones[side + "LittleProximal"];
+            var fingerDir = middle ? pos(middle).sub(wrist).normalize() : lowerDir;
+            var thumbSide = index && little ? pos(index).sub(pos(little)).normalize() : fwd;
+            var sign = side === "right" ? -1 : 1;
+            var palm = thumbSide.clone().cross(fingerDir).multiplyScalar(-sign).normalize();
+            scratch.limbs.push({
+                sign: sign, upper: upper, lower: lower, hand: hand, wristRest: hand.quaternion.clone(),
+                upperOffset: offset(upper, upperDir, fwd), lowerOffset: offset(lower, lowerDir, thumbSide),
+                handOffset: offset(hand, fingerDir, palm)
+            });
+        });
+        return scratch;
+    }
+
+    function aimVrmBone(bone, offset, direction, hint, alpha, scratch) {
+        var target = armBasis(direction, hint, scratch.target, scratch).multiply(offset);
+        var parent = bone.parent.getWorldQuaternion(scratch.parent).invert();
+        target.premultiply(scratch.facing).premultiply(parent);
+        setBoneQuat(bone, target, alpha);
+    }
+
+    function applyVrmArmPose(alpha, t, kind, envelope, phase, speaking) {
+        var arm = vtuber.arms;
+        if (!vtuber.root || !arm) return;
+        // 求解在角色正面坐标系中进行；拖拽转身时，肩、肘与掌心随角色一起旋转。
+        vtuber.root.getWorldQuaternion(arm.facing).multiply(arm.restFacing);
+        arm.limbs.forEach(function (limb) {
+            var side = limb.sign;
+            var talk = speaking && kind !== "nod" ? 0.64 + 0.19 * Math.sin(t * 3 + side) : 0;
+            var greeting = kind === "celebrate" || (kind === "wave" && side < 0) ? envelope : 0;
+            var sway = Math.sin(phase * 9);
+            var upper = arm.upper.set(side * (0.23 + 0.05 * talk), -1, 0.14 + 0.24 * talk);
+            var lower = arm.lower.set(side * 0.10, -0.96 + talk * 0.55, 0.30 + talk * 0.54);
+            upper.lerp(arm.hint.set(side * 0.93, -0.30, 0.38), greeting).normalize();
+            lower.lerp(arm.hint.set(side * (-0.10 + sway * 0.29), 1, 0.19), greeting).normalize();
+            // 连杆方向决定肘部的弯曲平面；手指与掌面使用独立的模型绑定基准。
+            aimVrmBone(limb.upper, limb.upperOffset, upper, lower, alpha, arm);
+            aimVrmBone(limb.lower, limb.lowerOffset, lower, arm.hint.copy(upper).negate(), alpha, arm);
+            var wristTarget = arm.target.copy(limb.wristRest);
+            // 等前臂抬起再翻掌，避免经过水平位置时手腕翻转。
+            var palmBlend = THREE.MathUtils.smoothstep(greeting, 0.55, 0.90);
+            if (palmBlend) {
+                var handDir = arm.hint.copy(lower).addScaledVector(upper, sway * 0.11).normalize();
+                armBasis(handDir, arm.forward, wristTarget, arm).multiply(limb.handOffset)
+                    .premultiply(arm.facing).premultiply(limb.hand.parent.getWorldQuaternion(arm.parent).invert());
+                wristTarget.slerp(limb.wristRest, 1 - palmBlend);
+            }
+            setBoneQuat(limb.hand, wristTarget, alpha);
+        });
     }
 
     // ---------- 降级形象：低多边形程序化数字人 ----------
@@ -498,11 +748,23 @@
     }
 
     function setMorph(list, idx, v) {
-        for (var i = 0; i < list.length; i++) list[i].morphTargetInfluences[idx] = v;
+        if (idx == null || idx < 0) return;
+        for (var i = 0; i < list.length; i++) {
+            if (idx < list[i].morphTargetInfluences.length) {
+                list[i].morphTargetInfluences[idx] = v;
+            }
+        }
+    }
+
+    function triggerVrmGesture(kind, duration) {
+        vtuber.gesture = { kind: kind, start: last || (performance.now() / 1000), duration: duration || (kind === "wave" ? 2.4 : 1.7) };
     }
 
     function updateVrm(t, dt) {
         mouthPulse = Math.max(0, mouthPulse - dt * 3);   // 末字后约 0.3s 收敛，流式期间由 delta 持续重置
+        if (vtuber.root) {
+            vtuber.root.rotation.y += ((vtuber.baseYaw + vtuber.yaw) - vtuber.root.rotation.y) * Math.min(1, dt * 10);
+        }
         var b = vtuber.bones, base = vtuber.base;
         function osc(name, fx, amp, ph) {
             var bone = b[name];
@@ -513,45 +775,74 @@
         var boost = voiceActive() ? 2.2 : 1;
         osc("chest", 1.5, 0.012 * boost);
         osc("spine", 0.9, 0.008 * boost, 1.2);
+
+        // 处理 VRM 互动手势（挥手 / 点头 / 庆祝）
+        var g = vtuber.gesture;
+        var gEnv = 0, gPhase = 0;
+        if (g && g.kind) {
+            var elapsed = t - g.start;
+            if (elapsed >= 0 && elapsed < g.duration) {
+                var u = elapsed / g.duration;
+                gEnv = Math.sin(Math.min(1, u * 4) * Math.PI * 0.5) * Math.sin(Math.min(1, (1 - u) * 3.5) * Math.PI * 0.5);
+                gPhase = elapsed;
+            } else if (elapsed >= g.duration) {
+                g.kind = null;
+            }
+        }
+
         var head = b.head;
         if (head && base.head) {
-            // root 已转 180°，局部 Y 轴在屏幕上反向，故 X 跟随取负
-            var ty = base.head.y - pointerNX * 0.30 + Math.sin(t * 0.5) * 0.045;
-            var tx = base.head.x - pointerNY * 0.16 + Math.sin(t * 0.9) * 0.015;
+            // 右手系验证：+Y 旋转使脸部转向屏幕右侧 (+pointerNX)；VRM 0.x(-Z 朝前) 俯首为 -X，VRM 1.0(+Z 朝前) 俯首为 +X
+            var pitchSign = vtuber.baseYaw === 0 ? 1 : -1;
+            var nodOff = (g && g.kind === "nod") ? pitchSign * (1 - Math.cos(gPhase * 7.8)) * 0.10 * gEnv : 0;
+            var tiltOff = (g && g.kind === "wave") ? (vtuber.baseYaw === 0 ? -0.10 : 0.10) * gEnv : 0;
+            var ty = base.head.y + pointerNX * 0.26 + Math.sin(t * 0.5) * 0.035;
+            var tx = base.head.x + pitchSign * pointerNY * 0.14 + Math.sin(t * 0.9) * 0.014 + nodOff;
+            var tz = base.head.z + tiltOff;
             head.rotation.y += (ty - head.rotation.y) * Math.min(1, dt * 6);
-            head.rotation.x += (tx - head.rotation.x) * Math.min(1, dt * 6);
+            head.rotation.x += (tx - head.rotation.x) * Math.min(1, dt * 7);
+            head.rotation.z += (tz - head.rotation.z) * Math.min(1, dt * 6);
         }
-        // 说话手势：手臂小幅摆动
-        if (voiceActive()) {
-            osc("leftUpperArm", 2.2, 0.05, 0.6);
-            osc("rightUpperArm", 2.0, 0.06, Math.PI);
-        }
+
+        // 使用世界方向四元数求解双臂姿态（自然垂手 / 胸前挥手 / 庆祝 / 说话手势）
+        applyVrmArmPose(Math.min(1, dt * 11), t, g ? g.kind : null, gEnv, gPhase, voiceActive());
 
         var faces = vtuber.faces;
         if (!faces.length) return;
         var infl = faces[0].morphTargetInfluences;
+        var map = vtuber.idx;
+        var visemes = [map.a, map.i, map.u, map.e, map.o];
+
         // 眨眼：每 2~5 秒一次，blink morph 0→1→0（全部面部网格同驱）
         if (t > nextBlinkAt && blinkPhase < 0) {
             blinkPhase = 0;
             nextBlinkAt = t + 2 + Math.random() * 3;
         }
-        if (blinkPhase >= 0) {
+        if (blinkPhase >= 0 && map.blink >= 0) {
             blinkPhase += dt / 0.14;
-            setMorph(faces, IDX.blink, blinkPhase < 0.5 ? blinkPhase * 2 : Math.max(0, 2 - blinkPhase * 2));
-            if (blinkPhase >= 1) { blinkPhase = -1; setMorph(faces, IDX.blink, 0); }
+            setMorph(faces, map.blink, blinkPhase < 0.5 ? blinkPhase * 2 : Math.max(0, 2 - blinkPhase * 2));
+            if (blinkPhase >= 1) { blinkPhase = -1; setMorph(faces, map.blink, 0); }
+        }
+        // 微笑表情：说话/挥手/庆祝时柔和展露 joy
+        if (map.joy >= 0 && map.joy < infl.length) {
+            var joyTarget = (g && (g.kind === "wave" || g.kind === "celebrate")) ? 0.62 * gEnv
+                : (g && g.kind === "nod") ? 0.35 * gEnv
+                : voiceActive() ? (tts.speaking ? 0.32 : 0.16) : 0.06;
+            setMorph(faces, map.joy, infl[map.joy] + (joyTarget - infl[map.joy]) * Math.min(1, dt * 5));
         }
         // 口型：朗读/文字脉冲期间按 ~7.5 次/秒切元音 morph，其余归零
         var target = [0, 0, 0, 0, 0];
         if (voiceActive()) {
             visemeTick += dt * 7.5;
-            var idx = Math.floor(visemeTick) % VISEME.length;
-            var open = 0.55 + 0.35 * Math.abs(Math.sin(visemeTick * 2.1)) + 0.25 * mouthPulse;
-            target[idx] = Math.min(1, open);
-            setMorph(faces, IDX.joy, infl[IDX.joy] + ((tts.speaking ? 0.3 : 0.12) - infl[IDX.joy]) * Math.min(1, dt * 4));
+            var idx = Math.floor(visemeTick) % visemes.length;
+            var open = 0.52 + 0.34 * Math.abs(Math.sin(visemeTick * 2.1)) + 0.22 * mouthPulse;
+            target[idx] = Math.min(0.95, open);
         }
-        for (var k = 0; k < VISEME.length; k++) {
-            var cur = infl[VISEME[k]];
-            setMorph(faces, VISEME[k], cur + (target[k] - cur) * Math.min(1, dt * 14));
+        for (var k = 0; k < visemes.length; k++) {
+            var vi = visemes[k];
+            if (vi < 0 || vi >= infl.length) continue;
+            var cur = infl[vi];
+            setMorph(faces, vi, cur + (target[k] - cur) * Math.min(1, dt * 14));
         }
     }
 
@@ -590,19 +881,47 @@
 
     function updateModelTag(kind) {
         var tag = $("avatarModelTag");
-        if (!tag) return;
-        tag.textContent = kind === "cwnu-panda"
-            ? "西华师范大学 · 华小竹（拖拽旋转视角，双击复位）"
-            : "虚拟主播 · VRM 实时驱动";
+        if (tag) {
+            if (kind === "cwnu-panda") {
+                tag.textContent = "西华师大 · 华小竹（拖拽旋转，双击复位）";
+            } else if (kind === "live2d") {
+                tag.textContent = "Live2D 看板娘 · Haru（眼神跟随，点击互动）";
+            } else {
+                var target = currentVrmTarget();
+                tag.textContent = "Live3D · " + target.label + "（拖拽旋转）";
+            }
+        }
+        var stage = $("avatarStage");
+        if (stage) {
+            stage.classList.toggle("is-live3d", kind === "vrm");
+            stage.classList.toggle("is-live2d", kind === "live2d");
+        }
         var bar = $("avatarGestureBar");
-        if (bar) bar.hidden = kind !== "cwnu-panda";
+        if (bar) bar.hidden = false;
+        var specialBtn = $("avatarSpecialBtn");
+        if (specialBtn) {
+            if (kind === "cwnu-panda") {
+                specialBtn.textContent = "📖 托书";
+                specialBtn.title = "翻阅校园手册";
+            } else if (kind === "live2d") {
+                specialBtn.textContent = "✨ 换表情";
+                specialBtn.title = "切换 Live2D 表情";
+            } else {
+                specialBtn.textContent = "🎭 换皮套";
+                specialBtn.title = "在内置 Live3D VRM 皮套间切换";
+            }
+        }
+        var uploadBtn = $("avatarVrmUploadBtn");
+        if (uploadBtn) uploadBtn.hidden = kind !== "vrm";
     }
 
     function renderSwitcherUI(kind) {
         var box = $("avatarSwitcher");
         if (!box) return;
         Array.prototype.forEach.call(box.querySelectorAll("[data-avatar-model]"), function (btn) {
-            btn.classList.toggle("is-active", btn.getAttribute("data-avatar-model") === kind);
+            var active = btn.getAttribute("data-avatar-model") === kind;
+            btn.classList.toggle("is-active", active);
+            btn.setAttribute("aria-selected", String(active));
         });
         updateModelTag(kind);
     }
@@ -614,16 +933,23 @@
             renderer.toneMappingExposure = 1.04;
             if (THREE.sRGBEncoding !== undefined) renderer.outputEncoding = THREE.sRGBEncoding;
             if (ambientLight) { ambientLight.color.setHex(0x98b0da); ambientLight.intensity = 0.38; }
+            if (hemiLight) { hemiLight.intensity = 0.0; }
             if (keyLight) { keyLight.color.setHex(0xfffaf2); keyLight.intensity = 0.92; keyLight.position.set(-2.1, 4.1, 3.8); }
             scene.environment = (pandaAvatar && pandaAvatar.envMap) ? pandaAvatar.envMap : null;
         } else {
             if (THREE.NoToneMapping !== undefined) renderer.toneMapping = THREE.NoToneMapping;
             renderer.toneMappingExposure = 1.0;
-            if (THREE.LinearEncoding !== undefined) renderer.outputEncoding = THREE.LinearEncoding;
-            if (ambientLight) { ambientLight.color.setHex(0xdde4ff); ambientLight.intensity = 1.0; }
-            if (keyLight) { keyLight.color.setHex(0xffffff); keyLight.intensity = 0.8; keyLight.position.set(2, 4, 3); }
+            if (THREE.sRGBEncoding !== undefined) renderer.outputEncoding = THREE.sRGBEncoding;
+            if (ambientLight) { ambientLight.color.setHex(0xffffff); ambientLight.intensity = 0.72; }
+            if (hemiLight) { hemiLight.color.setHex(0xffffff); hemiLight.groundColor.setHex(0x6b7aa1); hemiLight.intensity = 0.45; }
+            if (keyLight) { keyLight.color.setHex(0xfff8f0); keyLight.intensity = 0.75; keyLight.position.set(1.8, 3.2, 3.4); }
             scene.environment = null;
         }
+    }
+
+    function setThreeCanvasVisible(show) {
+        if (renderer && renderer.domElement) renderer.domElement.hidden = !show;
+        if (live2dAvatar) live2dAvatar.setVisible(!show);
     }
 
     function activatePanda() {
@@ -633,10 +959,11 @@
             scene.add(pandaAvatar.root);
         }
         syncPandaPersona(selectedAgent);
+        setThreeCanvasVisible(true);
         hideAllAvatars();
         applyLightingMode(true);
         pandaAvatar.root.visible = true;
-        if (gridHelper) gridHelper.scale.setScalar(1);
+        if (gridHelper) { gridHelper.visible = true; gridHelper.scale.setScalar(1); }
         var cp = pandaAvatar.cameraPreset;
         camera.fov = cp.fov;
         camera.position.set(cp.pos[0], cp.pos[1], cp.pos[2]);
@@ -647,8 +974,80 @@
         return true;
     }
 
+    function activateLive2D() {
+        if (!window.createCampusLive2DAvatar) return false;
+        if (!live2dAvatar) {
+            live2dAvatar = window.createCampusLive2DAvatar($("avatarStage"), { modelUrl: LIVE2D_MODEL_URL });
+        }
+        hideAllAvatars();
+        setThreeCanvasVisible(false);
+        if (live2dAvatar.isReady()) {
+            $("avatarLoading").hidden = true;
+            MODE = "live2d";
+            return true;
+        }
+        if (live2dLoading) {
+            $("avatarLoading").hidden = false;
+            return true;
+        }
+        live2dLoading = true;
+        $("avatarLoading").hidden = false;
+        live2dAvatar.load(function (ok, errMsg) {
+            live2dLoading = false;
+            if (!ok) {
+                live2dFailed = true;
+                appendCaption("系统", "Live2D 看板娘加载失败（" + (errMsg || "unknown") + "），已自动回退。", "is-error");
+                if (wantedModel === "live2d") switchAvatarModel("vrm");
+                return;
+            }
+            if (wantedModel !== "live2d") {
+                live2dAvatar.setVisible(false);
+                return;
+            }
+            setThreeCanvasVisible(false);
+            $("avatarLoading").hidden = true;
+            MODE = "live2d";
+        });
+        return true;
+    }
+
+    function loadAndShowVrm(url) {
+        vrmLoading = true;
+        vrmFailed = false;
+        setThreeCanvasVisible(true);
+        hideAllAvatars();
+        applyLightingMode(false);
+        $("avatarLoading").hidden = false;
+        loadVrmModel(url, function (ok) {
+            vrmLoading = false;
+            if (!ok) {
+                vrmFailed = true;
+                if (!rig.group) buildProceduralRig();
+            }
+            if (wantedModel !== "vrm") {
+                if (wantedModel === "live2d") activateLive2D();
+                else activatePanda();
+                return;
+            }
+            setThreeCanvasVisible(true);
+            hideAllAvatars();
+            if (ok && vtuber.root) {
+                vtuber.root.visible = true;
+                if (gridHelper) { gridHelper.visible = true; gridHelper.scale.setScalar(vtuber.gridScale || 1); }
+                applyVrmCamera();
+                updateModelTag("vrm");
+                MODE = "vrm";
+            } else if (rig.group) {
+                rig.group.visible = true;
+                MODE = "procedural";
+            }
+            $("avatarLoading").hidden = true;
+        });
+    }
+
     function switchAvatarModel(kind) {
-        wantedModel = kind === "vrm" ? "vrm" : "cwnu-panda";
+        if (kind !== "vrm" && kind !== "live2d" && kind !== "cwnu-panda") kind = "cwnu-panda";
+        wantedModel = kind;
         try { localStorage.setItem(MODEL_CHOICE_KEY, wantedModel); } catch (e) {}
         renderSwitcherUI(wantedModel);
 
@@ -658,12 +1057,19 @@
             renderSwitcherUI("vrm");
         }
 
-        // 切换到 VRM 虚拟主播
+        if (wantedModel === "live2d") {
+            if (activateLive2D()) return;
+            wantedModel = "vrm";
+            renderSwitcherUI("vrm");
+        }
+
+        // 切换到 Live3D VRM 虚拟主播
+        setThreeCanvasVisible(true);
         applyLightingMode(false);
         if (vrmReady && vtuber.root) {
             hideAllAvatars();
             vtuber.root.visible = true;
-            if (gridHelper) gridHelper.scale.setScalar(vtuber.gridScale || 1);
+            if (gridHelper) { gridHelper.visible = true; gridHelper.scale.setScalar(vtuber.gridScale || 1); }
             applyVrmCamera();
             $("avatarLoading").hidden = true;
             MODE = "vrm";
@@ -672,7 +1078,7 @@
         if (vrmFailed && rig.group) {
             hideAllAvatars();
             rig.group.visible = true;
-            if (gridHelper) gridHelper.scale.setScalar(1);
+            if (gridHelper) { gridHelper.visible = true; gridHelper.scale.setScalar(1); }
             camera.fov = 38;
             camera.position.set(0, 1.7, 5.2);
             camera.lookAt(0, 1.35, 0);
@@ -685,49 +1091,30 @@
             $("avatarLoading").hidden = false;
             return;
         }
-        vrmLoading = true;
-        hideAllAvatars();
-        $("avatarLoading").hidden = false;
-        loadVrmModel(function (ok) {
-            vrmLoading = false;
-            if (!ok) {
-                vrmFailed = true;
-                if (!rig.group) buildProceduralRig();
-            }
-            if (wantedModel !== "vrm") {
-                activatePanda();
-                return;
-            }
-            hideAllAvatars();
-            if (ok && vtuber.root) {
-                vtuber.root.visible = true;
-                if (gridHelper) gridHelper.scale.setScalar(vtuber.gridScale || 1);
-                applyVrmCamera();
-                MODE = "vrm";
-            } else if (rig.group) {
-                rig.group.visible = true;
-                MODE = "procedural";
-            }
-            $("avatarLoading").hidden = true;
-        });
+        loadAndShowVrm(currentVrmTarget().url);
     }
 
     function animate(tick) {
         var t = tick / 1000;
         var dt = Math.min(0.05, t - last || 0.016);
         last = t;
-        if (MODE === "panda" && pandaAvatar) {
+        if (MODE === "live2d") {
             mouthPulse = Math.max(0, mouthPulse - dt * 3);
-            pandaAvatar.update(t, dt, {
-                voiceActive: voiceActive(),
-                mouthPulse: mouthPulse,
-                pointerNX: pointerNX,
-                pointerNY: pointerNY,
-                thinking: thinking
-            });
-        } else if (MODE === "vrm") updateVrm(t, dt);
-        else if (MODE === "procedural") updateProcedural(t);
-        if (renderer) renderer.render(scene, camera);
+            if (live2dAvatar) live2dAvatar.setVoice(voiceActive());
+        } else {
+            if (MODE === "panda" && pandaAvatar) {
+                mouthPulse = Math.max(0, mouthPulse - dt * 3);
+                pandaAvatar.update(t, dt, {
+                    voiceActive: voiceActive(),
+                    mouthPulse: mouthPulse,
+                    pointerNX: pointerNX,
+                    pointerNY: pointerNY,
+                    thinking: thinking
+                });
+            } else if (MODE === "vrm") updateVrm(t, dt);
+            else if (MODE === "procedural") updateProcedural(t);
+            if (renderer) renderer.render(scene, camera);
+        }
         requestAnimationFrame(animate);
     }
 
@@ -1000,6 +1387,10 @@
     function triggerPandaAction(kind, duration) {
         if (MODE === "panda" && pandaAvatar && pandaAvatar.triggerGesture) {
             pandaAvatar.triggerGesture(kind, duration);
+        } else if (MODE === "vrm" && vtuber.root) {
+            triggerVrmGesture(kind === "book" ? "nod" : kind, duration || 1.6);
+        } else if (MODE === "live2d" && live2dAvatar) {
+            live2dAvatar.triggerGesture(kind);
         }
     }
 
@@ -1370,19 +1761,54 @@
 
     function bindGestureBar() {
         var bar = $("avatarGestureBar");
-        if (!bar) return;
-        bar.addEventListener("click", function (e) {
-            var btn = e.target.closest ? e.target.closest("[data-gesture]") : null;
-            if (!btn || MODE !== "panda" || !pandaAvatar) return;
-            var g = btn.getAttribute("data-gesture");
-            if (g === "reset") {
-                pandaAvatar.resetYaw();
-                return;
-            }
-            if (pandaAvatar.triggerGesture) {
-                pandaAvatar.triggerGesture(g);
-            }
-        });
+        if (bar) {
+            bar.addEventListener("click", function (e) {
+                var btn = e.target.closest ? e.target.closest("[data-gesture]") : null;
+                if (!btn) return;
+                var g = btn.getAttribute("data-gesture");
+                if (MODE === "panda" && pandaAvatar) {
+                    if (g === "reset") pandaAvatar.resetYaw();
+                    else if (pandaAvatar.triggerGesture) pandaAvatar.triggerGesture(g);
+                } else if (MODE === "vrm") {
+                    if (g === "reset") {
+                        vtuber.yaw = 0;
+                        vtuber.gesture.kind = null;
+                    } else if (g === "book") {
+                        // 在内置 Live3D VRM 皮套间切换
+                        if (vrmCustomUrl) {
+                            try { URL.revokeObjectURL(vrmCustomUrl); } catch (err) {}
+                            vrmCustomUrl = null;
+                            vrmCustomLabel = "";
+                        } else {
+                            activeVrmPresetIndex = (activeVrmPresetIndex + 1) % VRM_PRESETS.length;
+                        }
+                        loadAndShowVrm(currentVrmTarget().url);
+                    } else {
+                        triggerVrmGesture(g, g === "wave" ? 2.4 : 1.7);
+                    }
+                } else if (MODE === "live2d" && live2dAvatar) {
+                    live2dAvatar.triggerGesture(g);
+                }
+            });
+        }
+        var uploadBtn = $("avatarVrmUploadBtn");
+        var uploadInput = $("avatarVrmInput");
+        if (uploadBtn && uploadInput) {
+            uploadBtn.addEventListener("click", function () { uploadInput.click(); });
+            uploadInput.addEventListener("change", function () {
+                var file = uploadInput.files && uploadInput.files[0];
+                uploadInput.value = "";
+                if (!file) return;
+                if (vrmCustomUrl) {
+                    try { URL.revokeObjectURL(vrmCustomUrl); } catch (err) {}
+                }
+                vrmCustomUrl = URL.createObjectURL(file);
+                vrmCustomLabel = file.name.replace(/\.(vrm|glb)$/i, "");
+                wantedModel = "vrm";
+                renderSwitcherUI("vrm");
+                loadAndShowVrm(vrmCustomUrl);
+            });
+        }
     }
 
     // ---------- 事件绑定 ----------
@@ -1435,8 +1861,10 @@
         }
         var initialModel = "cwnu-panda";
         try {
+            var qModel = (new URLSearchParams(window.location.search).get("model") || "").toLowerCase();
             var saved = localStorage.getItem(MODEL_CHOICE_KEY) || localStorage.getItem(LEGACY_MODEL_CHOICE_KEY);
-            if (saved === "vrm" || saved === "cwnu-panda") initialModel = saved;
+            if (qModel === "vrm" || qModel === "live2d" || qModel === "cwnu-panda") initialModel = qModel;
+            else if (saved === "vrm" || saved === "live2d" || saved === "cwnu-panda") initialModel = saved;
         } catch (e) {}
         switchAvatarModel(initialModel);
         requestAnimationFrame(animate);

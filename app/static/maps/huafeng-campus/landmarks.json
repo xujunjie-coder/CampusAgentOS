@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "kind": "campus-gate-landmarks",
+  "source": "OpenStreetMap 华凤校区门禁、主干道连接点与校园广场/湖泊（ODbL 1.0）",
+  "coordinateSystem": "原模型局部米坐标：x东/y上/z南（EPSG:32648）",
+  "landmarks": [
+    {
+      "id": "gate-phase1-south",
+      "name": "一期大门（南侧）",
+      "positionLocal": [
+        443.903,
+        0,
+        -76.914
+      ],
+      "osmNodes": [
+        4780806121,
+        14002570470
+      ],
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 标注的校门/门禁节点（鼎新大道与西华路交汇处）生成，位置与门名为示意，请以现场出入口为准。"
+    },
+    {
+      "id": "gate-tongxian-bridge",
+      "name": "通贤桥（一期↔二期）",
+      "positionLocal": [
+        191.929,
+        0,
+        32.634
+      ],
+      "osmWay": 550986790,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 通贤桥路段中心点标注，为连接华凤校区一期（北区）与二期（南区）的跨路通道示意。"
+    },
+    {
+      "id": "gate-feihong-bridge",
+      "name": "飞虹桥（一期↔二期）",
+      "positionLocal": [
+        -18.018,
+        0,
+        52.029
+      ],
+      "osmWay": 551178916,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 飞虹桥路段中心点标注，为华凤校区西侧连接一期与二期的跨路通道示意。"
+    },
+    {
+      "id": "gate-phase2-east",
+      "name": "二期东侧出入口",
+      "positionLocal": [
+        601.297,
+        0,
+        396.142
+      ],
+      "osmNode": 2375898982,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 中二期校内道路与师大路二段交汇点标注，位置与门名为示意，请以现场出入口为准。"
+    }
+  ],
+  "places": [
+    {
+      "id": "place-lake-01",
+      "name": "迎曦湖",
+      "kind": "place",
+      "placeKind": "lake",
+      "category": "place",
+      "campusZone": "一期（北区）",
+      "positionLocal": [
+        138.627,
+        0,
+        -112.456
+      ],
+      "osmWay": 228941827,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 标注的校园水体景观（一期（北区），way/228941827）几何中心定位。"
+    },
+    {
+      "id": "place-lake-04",
+      "name": "毓秀湖",
+      "kind": "place",
+      "placeKind": "lake",
+      "category": "place",
+      "campusZone": "一期（北区）",
+      "positionLocal": [
+        320.229,
+        0,
+        -389.375
+      ],
+      "osmWay": 1349751073,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 标注的校园水体景观（一期（北区），way/1349751073）几何中心定位。"
+    },
+    {
+      "id": "place-square-06",
+      "name": "奔牛广场",
+      "kind": "place",
+      "placeKind": "square",
+      "category": "place",
+      "campusZone": "二期（南区）",
+      "positionLocal": [
+        404.658,
+        0,
+        82.598
+      ],
+      "osmWay": 1350866714,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 标注的校园公共广场（二期（南区），way/1350866714）几何中心定位。"
+    },
+    {
+      "id": "place-square-07",
+      "name": "博雅广场",
+      "kind": "place",
+      "placeKind": "square",
+      "category": "place",
+      "campusZone": "一期（北区）",
+      "positionLocal": [
+        312.022,
+        0,
+        -69.573
+      ],
+      "osmWay": 1350866724,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 标注的校园公共广场（一期（北区），way/1350866724）几何中心定位。"
+    },
+    {
+      "id": "place-square-03",
+      "name": "朝阳广场",
+      "kind": "place",
+      "placeKind": "square",
+      "category": "place",
+      "campusZone": "一期（北区）",
+      "positionLocal": [
+        418.1,
+        0,
+        -305.091
+      ],
+      "osmWay": 1349747312,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 标注的校园公共广场（一期（北区），way/1349747312）几何中心定位。"
+    },
+    {
+      "id": "place-square-05",
+      "name": "飞扬广场",
+      "kind": "place",
+      "placeKind": "square",
+      "category": "place",
+      "campusZone": "一期（北区）",
+      "positionLocal": [
+        416.572,
+        0,
+        -561.848
+      ],
+      "osmWay": 1350180892,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 标注的校园公共广场（一期（北区），way/1350180892）几何中心定位。"
+    },
+    {
+      "id": "place-square-08",
+      "name": "宏博广场",
+      "kind": "place",
+      "placeKind": "square",
+      "category": "place",
+      "campusZone": "二期（南区）",
+      "positionLocal": [
+        339.834,
+        0,
+        101.563
+      ],
+      "osmWay": 1350867842,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 标注的校园公共广场（二期（南区），way/1350867842）几何中心定位。"
+    },
+    {
+      "id": "place-square-09",
+      "name": "艺术广场",
+      "kind": "place",
+      "placeKind": "square",
+      "category": "place",
+      "campusZone": "一期（北区）",
+      "positionLocal": [
+        364.56,
+        0,
+        -161.921
+      ],
+      "osmWay": 1354345690,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 标注的校园公共广场（一期（北区），way/1354345690）几何中心定位。"
+    },
+    {
+      "id": "place-sports-02",
+      "name": "灯光球场",
+      "kind": "place",
+      "placeKind": "sports",
+      "category": "place",
+      "campusZone": "二期（南区）",
+      "positionLocal": [
+        -123.006,
+        0,
+        280.483
+      ],
+      "osmWay": 551178482,
+      "status": "approximate",
+      "note": "依据 OpenStreetMap 标注的运动场地（二期（南区），way/551178482）几何中心定位。"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+Haru sample character and motion data ©Live2D Inc.
+Source: https://github.com/Live2D/CubismWebSamples/tree/b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Haru
+The project model configuration selects the upstream idle and haru_g_m12 greeting motions without sample audio.
+Free Material License: https://www.live2d.com/eula/live2d-free-material-license-agreement_en.html
+Sample data terms: https://www.live2d.com/en/learn/sample/
+
+Live2D Cubism Core ©Live2D Inc. The vendored Core retains its upstream license header.
+Source: https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js
+License: https://www.live2d.com/eula/live2d-proprietary-software-license-agreement_en.html
+
+pixi-live2d-display 0.4.0 Cubism 4 runtime, MIT. See pixi-live2d-display.LICENSE.
+Source: https://github.com/guansss/pixi-live2d-display
