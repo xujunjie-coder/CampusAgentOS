@@ -22,7 +22,7 @@
                 </a>
                 <a href="/campus-map" class="chat-portal-btn is-secondary">
                     <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
-                    <span>行署校区</span>
+                    <span>校区地图</span>
                 </a>
             </div>
 
@@ -149,55 +149,56 @@
     <div class="face-mask" id="faceMask" hidden>
         <div class="face-dialog" role="dialog" aria-modal="true" aria-labelledby="faceTitle">
             <div class="face-dialog-head">
-                <div><span id="faceTitle"><i class="fas fa-camera"></i> 人脸设置</span><p class="face-dialog-subtitle">录入清晰的正面照，开启便捷的人脸登录</p></div>
+                <h2 id="faceTitle"><i class="fas fa-camera" aria-hidden="true"></i> 人脸设置</h2>
+                <label class="face-switch"><span>人脸登录</span><input type="checkbox" id="faceEnabled" role="switch" disabled><span class="face-switch-track" aria-hidden="true"></span></label>
                 <button type="button" class="face-close" id="faceClose" aria-label="关闭人脸设置">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="face-dialog-body">
-                <div class="face-engine" id="faceEngine">正在检查人脸服务…</div>
+                <div class="face-engine" id="faceEngine" role="status">正在检查人脸服务…</div>
                 <div class="face-grid">
                     <div class="face-left">
-                        <h3 class="face-section-title">采集人脸<span>拍照或上传照片</span></h3>
                         <div class="face-stage" id="faceStage">
                             <video id="faceVideo" autoplay playsinline muted></video>
                             <img id="faceShot" alt="待录入的人脸照片">
+                            <svg class="face-guide" viewBox="0 0 240 260" fill="none" aria-hidden="true">
+                                <path class="face-guide-corners" d="M42 8H18a10 10 0 0 0-10 10v24M198 8h24a10 10 0 0 1 10 10v24M8 218v24a10 10 0 0 0 10 10h24M198 252h24a10 10 0 0 0 10-10v-24"/>
+                                <path class="face-guide-person" d="M42 232c3-24 20-34 46-42 12-4 16-9 16-20v-10c-18-10-27-29-27-52V95c0-30 17-48 43-48s43 18 43 48v13c0 23-9 42-27 52v10c0 11 4 16 16 20 26 8 43 18 46 42"/>
+                                <path class="face-guide-oval" d="M120 29c-42 0-65 29-65 74 0 48 24 100 65 100s65-52 65-100c0-45-23-74-65-74Z"/>
+                            </svg>
                             <div class="face-stage-tip">
-                                <i class="fas fa-camera-retro"></i>
-                                <span><strong>让面部清晰出现在画面中</strong><span>正对镜头 · 光线均匀 · 避免遮挡</span></span>
+                                <button type="button" class="layui-btn" id="faceStart"><i class="fas fa-video" aria-hidden="true"></i> 开启摄像头</button>
                             </div>
+                            <span class="face-live-tip">正对取景框</span>
+                            <span class="face-preview-badge"><i class="fas fa-check" aria-hidden="true"></i> 照片预览</span>
                         </div>
                         <div class="face-actions">
-                            <button type="button" class="layui-btn layui-btn-sm" id="faceStart">
-                                <i class="fas fa-video"></i> 打开摄像头
-                            </button>
-                            <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="faceCapture" disabled>
-                                <i class="fas fa-camera"></i> 拍照
+                            <button type="button" class="face-shutter" id="faceCapture" aria-label="拍照" title="拍照" hidden disabled>
+                                <span aria-hidden="true"></span>
                             </button>
                             <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" id="faceRetake" hidden>
                                 <i class="fas fa-redo"></i> 重拍
                             </button>
-                            <label class="layui-btn layui-btn-sm layui-btn-primary face-upload">
-                                <i class="fas fa-upload"></i> 上传照片
-                                <input type="file" id="faceFile" accept="image/jpeg,image/png,image/webp" hidden>
-                            </label>
+                            <button type="button" class="face-upload" id="faceUpload"><i class="fas fa-upload" aria-hidden="true"></i> 上传照片</button>
+                            <input type="file" id="faceFile" accept="image/jpeg,image/png,image/webp" hidden>
                         </div>
                         <div class="face-hint" id="faceHint" role="status" aria-live="polite"></div>
-                        <div class="face-submit">
+                        <div class="face-submit" id="faceSubmit" hidden>
                             <input type="text" aria-label="人脸备注（选填）" id="faceLabel" class="layui-input" maxlength="32"
-                                   placeholder="备注（选填，如：日常照片）">
+                                   placeholder="添加备注（选填）">
                             <button type="button" class="layui-btn layui-btn-sm" id="faceEnroll" disabled>
-                                <i class="fas fa-check"></i> 录入人脸
+                                <i class="fas fa-check" aria-hidden="true"></i> 使用这张照片
                             </button>
                         </div>
+                        <details class="face-note"><summary><i class="fas fa-shield-alt" aria-hidden="true"></i> 隐私说明</summary><p>照片仅用于提取人脸特征，不保存原图。你可以随时关闭人脸登录或删除已录入的记录。</p></details>
                     </div>
                     <div class="face-right">
                         <div class="face-right-head">
-                            <span><i class="fas fa-id-card"></i> 已录入人脸</span>
-                            <label class="face-switch"><input type="checkbox" id="faceEnabled"> 人脸登录</label>
+                            <h3>已录入 <span id="faceCount" class="face-count">0</span></h3>
+                            <i class="fas fa-id-card" aria-hidden="true"></i>
                         </div>
                         <div class="face-list" id="faceList"></div>
-                        <p class="face-note"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>保护你的隐私</strong>照片仅用于提取人脸特征，不保存原图；特征加密存储。</span></p>
                     </div>
                 </div>
             </div>

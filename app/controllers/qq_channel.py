@@ -5,7 +5,16 @@ import tornado.web
 from app.controllers.admin import backend_required
 from app.controllers.collect import CollectApiHandler
 from app.models import qq_channel as repository
+from app.models.source import SourceRepository
 from app.services import qq_channel_service as service
+
+
+class QQChannelSourcesHandler(CollectApiHandler):
+    @tornado.web.authenticated
+    @backend_required
+    def get(self):
+        if self.guard():
+            self.write_json({'ok': True, 'list': SourceRepository.qq_channels()})
 
 
 class QQChannelRunsHandler(CollectApiHandler):
@@ -157,6 +166,7 @@ class QQChannelCommentsHandler(CollectApiHandler):
             return
         self.write_json({'ok':True,'job':repository.comment_job(int(item_id)),
                          'post_content':item['content'],
+                         'post_images':json.loads(item.get('metadata') or '{}').get('images',[]),
                          'post_is_excerpt':json.loads(item.get('metadata') or '{}').get('is_excerpt',False),
                          'items':repository.items(int(run_id),page,post_id=item['post_id'])})
 

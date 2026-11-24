@@ -74,10 +74,14 @@ def sync_sentiment_posts(run_id=None):
             if not rows:
                 continue
             source_name = 'QQ频道 · '+run['channel']
-            conn.execute("INSERT OR IGNORE INTO sources (name,url,description,enabled) VALUES (?,?,?,0)",
-                         (source_name,'https://pd.qq.com/g/'+run['channel'],
-                          '频道内关键词搜索结果，由专用频道入口采集'))
-            source_id = conn.execute('SELECT id FROM sources WHERE name = ?', (source_name,)).fetchone()['id']
+            source_url = 'https://pd.qq.com/g/'+run['channel']
+            source = conn.execute('SELECT id,name FROM sources WHERE url = ? OR url = ? ORDER BY enabled DESC,id LIMIT 1',
+                                  (source_url,source_url+'/')).fetchone()
+            if source is None:
+                conn.execute("INSERT OR IGNORE INTO sources (name,url,description,enabled) VALUES (?,?,?,0)",
+                             (source_name,source_url,'频道内关键词搜索结果，由专用频道入口采集'))
+                source = conn.execute('SELECT id,name FROM sources WHERE name = ?', (source_name,)).fetchone()
+            source_id, source_name = source['id'], source['name']
             for row in rows:
                 metadata = json.loads(row['metadata'] or '{}')
                 excerpt = bool(metadata.get('is_excerpt',True))
@@ -193,7 +197,8 @@ def save_items(run_id, items):
 
 
 def items(run_id, page=1, review_status='', post_id=None, posts_only=False):
-    page_size = 20 if post_id is not None else 12
+    # A collection job reads at most 300 comments/replies; keep a thread together.
+    page_size = 300 if post_id is not None else 12
     where, args = 'run_id = ?', [run_id]
     if review_status:
         where += ' AND review_status = ?'
@@ -206,8 +211,9 @@ def items(run_id, page=1, review_status='', post_id=None, posts_only=False):
     with get_connection() as conn:
         total = conn.execute('SELECT COUNT(*) AS n FROM qq_channel_items WHERE ' + where, args).fetchone()['n']
         page = max(1,min(page,max(1,(total+page_size-1)//page_size)))
+        ordering = 'id' if post_id is not None else 'heat DESC, sort_time DESC, id'
         rows = conn.execute('SELECT * FROM qq_channel_items WHERE ' + where +
-                            ' ORDER BY heat DESC, sort_time DESC, id LIMIT ? OFFSET ?', args + [page_size,(page - 1) * page_size]).fetchall()
+                            ' ORDER BY ' + ordering + ' LIMIT ? OFFSET ?', args + [page_size,(page - 1) * page_size]).fetchall()
     out = []
     for row in rows:
         row = dict(row)
@@ -246,6 +252,7 @@ def update_post(run_id, item_id, post):
         row = conn.execute('SELECT metadata FROM qq_channel_items WHERE id=? AND run_id=?', (item_id,run_id)).fetchone()
         meta = json.loads(row['metadata'] or '{}')
         meta['is_excerpt'] = False
+        meta['images'] = post.get('metadata', {}).get('images', [])
         conn.execute('UPDATE qq_channel_items SET content=?,metadata=? WHERE id=? AND run_id=?',
                      (post['content'],json.dumps(meta,ensure_ascii=False),item_id,run_id))
 

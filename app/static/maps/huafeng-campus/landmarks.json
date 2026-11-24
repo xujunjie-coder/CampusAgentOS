@@ -6,7 +6,7 @@
   "landmarks": [
     {
       "id": "gate-phase1-south",
-      "name": "一期大门（南侧）",
+      "name": "朝阳门",
       "positionLocal": [
         443.903,
         0,
@@ -17,7 +17,13 @@
         14002570470
       ],
       "status": "approximate",
-      "note": "依据 OpenStreetMap 标注的校门/门禁节点（鼎新大道与西华路交汇处）生成，位置与门名为示意，请以现场出入口为准。"
+      "note": "名称依据用户于 2026-11-24 提供的校门截图校正；位置保留原 OpenStreetMap 道路/门禁节点示意坐标，请以现场出入口为准。",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "batch": "campus-gates",
+        "image": 2
+      }
     },
     {
       "id": "gate-tongxian-bridge",
@@ -45,7 +51,7 @@
     },
     {
       "id": "gate-phase2-east",
-      "name": "二期东侧出入口",
+      "name": "南门",
       "positionLocal": [
         601.297,
         0,
@@ -53,7 +59,47 @@
       ],
       "osmNode": 2375898982,
       "status": "approximate",
-      "note": "依据 OpenStreetMap 中二期校内道路与师大路二段交汇点标注，位置与门名为示意，请以现场出入口为准。"
+      "note": "名称依据用户于 2026-11-24 提供的校门截图校正；位置保留原 OpenStreetMap 道路/门禁节点示意坐标，请以现场出入口为准。",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "batch": "campus-gates",
+        "image": 1
+      }
+    },
+    {
+      "id": "gate-dongliang",
+      "name": "栋梁门",
+      "positionLocal": [
+        568.1,
+        0,
+        310.2
+      ],
+      "status": "approximate",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "batch": "campus-gates",
+        "image": 1
+      },
+      "note": "名称与位置依据用户于 2026-11-24 提供的校门截图，在现有模型对应道路交汇处示意标注；点位未经实测，请以现场出入口为准。"
+    },
+    {
+      "id": "gate-zhida",
+      "name": "智达门",
+      "positionLocal": [
+        687.3,
+        0,
+        -297.5
+      ],
+      "status": "approximate",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "batch": "campus-gates",
+        "image": 2
+      },
+      "note": "名称与位置依据用户于 2026-11-24 提供的校门截图，在现有模型对应道路交汇处示意标注；点位未经实测，请以现场出入口为准。"
     }
   ],
   "places": [

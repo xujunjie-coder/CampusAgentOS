@@ -10,6 +10,18 @@ def documents():
             "SELECT id, title, created_at FROM knowledge_documents ORDER BY id DESC LIMIT 100")]
 
 
+def documents_page(page=1):
+    limit = 15
+    with get_connection() as conn:
+        total = conn.execute('SELECT COUNT(*) AS n FROM knowledge_documents').fetchone()['n']
+        pages = max(1, (total + limit - 1) // limit)
+        page = max(1, min(int(page), pages))
+        rows = conn.execute('SELECT id,title,created_at FROM knowledge_documents '
+                            'ORDER BY id DESC LIMIT ? OFFSET ?', (limit, (page - 1) * limit)).fetchall()
+    return dict(documents=[dict(row) for row in rows], document_total=total,
+                document_page=page, document_pages=pages)
+
+
 def document_options():
     """All indexed documents for binding; the management page's 100-row cap is unrelated."""
     with get_connection() as conn:

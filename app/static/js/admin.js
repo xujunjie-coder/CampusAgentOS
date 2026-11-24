@@ -854,6 +854,7 @@
             $("sourceSearch").addEventListener("click", function () { self.keyword = $("sourceKeyword").value.trim(); self.load(1); });
             $("sourceReset").addEventListener("click", function () { $("sourceKeyword").value = ""; self.keyword = ""; self.load(1); });
             $("sourceAdd").addEventListener("click", function () { self.openForm(null); });
+            $("sourceAddQQ").addEventListener("click", function () { self.openChannelForm(null); });
             $("sourceBody").addEventListener("click", function (e) {
                 var btn = e.target.closest("[data-act]");
                 if (!btn) return;
@@ -885,15 +886,17 @@
                     var headerCell = count
                         ? '<span class="admin-tag layui-bg-blue">' + count + " 项</span>"
                         : '<span class="admin-tag layui-bg-gray">未配置</span>';
+                    if(s.source_type==='qq_channel') headerCell='<span class="admin-tag">QQ 频道</span>';
                     var status = s.enabled ? '<span class="admin-tag layui-bg-green">启用</span>' : '<span class="admin-tag layui-bg-gray">停用</span>';
                     return "<tr>" +
                         "<td>" + esc(s.name) + "</td>" +
-                        '<td><div class="source-url" title="' + esc(s.url) + '">' + esc(s.url) + "</div></td>" +
+                        '<td><div class="source-url" title="' + esc(s.url) + '">' + esc(s.channel_id || s.url) + "</div></td>" +
                         "<td>" + headerCell + "</td>" +
                         "<td>" + esc(s.description || "-") + "</td>" +
                         "<td>" + status + "</td>" +
                         '<td class="admin-actions">' +
-                        '<button class="layui-btn layui-btn-primary layui-btn-sm" data-act="headers" data-id="' + s.id + '"><i class="fas fa-eye"></i> 请求头</button>' +
+                        (s.source_type==='qq_channel'?'<a class="layui-btn layui-btn-primary layui-btn-sm" href="/collect/qq?channel='+encodeURIComponent(s.channel_id)+'">前往采集</a>':
+                        '<button class="layui-btn layui-btn-primary layui-btn-sm" data-act="headers" data-id="' + s.id + '"><i class="fas fa-eye"></i> 请求头</button>') +
                         '<button class="layui-btn layui-btn-sm" data-act="edit" data-id="' + s.id + '"><i class="fas fa-edit"></i> 编辑</button>' +
                         '<button class="layui-btn layui-btn-danger layui-btn-sm" data-act="del" data-id="' + s.id + '" data-name="' + esc(s.name) + '"><i class="fas fa-trash-alt"></i> 删除</button>' +
                         "</td></tr>";
@@ -901,6 +904,27 @@
                 $("sourceBody").innerHTML = rows.length ? rows.join("") : emptyRow(6, "暂无信源数据");
                 renderPager("sourcePager", d.total, self.page, function (p) { self.load(p); });
             });
+        },
+        openChannelForm: function (row) {
+            var self=this, isEdit=!!row;
+            var html='<div class="layui-form-item"><label class="layui-form-label">频道名称</label>'+
+                '<div class="layui-input-block"><input name="name" class="layui-input" maxlength="64" value="'+esc(row && row.name)+'" placeholder="如 西华师大频道"></div></div>'+
+                '<div class="layui-form-item"><label class="layui-form-label">频道号</label>'+
+                '<div class="layui-input-block"><input name="channel_id" class="layui-input" maxlength="64" value="'+esc(row && row.channel_id)+'" placeholder="如 583an87117">'+
+                '<div class="source-raw-tip">启用后可在「采集管理 → QQ 频道」中选择，无需填写 URL 或请求头。</div></div></div>'+
+                '<div class="layui-form-item"><label class="layui-form-label">简介</label><div class="layui-input-block"><input name="description" class="layui-input" value="'+esc(row && row.description)+'"></div></div>'+
+                '<div class="layui-form-item"><label class="layui-form-label">状态</label><div class="layui-input-block"><input type="checkbox" name="enabled" lay-skin="switch" lay-text="启用|停用"'+(!row || row.enabled?' checked':'')+'></div></div>';
+            openForm(isEdit?'编辑 QQ 频道':'新增 QQ 频道',html,function(layero,index){
+                var name=field(layero,'name'),channel=field(layero,'channel_id');
+                if(!name || !/^[A-Za-z0-9_-]{3,64}$/.test(channel)) {
+                    L.layer.msg('请填写名称及有效频道号（3–64 位字母、数字、下划线或短横线）',{icon:2}); return false;
+                }
+                api('POST',isEdit?'/api/admin/sources/'+row.id:'/api/admin/sources',{
+                    name:name,source_type:'qq_channel',channel_id:channel,description:field(layero,'description'),
+                    enabled:layero.querySelector('[name="enabled"]').checked?1:0
+                }).then(function(){L.layer.close(index);L.layer.msg('频道已保存',{icon:1});self.load(isEdit?self.page:1);});
+                return false;
+            },'560px');
         },
         viewHeaders: function (row) {
             var headers = this.parseHeaders(row);
@@ -919,6 +943,7 @@
             var self = this;
             var isEdit = !!row;
             var rawValue = isEdit ? self.headersToRaw(self.parseHeaders(row)) : "";
+            if (row && row.source_type === 'qq_channel') return self.openChannelForm(row);
             var html =
                 '<div class="layui-form-item"><label class="layui-form-label">信源名称</label>' +
                 '<div class="layui-input-block"><input type="text" name="name" class="layui-input" value="' + esc(row && row.name) + '" placeholder="如 百度资讯搜索"></div></div>' +

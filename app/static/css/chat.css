@@ -822,6 +822,41 @@
     .chat-msg-assistant.is-working .chat-process-head > .fa-layer-group { animation: none; }
 }
 
+/* Independent child agents remain visible even when the tool log is collapsed. */
+.chat-team[hidden] { display: none; }
+.chat-team { margin: 8px 0 14px; border: 1px solid #dbe5f2; border-radius: 12px; background: #fff; overflow: hidden; }
+.chat-team-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 14px; color: #003087; font-size: 13px; }
+.chat-team-count { margin-left: auto; color: #64748b; font-size: 12px; }
+.chat-team-coordinator { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 0 14px 12px; color: #475569; font-size: 12px; }
+.chat-team-phase { margin-left: auto; color: #64748b; }
+.chat-team-list { padding: 0 12px 12px 25px; display: grid; gap: 8px; position: relative; }
+.chat-team-list::before { content: ""; position: absolute; left: 14px; top: 0; bottom: 28px; border-left: 1px solid #dbe5f2; }
+.chat-child-card { position: relative; min-width: 0; border: 1px solid #e2e8f0; border-radius: 9px; background: #f8fafc; }
+.chat-child-card::before { content: ""; position: absolute; width: 11px; left: -12px; top: 27px; border-top: 1px solid #dbe5f2; }
+.chat-child-card summary { display: flex; align-items: center; gap: 10px; padding: 12px; cursor: pointer; list-style: none; }
+.chat-child-card summary::-webkit-details-marker { display: none; }
+.chat-child-card summary:focus-visible { outline: 2px solid #003087; outline-offset: -2px; border-radius: 8px; }
+.chat-child-avatar { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 30px; border-radius: 9px; color: #003087; background: #e8effc; }
+.chat-child-info { display: grid; min-width: 0; flex: 1; gap: 3px; font-size: 12px; color: #334155; }
+.chat-child-info strong { font-size: 13px; }
+.chat-child-task { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #64748b; }
+.chat-child-status { display: flex; align-items: center; gap: 5px; font-size: 11px; white-space: nowrap; color: #64748b; }
+.chat-child-card[data-status="running"] .chat-child-status { color: #003087; }
+.chat-child-card[data-status="running"] .chat-child-status::before { content: ""; width: 9px; height: 9px; border: 1px solid #cbd5e1; border-top-color: #003087; border-radius: 50%; animation: chat-child-spin 1s linear infinite; }
+.chat-child-card[data-status="completed"] .chat-child-status { color: #047857; }
+.chat-child-card[data-status="timeout"] .chat-child-status,
+.chat-child-card[data-status="partial"] .chat-child-status { color: #b45309; }
+.chat-child-card[data-status="failed"] .chat-child-status,
+.chat-child-card[data-status="interrupted"] .chat-child-status { color: #b91c1c; }
+.chat-child-caret { font-size: 10px; color: #94a3b8; }
+.chat-child-card[open] .chat-child-caret { transform: rotate(180deg); }
+.chat-child-detail { border-top: 1px solid #e2e8f0; padding: 12px; font-size: 12px; color: #475569; line-height: 1.7; overflow-wrap: anywhere; }
+.chat-child-assignment { margin-bottom: 12px; white-space: pre-wrap; }
+.chat-child-result { white-space: pre-wrap; max-height: 320px; overflow: auto; margin-top: 6px; }
+@keyframes chat-child-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .chat-child-card[data-status="running"] .chat-child-status::before { animation: none; } }
+@media (max-width: 480px) { .chat-child-card summary { gap: 6px; padding: 10px 8px; } .chat-team-heading { padding: 10px; } .chat-team-coordinator { padding: 0 10px 10px; } }
+
 /* ---------- 执行过程时间线 ---------- */
 .chat-process {
     border: 1px solid #e2e8f0;

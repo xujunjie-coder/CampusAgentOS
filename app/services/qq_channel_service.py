@@ -158,13 +158,32 @@ def parse_post(html, post):
     body = '\n'.join(x.get_text('', strip=True) for x in content.select('.feed-detail-text')
                      if is_post_node(x))
     # Images remain links, not silently treated as OCR text.
-    images = [x.get('src', '') for x in content.select('img')
-              if is_post_node(x) and 'emoji' not in ' '.join(x.get('class', []))
-              and x.get('src', '').startswith('https://')]
+    images = []
+    for node in content.select('img, [style*="background"]'):
+        if not is_post_node(node):
+            continue
+        labels = ' '.join(node.get('class', [])) + ' ' + node.get('alt', '')
+        if re.search(r'emoji|avatar', labels, re.I):
+            continue
+        if any(re.search(r'avatar|user-info', ' '.join(parent.get('class', [])), re.I)
+               for parent in node.parents if parent is not content):
+            continue
+        source = node.get('data-original') or node.get('data-src') or node.get('src', '')
+        if node.name != 'img':
+            match = re.search(r'url\([\s\"\']*(https://[^\s\"\')]+)', node.get('style', ''))
+            source = match.group(1) if match else ''
+        if source.startswith('//'):
+            source = 'https:' + source
+        try:
+            parsed_url = urlsplit(source)
+        except ValueError:
+            continue
+        if parsed_url.scheme == 'https' and parsed_url.hostname and not parsed_url.username and source not in images:
+            images.append(source)
     stamp = re.search(r'\b20\d{2}-\d{2}-\d{2}\b', _text(content, ['.feed-info__detail__time']))
     records = [{'id': post['id'], 'kind': 'post', 'post_id': post['id'], 'url': post['url'],
                 'content': body, 'author': _text(root, ['.user-info__name-text']),
-                'time': stamp.group(0) if stamp else '', 'context': ''}]
+                'time': stamp.group(0) if stamp else '', 'context': '', 'metadata': {'images': images}}]
     expected = None
     if comments:
         count = re.search(r'评论\s*(\d+)', _text(comments, ['.comment-bar__comment-count']))
@@ -702,7 +721,8 @@ def start_comments(run_id, item_id):
     if not item or item['kind'] != 'post':
         raise ChannelError('只能从一条帖子进入评论审核')
     job = repository.comment_job(item_id)
-    if job and job['status'] in ('queued','running','finished'):
+    if job and (job['status'] in ('queued','running') or
+                (job['status'] == 'finished' and 'images' in json.loads(item.get('metadata') or '{}'))):
         return job
     if not _slot.acquire(blocking=False):
         raise ChannelError('另一个检索、评论读取或连接任务运行中，请稍后再打开审核')
@@ -726,9 +746,14 @@ def _comments_worker(run_id,item_id):
         with BrowserCollector() as c:
             c.open(post['url'],'#feed-content-'+post['id'])
             parsed = parse_post(c.html(),post)
-            repository.update_post(run_id,item_id,parsed['records'][0])
-            all_rows, stagnant = {}, 0
+            all_rows, stagnant, post_images = {}, 0, []
             def save(parsed):
+                full_post = parsed['records'][0]
+                for source in full_post.get('metadata', {}).get('images', []):
+                    if source not in post_images:
+                        post_images.append(source)
+                full_post.setdefault('metadata', {})['images'] = list(post_images)
+                repository.update_post(run_id,item_id,full_post)
                 for row in parsed['records'][1:]:
                     if row['id'] in all_rows or len(all_rows)<options['max_comments']:
                         row['matched'] = matching_keywords(row['content'],options['keywords'])

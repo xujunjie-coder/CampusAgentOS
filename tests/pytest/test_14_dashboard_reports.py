@@ -9,6 +9,7 @@
 """
 
 import json
+from unittest.mock import MagicMock, patch
 
 from conftest import ApiCase
 
@@ -47,7 +48,7 @@ class TestDashboardReports(ApiCase):
         resp = self.fetch("/admin/sentiment", raise_error=False)
         assert resp.code == 200
         body = resp.body.decode("utf-8")
-        assert "实时风险流" in body
+        assert 'id="riskStream"' in body
         assert "/static/js/sentiment.js" in body
         assert "/static/vendor/echarts/echarts.min.js" in body
         # 子模板自定义 {% block styles %} 会覆盖父模板，必须自己再引栅格，否则 .row/.col-* 全部失效
@@ -97,6 +98,19 @@ class TestDashboardReports(ApiCase):
         snap = json.loads(resp.body)["snapshot"]
         # 仓储层把 days 收敛到 1..90，避免超大区间拖库
         assert 1 <= snap["days"] <= 90
+
+    def test_stream_titles_hide_qq_image_identifiers_without_editing_source(self):
+        from app.models import console
+        source = {"title": "在食堂这一份 25 正常吗？ [B_0525fc6a888f08001441152187792247830X60]", "level": "normal"}
+        connection = MagicMock()
+        connection.__enter__.return_value.execute.return_value = [source]
+        with patch.object(console, "get_connection", return_value=connection):
+            risk, = console.ConsoleStatsRepository.latest_risks()
+            recent, = console.ConsoleStatsRepository.recent_items()
+        assert risk["title"] == recent["title"] == "在食堂这一份 25 正常吗？"
+        assert "[B_" in source["title"]
+        assert console._display_title("[B_838d026bc75e0b001441152195962980480X60]") == "图片消息"
+        assert console._display_title("[通知] B_树学习 [B_课程]") == "[通知] B_树学习 [B_课程]"
 
     # ---------------- 大屏问答 ----------------
     def test_ask_collect_intent(self):

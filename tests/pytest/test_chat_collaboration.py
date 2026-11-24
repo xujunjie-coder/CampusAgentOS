@@ -66,10 +66,14 @@ class TestChatCollaboration(ApiCase):
                 await tool.task("research", timeout=requested)
                 assert delegate.call_args.kwargs["timeout"] == expected
                 assert delegate.call_args.args[1] == "campus_research"
+                assert delegate.call_args.kwargs["max_turns"] == agent_service.SUBAGENT_MAX_TURNS
         assert tool.functions["task"].manages_own_timeout
 
     @gen_test
     async def test_campus_child_inherits_queries_but_cannot_spawn_or_write(self):
+        config = get_subagent_config("campus_research")
+        assert config.tool_call_limit == 3 and config.max_turns == 4
+        assert not config.inherit_context
         tools = agent_service._tools_for({"tools": '["task", "campus_calendar", "todo"]',
                                           "rag_kb_ids": '["bound-kb"]'})
         registry = SubagentRegistry()
@@ -84,7 +88,14 @@ class TestChatCollaboration(ApiCase):
 
     @gen_test
     async def test_sdk_spawns_campus_child_and_returns_findings(self):
-        parent = Agent(model=OpenAIChat(id="test", api_key="test"), tools=[CampusTaskTool()],
+        queries = []
+
+        async def campus_knowledge(query: str) -> str:
+            queries.append(query)
+            return "申请材料资料"
+
+        lookup, = agent_service._bounded_queries([campus_knowledge])
+        parent = Agent(model=OpenAIChat(id="test", api_key="test"), tools=[CampusTaskTool(), lookup],
                        enable_session_log=False)
         tool = next(t for t in parent.tools if isinstance(t, CampusTaskTool))
         tool.set_parent_agent(parent)
@@ -92,6 +103,9 @@ class TestChatCollaboration(ApiCase):
 
         async def child_reply(child, *args, **kwargs):
             seen.append(child.name)
+            inherited = next(t for t in child.tools if getattr(t, "__name__", "") == "campus_knowledge")
+            results = await asyncio.gather(*(inherited(str(i)) for i in range(5)))
+            assert results.count("申请材料资料") == 3
             yield RunResponse(content="已找到申请材料，须核对适用年份")
 
         with patch.object(Agent, "run_stream", child_reply):
@@ -99,6 +113,7 @@ class TestChatCollaboration(ApiCase):
         assert result["success"] is True, result
         assert result["subagent_type"] == "campus_research"
         assert "申请材料" in result["result"] and len(seen) == 1
+        assert len(queries) == 3
 
     def test_collaboration_option_validates_availability(self):
         response = self.post_json("/api/chat", {"message": "查资料", "collaboration": "yes"})
@@ -140,5 +155,79 @@ class TestChatCollaboration(ApiCase):
                 patch.object(agent_service, "chat_engine", return_value=None):
             events = [event async for event in agent_service.stream_answer("查资料", "test")]
         assert events[0]["call_id"] == "child-1"
-        assert events[1] == {"type": "tool_result", "name": "task", "call_id": "child-1", "status": "timeout"}
+        assert events[1] == {"type": "tool_result", "name": "task", "call_id": "child-1", "status": "timeout",
+                             "result": "", "agent_type": "campus_research"}
         assert events[-1] == {"type": "done", "answer": "已汇总可用内容"}
+
+    def test_child_findings_reach_browser_without_internal_payload(self):
+        async def reply(*args, **kwargs):
+            yield {"type": "tool_result", "name": "task", "call_id": "child-1", "status": "completed",
+                   "result": "找到校历资料", "internal": "private"}
+            yield {"type": "done", "answer": "汇总完成"}
+
+        with patch.object(chat, "stream_answer", reply):
+            response = self.post_json("/api/chat", {"message": "查校历", "session_id": "child-findings"})
+        assert '"result": "找到校历资料"' in response.body.decode()
+        assert '"internal"' not in response.body.decode()
+
+    @gen_test
+    async def test_child_result_is_extracted_and_bounded(self):
+        class Agent:
+            async def run_stream(self, *args, **kwargs):
+                call = ToolCallInfo(tool_name="task", tool_call_id="child-1")
+                call.content = json.dumps({"success": True, "result": "资料" * 7000, "run_id": "private"})
+                yield RunResponse(event=RunEvent.tool_call_completed, tool_call=call)
+                yield RunResponse(content="已汇总")
+
+        with patch.object(agent_service, "get_agent", return_value=Agent()), \
+                patch.object(agent_service, "chat_engine", return_value=None):
+            events = [event async for event in agent_service.stream_answer("查资料", "test")]
+        assert events[0]["status"] == "completed"
+        assert len(events[0]["result"]) == 12000
+        assert "private" not in json.dumps(events[0])
+
+    def test_interactive_model_uses_fast_mode_only_for_supported_engines(self):
+        for supported, isolated in [(True, True), (False, True), (True, False)]:
+            with patch.object(agent_service, "_model_conf", return_value={
+                    "id": "test", "api_key": "test", "base_url": "https://example.com/v1",
+                    "supports_thinking": supported}), \
+                    patch.object(agent_service.DigitalEmployeeRepository, "get_default", return_value=None), \
+                    patch.object(agent_service.DigitalEmployeeRepository, "get_first_enabled", return_value=None), \
+                    patch.object(agent_service, "Agent") as constructor:
+                agent_service.build_agent("fast-mode-test", isolated=isolated)
+            model = constructor.call_args.kwargs["model"]
+            assert model.extra_body == ({"enable_thinking": False,
+                                         "chat_template_kwargs": {"enable_thinking": False}}
+                                        if supported and isolated else None)
+
+    @gen_test
+    async def test_query_budget_caps_parallel_batches_and_isolates_children(self):
+        calls = []
+
+        async def campus_knowledge(query: str) -> str:
+            calls.append(query)
+            await asyncio.sleep(0)
+            return "found"
+
+        query, = agent_service._bounded_queries([campus_knowledge])
+
+        async def delegate(*args, **kwargs):
+            results = await asyncio.gather(*(query(str(i)) for i in range(5)))
+            assert results.count("found") == 3
+            assert all("次数已用完" in result for result in results[3:])
+            return "done"
+
+        with patch.object(BuiltinTaskTool, "task", delegate):
+            await asyncio.gather(CampusTaskTool().task("first"), CampusTaskTool().task("second"))
+        assert len(calls) == 6
+        assert agent_service._child_query_budget.get() is None
+        assert await query("parent is unrestricted") == "found"
+
+    @gen_test
+    async def test_query_budget_resets_after_delegation_failure(self):
+        with patch.object(BuiltinTaskTool, "task", new_callable=AsyncMock, side_effect=RuntimeError("failed")):
+            try:
+                await CampusTaskTool().task("research")
+            except RuntimeError:
+                pass
+        assert agent_service._child_query_budget.get() is None

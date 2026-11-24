@@ -55,7 +55,7 @@
         <div class="layui-card admin-card h-100">
             <div class="layui-card-header">
                 <i class="fas fa-book"></i> 已入库知识文档
-                <span class="kb-count-pill">共 {{ len(documents) }} 篇</span>
+                <span class="kb-count-pill">共 {{ document_total }} 篇</span>
             </div>
             <div class="layui-card-body admin-list">
                 <div class="admin-table-wrap">
@@ -101,6 +101,24 @@
                         </tbody>
                     </table>
                 </div>
+                <nav class="admin-pager" aria-label="知识文档分页">
+                    <span class="admin-pager-tip">每页 15 条 · 第 {{ document_page }} / {{ document_pages }} 页</span>
+                    <div class="admin-pager-box">
+                        {% if document_page > 1 %}
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" href="?page={{ document_page - 1 }}">上一页</a>
+                        {% end %}
+                        {% for p in range(1, document_pages + 1) %}
+                            {% if p == 1 or p == document_pages or abs(p - document_page) <= 1 %}
+                            <a class="layui-btn layui-btn-sm{% if p != document_page %} layui-btn-primary{% end %}" href="?page={{ p }}"{% if p == document_page %} aria-current="page"{% end %}>{{ p }}</a>
+                            {% elif p == document_page - 2 or p == document_page + 2 %}
+                            <span>…</span>
+                            {% end %}
+                        {% end %}
+                        {% if document_page < document_pages %}
+                        <a class="layui-btn layui-btn-primary layui-btn-sm" href="?page={{ document_page + 1 }}">下一页</a>
+                        {% end %}
+                    </div>
+                </nav>
             </div>
         </div>
     </div>

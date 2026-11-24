@@ -577,7 +577,11 @@ class AdminSourcesApiHandler(AdminApiHandler):
         if not self.require_menu(URL_SOURCES):
             return
         page, keyword = self._page_args(self)
-        self.ok(**SourceRepository.paginate(keyword=keyword or None, page=page, limit=PAGE_SIZE))
+        data = SourceRepository.paginate(keyword=keyword or None, page=page, limit=PAGE_SIZE)
+        for source in data['list']:
+            source['channel_id'] = SourceRepository.channel_id(source['url'])
+            source['source_type'] = 'qq_channel' if source['channel_id'] else 'web'
+        self.ok(**data)
 
     @tornado.web.authenticated
     @backend_required
@@ -588,6 +592,13 @@ class AdminSourcesApiHandler(AdminApiHandler):
         name = (b.get("name") or "").strip()
         url = (b.get("url") or "").strip()
         raw = b.get("headers_raw") or ""
+        if b.get('source_type') == 'qq_channel':
+            try:
+                url = SourceRepository.channel_url(b.get('channel_id'))
+            except ValueError as exc:
+                self.fail(str(exc))
+                return
+            raw = ''
         if not name:
             self.fail("信源名称不能为空")
             return
@@ -619,6 +630,13 @@ class AdminSourceItemHandler(AdminApiHandler):
         b = self.body()
         name = (b.get("name") or "").strip() or None
         url = (b.get("url") or "").strip() or None
+        if b.get('source_type') == 'qq_channel':
+            try:
+                url = SourceRepository.channel_url(b.get('channel_id'))
+            except ValueError as exc:
+                self.fail(str(exc))
+                return
+            b['headers_raw'] = ''
         if name is not None and len(name) > 64:
             self.fail("信源名称不能超过64个字符")
             return

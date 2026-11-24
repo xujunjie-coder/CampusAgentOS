@@ -16,6 +16,7 @@
 import json
 import re
 from typing import Optional, List, Dict
+from urllib.parse import urlsplit
 from app.models.db import IntegrityError, get_connection
 
 # 合法 header 名（token）：字母数字与 -_ ；标准行格式为「Name: Value」
@@ -28,6 +29,35 @@ _REQUEST_LINE_RE = re.compile(r"^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)\s|^HTT
 class SourceRepository:
     # 统一列集合，避免多处漏字段
     _COLS = "id, name, url, headers, description, enabled, created_at"
+
+    @staticmethod
+    def channel_id(url: str) -> str:
+        """Recognize canonical QQ channel home URLs, excluding posts and lookalike hosts."""
+        try:
+            parsed = urlsplit(url or '')
+            match = re.fullmatch(r'/g/([A-Za-z0-9_-]{3,64})/?', parsed.path)
+            if (parsed.scheme == 'https' and parsed.netloc == 'pd.qq.com' and
+                    not parsed.query and not parsed.fragment and match):
+                return match.group(1)
+        except ValueError:
+            pass
+        return ''
+
+    @staticmethod
+    def channel_url(channel: str) -> str:
+        if not isinstance(channel, str) or not re.fullmatch(r'[A-Za-z0-9_-]{3,64}', channel.strip()):
+            raise ValueError('频道号须为 3–64 位字母、数字、下划线或短横线')
+        return 'https://pd.qq.com/g/' + channel.strip()
+
+    @staticmethod
+    def qq_channels() -> List[Dict]:
+        out, seen = [], set()
+        for source in SourceRepository.get_all():
+            channel = SourceRepository.channel_id(source['url'])
+            if source['enabled'] and channel and channel not in seen:
+                seen.add(channel)
+                out.append({'id': source['id'], 'name': source['name'], 'channel': channel})
+        return out
 
     @staticmethod
     def parse_raw_headers(raw: str) -> Dict:

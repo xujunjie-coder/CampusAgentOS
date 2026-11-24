@@ -10,6 +10,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { applyNameCorrections } from "./huafeng_name_corrections.mjs";
 
 const inputPath = process.argv[2];
 if (!inputPath || !fs.existsSync(inputPath)) {
@@ -1008,6 +1009,7 @@ const notice = [
   "本页未调用腾讯或高德商业地图服务，未抓取商业卫星瓦片或 3D 模型。",
 ].join("\n") + "\n";
 fs.writeFileSync(path.join(outDir, "NOTICE.txt"), notice, "utf8");
+applyNameCorrections(outDir);
 
 console.log("SUCCESS! Built Huafeng Campus 3D map:");
 console.log("  GLB:", glbPath, `(${(glbBytes.byteLength / 1024).toFixed(1)} KB, sha256=${sha256.slice(0, 12)}...)`);

@@ -25,8 +25,16 @@
             if (!r.ok || !d.ok) throw new Error(d.error || '请求失败'); return d;
         }); });
     }
-    function error(e) { $('qqProgress').textContent = e.message; }
-    function busy(on) { $('qqRunBtn').disabled = on; $('qqStopBtn').disabled = !on; $('qqStopBtn').hidden = !on; }
+    function error(e) { $('qqProgress').textContent = e.message; $('qqProgress').hidden = false; }
+    function busy(on) {
+        var button = $('qqRunBtn');
+        button.disabled = on;
+        button.setAttribute('aria-busy', String(on));
+        button.querySelector('i').className = on ? 'fas fa-spinner qq-search-spinner' : 'fas fa-search';
+        button.querySelector('span').textContent = on ? '搜索中…' : '搜索';
+        $('qqStopBtn').disabled = !on;
+        $('qqStopBtn').hidden = !on;
+    }
     function loadHistory(selectLatest) {
         return api('/api/collect/qq/runs').then(function (data) {
             var old = runId;
@@ -39,6 +47,21 @@
             runId = selectLatest || !old ? data.list[0].id : old;
             $('qqHistory').value = String(runId);
             return loadRun();
+        });
+    }
+    function loadChannelSources() {
+        return api('/api/collect/qq/sources').then(function(data){
+            var select=$('qqChannel'), previous=select.value;
+            var requested=new URL(window.location.href).searchParams.get('channel');
+            select.replaceChildren();
+            data.list.forEach(function(source){
+                var option=el('option',source.name+' · '+source.channel);
+                option.value=source.channel; select.appendChild(option);
+            });
+            if(!data.list.length) {
+                var empty=el('option','请先在信源管理中添加并启用 QQ 频道');empty.value='';select.appendChild(empty);
+            } else if(data.list.some(function(s){return s.channel===(previous || requested);})) select.value=previous || requested;
+            select.disabled=!data.list.length;
         });
     }
     function safeLink(url) {
@@ -54,12 +77,31 @@
         var dialog=$('qqReviewDialog'),content=$('qqReviewContent');
         if (!dialog || !content) return;
         content.replaceChildren();
-        content.appendChild(el('p',(item.author || '频道帖子')+' · '+(item.published_at || '时间未知'),'qq-match'));
-        content.appendChild(el('p',item.content,'qq-original'));
-        content.appendChild(audit);
+        var thread = el('div',null,'qq-thread');
+        var post = el('section',null,'qq-thread-post');
+        var header = el('div',null,'qq-thread-author');
+        header.appendChild(authorAvatar(item.author));
+        var byline = el('div');
+        byline.append(el('strong',item.author || '频道帖子'),el('small',item.published_at || '时间未知'));
+        var link = el('a','在 QQ 查看原帖','qq-thread-link');
+        link.href=safeLink(item.url); link.target='_blank'; link.rel='noopener noreferrer';
+        header.append(byline,link); post.appendChild(header);
+        var body = el('div',item.content,'qq-thread-body');
+        post.appendChild(body);
+        var gallery=el('div',null,'qq-post-gallery');
+        post.appendChild(gallery);
+        renderPostImages(gallery,(item.metadata || {}).images || []);
+        if (openReview) { openReview.postBody=body; openReview.postGallery=gallery; }
+        var commentArea=audit.querySelector('.qq-comments');
+        var tools=el('details',null,'qq-thread-review');
+        tools.appendChild(el('summary','整帖审核')); tools.appendChild(audit);
+        post.appendChild(tools); thread.appendChild(post);
+        if (commentArea) thread.appendChild(commentArea);
+        content.appendChild(thread);
         if (!dialog.open && dialog.showModal) dialog.showModal();
     }
     function renderItem(item, inComments) {
+        if (inComments) return renderComment(item);
         var card = el('article', null, 'qq-result');
         var header = el('div', null, 'qq-result-header');
         if (item.kind !== 'post') header.appendChild(el('strong', ({comment:'评论',reply:'回复'})[item.kind] || '内容'));
@@ -83,7 +125,7 @@
         }
         var audit = el('div',null,'qq-audit');
         if (item.kind === 'post' && !inComments) {
-            var review = el('button','审核帖子 →','pager-btn'); review.type = 'button'; review.title='查看全文、评论并审核';
+            var review = el('button','查看帖子与评论 →','pager-btn'); review.type = 'button'; review.title='查看全文和评论';
             audit.hidden = true;
             review.addEventListener('click',function () {
                 clearTimeout(commentTimer);
@@ -143,6 +185,70 @@
         if (item.reviewer) card.appendChild(el('small', '审核人：' + item.reviewer + ' · ' + item.reviewed_at));
         return card;
     }
+    function authorAvatar(name) {
+        var avatar=el('span',Array.from(name || '访客')[0],'qq-reader-avatar');
+        avatar.setAttribute('aria-hidden','true');
+        return avatar;
+    }
+    function renderPostImages(gallery,images) {
+        var urls=Array.from(new Set((Array.isArray(images)?images:[]).filter(function(source){
+            try { var url=new URL(source); return url.protocol==='https:' && !url.username; }
+            catch(e) { return false; }
+        })));
+        var signature=JSON.stringify(urls);
+        if(gallery.dataset.images===signature) return;
+        gallery.dataset.images=signature;
+        gallery.replaceChildren();
+        urls.forEach(function(source,index){
+            var link=el('a',null,'qq-post-image');
+            link.href=source; link.target='_blank'; link.rel='noopener noreferrer';
+            link.setAttribute('aria-label','查看帖子图片 '+(index+1)+' 原图');
+            var image=el('img'); image.src=source; image.alt='帖子图片 '+(index+1);
+            image.loading='lazy'; image.referrerPolicy='no-referrer';
+            image.addEventListener('error',function(){
+                link.replaceChildren(el('span','图片加载失败，点击查看原图','qq-image-error'));
+            });
+            link.appendChild(image); gallery.appendChild(link);
+        });
+    }
+    function renderComment(item) {
+        var row=el('article',null,'qq-reader-comment'+(item.kind==='reply'?' is-reply':''));
+        row.appendChild(authorAvatar(item.author));
+        var content=el('div',null,'qq-reader-comment-main');
+        var byline=el('div',null,'qq-reader-byline');
+        byline.append(el('strong',item.author || '频道用户'),el('time',item.published_at || ''));
+        content.append(byline,el('p',item.content,'qq-reader-text'));
+        if (item.metadata && item.metadata.likes != null) content.appendChild(el('small','♡ '+item.metadata.likes,'qq-reader-likes'));
+        row.appendChild(content);
+        return row;
+    }
+    function renderCommentThreads(rows) {
+        var list=el('div',null,'qq-reader-list'), parents=new Map(), replies=new Map();
+        rows.forEach(function(row){ if(row.kind!=='reply') parents.set(row.external_id,row); });
+        rows.forEach(function(row){
+            if(row.kind==='reply' && parents.has(row.parent_id)) {
+                if(!replies.has(row.parent_id)) replies.set(row.parent_id,[]);
+                replies.get(row.parent_id).push(row);
+            }
+        });
+        rows.forEach(function(row){
+            if(row.kind==='reply' && parents.has(row.parent_id)) return;
+            var comment=renderComment(row), children=replies.get(row.external_id) || [];
+            if(children.length) {
+                var group=el('div',null,'qq-reader-replies');
+                group.appendChild(renderComment(children[0]));
+                if(children.length>1) {
+                    var more=el('details',null,'qq-reader-more');
+                    more.appendChild(el('summary','展开 '+(children.length-1)+' 条回复'));
+                    children.slice(1).forEach(function(reply){more.appendChild(renderComment(reply));});
+                    group.appendChild(more);
+                }
+                comment.children[1].appendChild(group);
+            }
+            list.appendChild(comment);
+        });
+        return list;
+    }
     function loadComments(area,itemId) {
         clearTimeout(commentTimer);
         if (!openReview || openReview.runId !== runId || openReview.itemId !== itemId) return Promise.resolve();
@@ -152,22 +258,23 @@
             if (!area.contains(document.activeElement)) {
                 area.replaceChildren();
                 var job=data.job, p=job && job.progress || {};
-                if (data.post_content && data.post_is_excerpt === false) {
-                    area.appendChild(el('h4','当前帖完整正文'));
-                    area.appendChild(el('p',data.post_content,'qq-original'));
+                if (typeof data.post_content === 'string' && data.post_is_excerpt === false) {
+                    openReview.postBody.textContent=data.post_content;
                 }
-                area.appendChild(el('h4','当前帖评论与回复'));
-                area.appendChild(el('p',job ? (states[job.status] || job.status) + ' · ' + job.message : '尚未读取'));
-                area.appendChild(el('p','已读取 ' + (p.scanned_comments || 0) + ' 条；腾讯显示总数：' + (p.expected_comments == null ? '未知' : p.expected_comments)));
+                if (Array.isArray(data.post_images)) renderPostImages(openReview.postGallery,data.post_images);
+                var heading=el('div',null,'qq-reader-heading');
+                heading.append(el('h3','评论'+(p.expected_comments == null ? '' : ' '+p.expected_comments)),el('span','已读取 '+(p.scanned_comments || 0)+' 条'));
+                area.appendChild(heading);
+                if(job && ['finished','stopped'].indexOf(job.status)===-1) area.appendChild(el('p',(states[job.status] || job.status)+' · '+job.message,'qq-reader-status'));
                 (p.warnings || []).forEach(function (w) { area.appendChild(el('p',w,'panel-tip')); });
-                data.items.list.forEach(function (row) { area.appendChild(renderItem(row,true)); });
+                area.appendChild(renderCommentThreads(data.items.list));
                 if (!data.items.list.length) area.appendChild(el('p','当前尚无已读取评论。'));
                 var pager=el('div',null,'qq-pagination'), pages=Math.max(1,Math.ceil(data.items.total/data.items.page_size));
                 var previous=el('button','上一页','pager-btn'), next=el('button','下一页','pager-btn');
                 previous.type=next.type='button'; previous.disabled=selectedPage<=1; next.disabled=selectedPage>=pages;
                 previous.addEventListener('click',function(){openReview.page--;loadComments(area,itemId).catch(error);});
                 next.addEventListener('click',function(){openReview.page++;loadComments(area,itemId).catch(error);});
-                pager.append(previous,el('span',selectedPage+'/'+pages+' 页'),next); area.appendChild(pager);
+                pager.append(previous,el('span',selectedPage+'/'+pages+' 页'),next); if(pages>1) area.appendChild(pager);
                 if (job && ['failed','interrupted'].indexOf(job.status)!==-1) {
                     var retry=el('button','重试读取本帖评论','pager-btn'); retry.type='button';
                     retry.addEventListener('click',function(){api('/api/collect/qq/runs/'+selectedRun+'/items/'+itemId+'/comments',{}).then(function(){return loadComments(area,itemId);}).catch(error);});
@@ -222,15 +329,12 @@
             busy(active); $('qqStopBtn').disabled = !active || r.status === 'cancelling';
             $('qqProgress').textContent = (states[r.status] || r.status);
             $('qqProgress').title=r.message;
+            $('qqProgress').hidden = ['failed','interrupted'].indexOf(r.status) === -1;
             if (r.status==='failed' || r.status==='interrupted') $('qqProgress').textContent+=' · '+r.message;
             var coverage = $('qqCoverage'); coverage.replaceChildren();
             var stats=el('div',null,'qq-stats');
             [['发现',p.discovered_posts || 0],['已读取',p.scanned_posts || 0],['结果',p.matched || 0]].forEach(function(s){var stat=el('span');stat.appendChild(el('strong',String(s[1])));stat.appendChild(el('span',s[0]));stats.appendChild(stat);});
             coverage.appendChild(stats);
-            var scope=el('details',null,'qq-scope');scope.appendChild(el('summary','采集范围 · 热度排序'));
-            scope.appendChild(el('p',p.scope || '公开网页可见范围，未证明覆盖全部历史'));
-            if(p.sort) scope.appendChild(el('p',p.sort));
-            (p.warnings || []).forEach(function(t){scope.appendChild(el('p',t));});coverage.appendChild(scope);
             // Do not replace an actively edited review while a background run is polling.
             if (force === true || (!$('qqResults').contains(document.activeElement) && !$('qqReviewDialog').contains(document.activeElement))) {
                 $('qqResults').replaceChildren();
@@ -244,7 +348,9 @@
     }
     $('qqForm').addEventListener('submit', function (event) {
         event.preventDefault(); if (loading) return;
+        if (!$('qqChannel').value) { error(new Error('请先在信源管理中添加并启用 QQ 频道')); return; }
         closeReview();
+        $('qqProgress').hidden = true;
         loading = true; busy(true);
         api('/api/collect/qq/runs', {channel:$('qqChannel').value.trim(), keywords:$('qqKeywords').value.trim(),
             start_date:$('qqStartDate').value, end_date:$('qqEndDate').value,
@@ -266,6 +372,8 @@
         api('/api/collect/qq/connection',{channel:$('qqChannel').value.trim()}).then(loadConnection).catch(function(e){$('qqConnectionStatus').textContent=e.message;$('qqConnectBtn').disabled=false;});
     });
     window.addEventListener('pagehide', function () { clearTimeout(timer);clearTimeout(commentTimer);clearTimeout(connectionTimer); });
+    loadChannelSources().catch(function(e){$('qqChannel').replaceChildren(el('option','频道加载失败，请刷新重试'));error(e);});
+    window.addEventListener('focus',function(){loadChannelSources().catch(error);});
     loadConnection().catch(error);
     loadHistory(true).catch(error);
 })();

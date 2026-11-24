@@ -14,10 +14,17 @@
 """
 
 import datetime
+import re
 from typing import Dict, List
 
 from app.models.db import get_connection
 from app.models.stats import RISK_LABELS, RISK_LEVELS, StatsRepository
+
+
+def _display_title(value):
+    """Hide QQ image identifiers in display copies, keeping source records intact."""
+    title = re.sub(r"\[B_[0-9a-fA-F]+X\d+\]", "", str(value or ""))
+    return " ".join(title.split()) or "图片消息"
 
 # 省级行政区（与 vendor/echarts/china.json 的 feature.name 对齐，均为简称）
 PROVINCES = [
@@ -126,6 +133,7 @@ class ConsoleStatsRepository:
         with get_connection() as conn:
             rows = [dict(r) for r in conn.execute(sql, tuple(params))]
         for row in rows:
+            row["title"] = _display_title(row["title"])
             row["level_label"] = RISK_LABELS.get(row["level"], row["level"])
         return rows
 
@@ -157,9 +165,12 @@ class ConsoleStatsRepository:
     def recent_items(limit: int = 12) -> List[Dict]:
         """最新采集条目（大屏滚动条 / 报表底部清单）"""
         with get_connection() as conn:
-            return [dict(r) for r in conn.execute(
+            rows = [dict(r) for r in conn.execute(
                 "SELECT id, title, url, source_name, keyword, collected_at, published_at "
                 "FROM collect_items ORDER BY id DESC LIMIT ?", (max(1, min(int(limit), 50)),))]
+        for row in rows:
+            row["title"] = _display_title(row["title"])
+        return rows
 
     # -------------------- 快照（大屏/报表/SSE 共用） --------------------
     @staticmethod

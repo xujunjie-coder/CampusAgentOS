@@ -321,7 +321,17 @@
 }
 
 /* 风险流 / 采集流 */
-.ckb-feed { list-style: none; margin: 0; padding: 0; height: 100%; overflow: hidden; }
+.ckb-feed-body { display: flex; overflow: hidden; padding: 4px 10px 48px; }
+.ckb-feed {
+    list-style: none; margin: 0; padding: 0 4px 0 0;
+    flex: 1; min-height: 0; min-width: 0; overflow-y: auto; overflow-x: hidden;
+    scrollbar-gutter: stable; scrollbar-color: #38bdf8 #0b2042;
+    overscroll-behavior: contain;
+}
+.ckb-feed::-webkit-scrollbar { width: 7px; }
+.ckb-feed::-webkit-scrollbar-track { background: #0b2042; border-radius: 4px; }
+.ckb-feed::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 4px; }
+.ckb-feed:focus-visible { outline: 1px solid #00e5ff; outline-offset: -1px; }
 .ckb-feed li {
     display: flex; align-items: flex-start; gap: 8px; padding: 7px 6px;
     border-bottom: 1px dashed rgba(56, 189, 248, .18); font-size: 12px; line-height: 1.5;

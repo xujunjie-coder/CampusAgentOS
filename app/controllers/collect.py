@@ -83,7 +83,7 @@ class CollectSourcesApiHandler(CollectApiHandler):
             return
         out = []
         for s in SourceRepository.get_all():
-            if not s["enabled"]:
+            if not s["enabled"] or SourceRepository.channel_id(s['url']):
                 continue
             out.append({
                 "id": s["id"],
@@ -125,6 +125,9 @@ class CollectRunApiHandler(CollectApiHandler):
                 source = None
             if not source or not source["enabled"]:
                 self.deny(400, "信源不存在或已停用：%s" % sid)
+                return
+            if SourceRepository.channel_id(source['url']):
+                self.deny(400, 'QQ 频道请使用采集管理中的 QQ 频道入口')
                 return
             sources.append(source)
         params = data.get("params") or {}

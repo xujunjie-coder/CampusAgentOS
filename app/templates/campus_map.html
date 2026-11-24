@@ -66,6 +66,12 @@
             </aside>
             <div id="mapControls" class="map-controls" aria-label="地图视角控制">
                 <button type="button" id="mapNorth" title="恢复模型北向俯视" aria-label="恢复模型北向俯视"><span id="mapCompass" aria-hidden="true">▲</span><small aria-hidden="true">N</small></button>
+                <div class="map-pan" role="group" aria-label="平移地图">
+                    <button type="button" data-pan="up" title="向上移动地图" aria-label="向上移动地图">↑</button>
+                    <button type="button" data-pan="left" title="向左移动地图" aria-label="向左移动地图">←</button>
+                    <button type="button" data-pan="right" title="向右移动地图" aria-label="向右移动地图">→</button>
+                    <button type="button" data-pan="down" title="向下移动地图" aria-label="向下移动地图">↓</button>
+                </div>
                 <div class="map-zoom">
                     <button type="button" id="mapZoomIn" aria-label="放大地图">＋</button>
                     <button type="button" id="mapZoomOut" aria-label="缩小地图">−</button>

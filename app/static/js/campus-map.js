@@ -278,7 +278,8 @@
         buildingMeshesById.forEach(function (meshes, id) {
             var feature = featureById.get(id);
             var cat = featureCategory(feature);
-            var isSelected = id === selectedId;
+            var selectedFeature = featureById.get(selectedId);
+            var isSelected = id === selectedId || (selectedFeature && selectedFeature.parentId === id);
             var matPair;
             if (isSelected) {
                 matPair = categoryMaterials.selected;
@@ -317,7 +318,7 @@
             catBadge.textContent = (CATEGORY_LABELS[cat] || "建筑") + (feature.campusZone ? " · " + feature.campusZone : "");
         }
         document.getElementById("mapDetailId").textContent = id;
-        document.getElementById("mapDetailReview").textContent = isGate ? "位置示意" : isPlace ? "OSM 景观定位" : "信息待核验";
+        document.getElementById("mapDetailReview").textContent = isGate ? "位置示意" : isPlace ? "OSM 景观定位" : feature.nameSource ? "用户校正名称" : "信息待核验";
         document.getElementById("mapDetailPosition").textContent = "E " + Math.round(position[0]) + " m · N " + Math.round(position[1]) + " m";
         document.getElementById("mapDetailHeightRow").hidden = isPointMarker;
         var hMeters = Math.round(box.max.y - box.min.y);
@@ -327,7 +328,9 @@
         var extraIssue = review && Array.isArray(review.issues) && review.issues.find(function (msg) {
             return msg.indexOf("OSM 中有") === 0 || msg.indexOf("未填写楼名") !== -1;
         });
-        document.getElementById("mapDetailNote").textContent = isPointMarker ? feature.note : conflict
+        document.getElementById("mapDetailNote").textContent = isPointMarker ? feature.note : feature.nameSource
+            ? "名称依据用户提供的校园截图校正。" + (feature.parentId ? "分栋位置按截图示意，当前模型仍为连体轮廓；" : "") + "建筑轮廓与高度沿用 OSM 模型，尚非实测。"
+            : conflict
             ? "清单与模型内部名称（" + review.modelName + "）有差异，需现场校对。位置与高度均取自模型。"
             : extraIssue
             ? extraIssue + " 坐标为模型原点的东向、北向偏移，高度为估算值。"
@@ -339,6 +342,8 @@
     }
 
     function highlight(id, selected) {
+        var feature = featureById.get(id);
+        if (feature && feature.parentId) id = feature.parentId;
         (outlines.get(id) || []).forEach(function (outline) {
             outline.material = selected ? selectionMaterial : outlineMaterial;
         });
@@ -347,6 +352,23 @@
     function createLabels() {
         manifest.features.forEach(function (feature) {
             var box = bounds.get(feature.id); if (!box) return;
+            if (feature.parts) {
+                // Keep the parent searchable while presenting each annotated wing separately.
+                featureById.set(feature.id, feature);
+                feature.parts.forEach(function (part) {
+                    var child = Object.assign({}, feature, part, {
+                        id: feature.id + "-" + part.suffix, parentId: feature.id, parts: undefined
+                    });
+                    var region = part.boundsLocalEN;
+                    var partBox = new THREE.Box3(
+                        new THREE.Vector3(region[0], box.min.y, -region[3]),
+                        new THREE.Vector3(region[2], box.max.y, -region[1]));
+                    roots.set(child.id, roots.get(feature.id));
+                    bounds.set(child.id, partBox);
+                    addLabel(child, new THREE.Vector3(part.centerLocalEN[0], box.max.y + 2.5, -part.centerLocalEN[1]));
+                });
+                return;
+            }
             var anchor = box.getCenter(new THREE.Vector3());
             anchor.y = box.max.y + 2.5;
             addLabel(feature, anchor);
@@ -693,7 +715,7 @@
         featureById.forEach(function (feature) {
             if (feature.verification !== "named" && feature.kind !== "gate" && feature.kind !== "place") return;
             var cat = featureCategory(feature);
-            if (counts[cat] !== undefined) counts[cat]++;
+            if (!feature.parts && counts[cat] !== undefined) counts[cat]++;
         });
         categoryButtons.forEach(function (btn) {
             var cat = btn.dataset.category;
@@ -760,7 +782,7 @@
         var groups = new Map();
         GUIDE_ORDER.forEach(function (cat) { groups.set(cat, []); });
         featureById.forEach(function (feature) {
-            if (feature.verification !== "named" && feature.kind !== "gate" && feature.kind !== "place") return;
+            if (feature.parts || (feature.verification !== "named" && feature.kind !== "gate" && feature.kind !== "place")) return;
             var cat = featureCategory(feature);
             if (!groups.has(cat)) return;
             if (activeCategory !== "all" && cat !== activeCategory) return;
@@ -1162,6 +1184,16 @@
     document.getElementById("mapNorth").addEventListener("click", function () { if (model) fit(true); });
     document.getElementById("mapZoomIn").addEventListener("click", function () { if (model) zoom(0.8, true); });
     document.getElementById("mapZoomOut").addEventListener("click", function () { if (model) zoom(1.25, true); });
+    document.querySelectorAll(".map-pan [data-pan]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            if (!model) return;
+            // Move the viewing position in the arrow direction, opposite to dragging.
+            var step = Math.max(24, Math.min(stage.clientWidth, stage.clientHeight) * 0.12);
+            var direction = button.dataset.pan;
+            pan(direction === "left" ? step : direction === "right" ? -step : 0,
+                direction === "up" ? step : direction === "down" ? -step : 0);
+        });
+    });
 
     var fullscreen = document.getElementById("mapFullscreen");
     fullscreen.hidden = !shell.requestFullscreen;
@@ -1222,7 +1254,19 @@
         if (!hits.length) return;
         var node = hits[0].object;
         while (node && node.name.indexOf("feature__") !== 0) node = node.parent;
-        if (node) setSelection(node.name.slice(9));
+        if (node) {
+            var id = node.name.slice(9);
+            var feature = featureById.get(id);
+            if (feature && feature.parts) {
+                var point = hits[0].point;
+                var nearest = feature.parts.slice().sort(function (a, b) {
+                    return Math.hypot(point.x - a.centerLocalEN[0], point.z + a.centerLocalEN[1])
+                        - Math.hypot(point.x - b.centerLocalEN[0], point.z + b.centerLocalEN[1]);
+                })[0];
+                id += "-" + nearest.suffix;
+            }
+            setSelection(id);
+        }
     });
     stage.addEventListener("pointercancel", function (event) { pointers.delete(event.pointerId); moved = true; });
     stage.addEventListener("contextmenu", function (event) { event.preventDefault(); });

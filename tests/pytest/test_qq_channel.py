@@ -109,11 +109,65 @@ def test_body_does_not_include_nested_comments_and_reply_keeps_parent_context():
     assert '父评论：\n热水收费' in reply['context']
 
 
+def test_post_images_keep_order_deduplicate_and_exclude_comments_avatars_emoji():
+    body = '''<img src="https://example.com/one.jpg">
+    <img src="https://example.com/one.jpg">
+    <img src="placeholder" data-src="//example.com/two.jpg">
+    <div style="background-image:url('https://example.com/three.jpg')"></div>
+    <img alt="avatar-img" src="https://example.com/avatar.jpg">
+    <img alt="emoji" src="https://example.com/emoji.gif">
+    <img src="javascript:alert(1)"><img src="https://[invalid">
+    <div class="user-info"><img src="https://example.com/author.jpg"></div>'''
+    html = detail(body=body, extra='<div id="c_photo"><img src="https://example.com/comment.jpg"></div>')
+    result = svc.parse_post(html, {'id': 'B_one', 'url': 'https://pd.qq.com/g/CWNUpindao/post/B_one'})
+    assert result['records'][0]['metadata']['images'] == [
+        'https://example.com/one.jpg', 'https://example.com/two.jpg', 'https://example.com/three.jpg']
+    assert result['images'] == 3
+
+
 def test_inline_styling_does_not_split_keyword():
     html = detail(comment='<span>热</span><strong>水</strong>收费<br>建议改进')
     parsed = svc.parse_post(html,{'id':'B_one','url':'https://pd.qq.com/g/CWNUpindao/post/B_one'})
     assert parsed['records'][1]['content'] == '热水收费\n建议改进'
     assert svc.matching_keywords(parsed['records'][1]['content'], ['热水']) == ['热水']
+
+
+def test_image_metadata_updates_preserve_existing_post_metrics(tmp_path):
+    import json
+    import sqlite3
+    from contextlib import contextmanager
+    database = tmp_path / 'images.db'
+    @contextmanager
+    def connection():
+        with sqlite3.connect(database) as conn:
+            conn.row_factory = sqlite3.Row
+            yield conn
+    with connection() as conn:
+        conn.execute('CREATE TABLE qq_channel_items(id INTEGER,run_id INTEGER,content TEXT,metadata TEXT)')
+        conn.execute('INSERT INTO qq_channel_items VALUES(1,2,?,?)', ('摘要', json.dumps({'likes': 95, 'is_excerpt': True})))
+    with patch.object(repo, 'get_connection', connection):
+        repo.update_post(2, 1, {'content': '', 'metadata': {'images': ['https://example.com/a.jpg']}})
+    with connection() as conn:
+        result = conn.execute('SELECT * FROM qq_channel_items').fetchone()
+        metadata = json.loads(result['metadata'])
+        assert metadata == {'likes': 95, 'is_excerpt': False, 'images': ['https://example.com/a.jpg']}
+        assert result['content'] == ''
+
+
+def test_finished_legacy_thread_is_refreshed_once_for_images():
+    with patch.object(repo, 'get_item', return_value={'kind': 'post', 'metadata': '{}'}), \
+         patch.object(repo, 'comment_job', return_value={'status': 'finished'}), \
+         patch.object(repo, 'create_comment_job'), patch.object(svc._pool, 'submit') as submit:
+        try:
+            svc.start_comments(1, 2)
+            assert submit.call_count == 1
+        finally:
+            svc._slot.release()
+    with patch.object(repo, 'get_item', return_value={'kind': 'post', 'metadata': '{"images":[]}'}), \
+         patch.object(repo, 'comment_job', return_value={'status': 'finished'}), \
+         patch.object(svc._pool, 'submit') as submit:
+        svc.start_comments(1, 2)
+        submit.assert_not_called()
 
 
 def test_no_new_links_while_scroll_moves_does_not_stop_at_first_page():
@@ -349,6 +403,20 @@ class TestQQChannelApi(ApiCase):
         assert repo.comment_job(item['id'])['status']=='finished'
         assert repo.items(run_id,post_id=item['post_id'])['total']==3
         assert repo.get_item(run_id,item['id'])['content']=='学生提案'
+
+    def test_post_images_are_persisted_and_returned_with_thread(self):
+        self.login()
+        run_id = repo.create_run(options(), 'admin')
+        rows = svc.search_posts(native_html(), 'CWNUpindao', {'CWNUpindao'}, '热水')
+        repo.save_items(run_id, rows)
+        item = repo.items(run_id, posts_only=True)['list'][0]
+        urls = ['https://example.com/post.jpg']
+        repo.update_post(run_id, item['id'], {'content': '', 'metadata': {'images': urls}})
+        thread = self._json(self.get_json('/api/collect/qq/runs/%d/items/%d/comments' % (run_id, item['id'])))
+        assert thread['post_images'] == urls
+        assert thread['post_content'] == ''
+        assert thread['post_is_excerpt'] is False
+        assert repo.items(run_id, posts_only=True)['list'][0]['metadata']['images'] == urls
 
     def test_connection_endpoint_does_not_open_browser_on_get(self):
         self.login()

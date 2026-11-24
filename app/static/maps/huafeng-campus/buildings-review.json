@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "building-evidence-review",
-  "reviewedAt": "2026-11-22",
+  "reviewedAt": "2026-11-24",
   "scope": "hf-bldg-0001..hf-bldg-0115",
   "geometryModified": false,
   "tencent3dCompared": false,
@@ -427,10 +427,16 @@
       "reviewStatus": "needs-review",
       "osmRef": "way/1412377390",
       "issues": [
+        "名称依据用户于 2026-11-24 提供的校园截图标注；几何轮廓与高度仍沿用 OSM 模型。",
         "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
       ],
       "references": [],
-      "modelName": "新食堂"
+      "modelName": "第三学生食堂",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 4
+      }
     },
     {
       "id": "hf-bldg-0043",
@@ -1044,66 +1050,96 @@
       "reviewStatus": "needs-review",
       "osmRef": "way/1412385691",
       "issues": [
-        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "名称依据用户于 2026-11-24 提供的校园截图标注；几何轮廓与高度仍沿用 OSM 模型。",
         "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
       ],
       "references": [],
-      "modelName": "二期（南区）未命名建筑 99"
+      "modelName": "地理科学学院",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 5
+      }
     },
     {
       "id": "hf-bldg-0100",
       "reviewStatus": "needs-review",
       "osmRef": "way/1412385690",
       "issues": [
-        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "名称依据用户于 2026-11-24 提供的校园截图标注；几何轮廓与高度仍沿用 OSM 模型。",
         "楼高按 OSM 标注层数（2 层 × 3.4 m）估算，非实测建筑立面。"
       ],
       "references": [],
-      "modelName": "二期（南区）未命名建筑 100"
+      "modelName": "西华师范大学档案馆",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 5
+      }
     },
     {
       "id": "hf-bldg-0101",
       "reviewStatus": "needs-review",
       "osmRef": "way/1412385692",
       "issues": [
-        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "名称依据用户于 2026-11-24 提供的校园截图标注；几何轮廓与高度仍沿用 OSM 模型。",
         "楼高按 OSM 标注层数（3 层 × 3.4 m）估算，非实测建筑立面。"
       ],
       "references": [],
-      "modelName": "二期（南区）未命名建筑 101"
+      "modelName": "西华师范大学档案馆（附属楼块）",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 5
+      }
     },
     {
       "id": "hf-bldg-0102",
       "reviewStatus": "needs-review",
       "osmRef": "way/551178469",
       "issues": [
-        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "名称依据用户于 2026-11-24 提供的校园截图标注；几何轮廓与高度仍沿用 OSM 模型。",
         "OSM 未标注层数，楼高按占地面积估算，非实测值。"
       ],
       "references": [],
-      "modelName": "二期（南区）未命名建筑 102"
+      "modelName": "西华师范大学教育信息技术中心",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 3
+      }
     },
     {
       "id": "hf-bldg-0103",
       "reviewStatus": "needs-review",
       "osmRef": "way/1349741928",
       "issues": [
-        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "名称依据用户于 2026-11-24 提供的校园截图标注；几何轮廓与高度仍沿用 OSM 模型。",
         "OSM 未标注层数，楼高按占地面积估算，非实测值。"
       ],
       "references": [],
-      "modelName": "二期（南区）未命名建筑 103"
+      "modelName": "灯光球场",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 4
+      }
     },
     {
       "id": "hf-bldg-0104",
       "reviewStatus": "needs-review",
       "osmRef": "way/1349741914",
       "issues": [
-        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "名称依据用户于 2026-11-24 提供的校园截图标注；几何轮廓与高度仍沿用 OSM 模型。",
         "OSM 未标注层数，楼高按占地面积估算，非实测值。"
       ],
       "references": [],
-      "modelName": "二期（南区）未命名建筑 104"
+      "modelName": "理科楼（A、B、C栋）",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 2
+      }
     },
     {
       "id": "hf-bldg-0105",
@@ -1187,11 +1223,16 @@
       "reviewStatus": "needs-review",
       "osmRef": "way/1412364015",
       "issues": [
-        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "名称依据用户于 2026-11-24 提供的校园截图标注；几何轮廓与高度仍沿用 OSM 模型。",
         "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
       ],
       "references": [],
-      "modelName": "二期（南区）未命名建筑 112"
+      "modelName": "22公寓、23公寓",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 4
+      }
     },
     {
       "id": "hf-bldg-0113",
@@ -1209,22 +1250,32 @@
       "reviewStatus": "needs-review",
       "osmRef": "way/1412364014",
       "issues": [
-        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "名称依据用户于 2026-11-24 提供的校园截图标注；几何轮廓与高度仍沿用 OSM 模型。",
         "楼高按 OSM 标注层数（4 层 × 3.4 m）估算，非实测建筑立面。"
       ],
       "references": [],
-      "modelName": "二期（南区）未命名建筑 114"
+      "modelName": "24学舍",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 4
+      }
     },
     {
       "id": "hf-bldg-0115",
       "reviewStatus": "needs-review",
       "osmRef": "way/551178471",
       "issues": [
-        "OSM 底图中该建筑有轮廓但未填写楼名，属于待核验候选楼块。",
+        "名称依据用户于 2026-11-24 提供的校园截图标注；几何轮廓与高度仍沿用 OSM 模型。",
         "OSM 未标注层数，楼高按占地面积估算，非实测值。"
       ],
       "references": [],
-      "modelName": "二期（南区）未命名建筑 115"
+      "modelName": "研究生宿舍",
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 1
+      }
     }
   ]
 }

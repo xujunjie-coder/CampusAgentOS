@@ -997,7 +997,7 @@
     },
     {
       "id": "hf-bldg-0042",
-      "name": "新食堂",
+      "name": "第三学生食堂",
       "osmRef": "way/1412377390",
       "campusZone": "二期（南区）",
       "category": "canteen",
@@ -1013,7 +1013,12 @@
         -315.647,
         -266.005
       ],
-      "levels": 2
+      "levels": 2,
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 4
+      }
     },
     {
       "id": "hf-bldg-0043",
@@ -2137,10 +2142,10 @@
     },
     {
       "id": "hf-bldg-0099",
-      "name": "二期（南区）未命名建筑 99",
+      "name": "地理科学学院",
       "osmRef": "way/1412385691",
       "campusZone": "二期（南区）",
-      "category": "candidate",
+      "category": "teaching",
       "modelGrade": "M2",
       "status": "needs-review",
       "confidence": {
@@ -2148,19 +2153,24 @@
         "z": "B",
         "roof": "C"
       },
-      "verification": "candidate",
+      "verification": "named",
       "centerLocalEN": [
         270.756,
         -98.37
       ],
-      "levels": 4
+      "levels": 4,
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 5
+      }
     },
     {
       "id": "hf-bldg-0100",
-      "name": "二期（南区）未命名建筑 100",
+      "name": "西华师范大学档案馆",
       "osmRef": "way/1412385690",
       "campusZone": "二期（南区）",
-      "category": "candidate",
+      "category": "service",
       "modelGrade": "M2",
       "status": "needs-review",
       "confidence": {
@@ -2168,19 +2178,24 @@
         "z": "B",
         "roof": "C"
       },
-      "verification": "candidate",
+      "verification": "named",
       "centerLocalEN": [
         286.589,
         -124.824
       ],
-      "levels": 2
+      "levels": 2,
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 5
+      }
     },
     {
       "id": "hf-bldg-0101",
-      "name": "二期（南区）未命名建筑 101",
+      "name": "西华师范大学档案馆（附属楼块）",
       "osmRef": "way/1412385692",
       "campusZone": "二期（南区）",
-      "category": "candidate",
+      "category": "service",
       "modelGrade": "M2",
       "status": "needs-review",
       "confidence": {
@@ -2188,19 +2203,24 @@
         "z": "B",
         "roof": "C"
       },
-      "verification": "candidate",
+      "verification": "named",
       "centerLocalEN": [
         276.247,
         -133.277
       ],
-      "levels": 3
+      "levels": 3,
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 5
+      }
     },
     {
       "id": "hf-bldg-0102",
-      "name": "二期（南区）未命名建筑 102",
+      "name": "西华师范大学教育信息技术中心",
       "osmRef": "way/551178469",
       "campusZone": "二期（南区）",
-      "category": "candidate",
+      "category": "service",
       "modelGrade": "M1+",
       "status": "needs-review",
       "confidence": {
@@ -2208,19 +2228,24 @@
         "z": "C",
         "roof": "C"
       },
-      "verification": "candidate",
+      "verification": "named",
       "centerLocalEN": [
         408.858,
         -164.779
       ],
-      "levels": null
+      "levels": null,
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 3
+      }
     },
     {
       "id": "hf-bldg-0103",
-      "name": "二期（南区）未命名建筑 103",
+      "name": "灯光球场",
       "osmRef": "way/1349741928",
       "campusZone": "二期（南区）",
-      "category": "candidate",
+      "category": "landmark",
       "modelGrade": "M1+",
       "status": "needs-review",
       "confidence": {
@@ -2228,19 +2253,24 @@
         "z": "C",
         "roof": "C"
       },
-      "verification": "candidate",
+      "verification": "named",
       "centerLocalEN": [
         16.696,
         -261.088
       ],
-      "levels": null
+      "levels": null,
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 4
+      }
     },
     {
       "id": "hf-bldg-0104",
-      "name": "二期（南区）未命名建筑 104",
+      "name": "理科楼（A、B、C栋）",
       "osmRef": "way/1349741914",
       "campusZone": "二期（南区）",
-      "category": "candidate",
+      "category": "teaching",
       "modelGrade": "M1+",
       "status": "needs-review",
       "confidence": {
@@ -2248,12 +2278,61 @@
         "z": "C",
         "roof": "C"
       },
-      "verification": "candidate",
+      "verification": "named",
       "centerLocalEN": [
         423.094,
         -270.378
       ],
-      "levels": null
+      "levels": null,
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 2
+      },
+      "parts": [
+        {
+          "suffix": "a",
+          "name": "理科楼A栋",
+          "centerLocalEN": [
+            453,
+            -253
+          ],
+          "boundsLocalEN": [
+            433,
+            -292,
+            475.4,
+            -219.5
+          ]
+        },
+        {
+          "suffix": "b",
+          "name": "理科楼B栋",
+          "centerLocalEN": [
+            443,
+            -315
+          ],
+          "boundsLocalEN": [
+            412,
+            -332.5,
+            475.4,
+            -292
+          ]
+        },
+        {
+          "suffix": "c",
+          "name": "理科楼C栋",
+          "centerLocalEN": [
+            380,
+            -256
+          ],
+          "boundsLocalEN": [
+            356.6,
+            -311.6,
+            433,
+            -222.8
+          ]
+        }
+      ]
     },
     {
       "id": "hf-bldg-0105",
@@ -2397,10 +2476,10 @@
     },
     {
       "id": "hf-bldg-0112",
-      "name": "二期（南区）未命名建筑 112",
+      "name": "22公寓、23公寓",
       "osmRef": "way/1412364015",
       "campusZone": "二期（南区）",
-      "category": "candidate",
+      "category": "dorm",
       "modelGrade": "M2",
       "status": "needs-review",
       "confidence": {
@@ -2408,12 +2487,17 @@
         "z": "B",
         "roof": "C"
       },
-      "verification": "candidate",
+      "verification": "named",
       "centerLocalEN": [
         -349.807,
         -391.602
       ],
-      "levels": 4
+      "levels": 4,
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 4
+      }
     },
     {
       "id": "hf-bldg-0113",
@@ -2437,10 +2521,10 @@
     },
     {
       "id": "hf-bldg-0114",
-      "name": "二期（南区）未命名建筑 114",
+      "name": "24学舍",
       "osmRef": "way/1412364014",
       "campusZone": "二期（南区）",
-      "category": "candidate",
+      "category": "dorm",
       "modelGrade": "M2",
       "status": "needs-review",
       "confidence": {
@@ -2448,19 +2532,24 @@
         "z": "B",
         "roof": "C"
       },
-      "verification": "candidate",
+      "verification": "named",
       "centerLocalEN": [
         -222.125,
         -401.336
       ],
-      "levels": 4
+      "levels": 4,
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 4
+      }
     },
     {
       "id": "hf-bldg-0115",
-      "name": "二期（南区）未命名建筑 115",
+      "name": "研究生宿舍",
       "osmRef": "way/551178471",
       "campusZone": "二期（南区）",
-      "category": "candidate",
+      "category": "dorm",
       "modelGrade": "M1+",
       "status": "needs-review",
       "confidence": {
@@ -2468,12 +2557,17 @@
         "z": "C",
         "roof": "C"
       },
-      "verification": "candidate",
+      "verification": "named",
       "centerLocalEN": [
         598.876,
         -646.645
       ],
-      "levels": null
+      "levels": null,
+      "nameSource": {
+        "type": "user-annotation",
+        "date": "2026-11-24",
+        "image": 1
+      }
     }
   ]
 }

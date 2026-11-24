@@ -1,5 +1,19 @@
 # 接口文档（api.md）
 
+## 2026-11-24 增量接口与页面行为
+
+| 路径 | 当前契约 |
+| --- | --- |
+| `GET /api/admin/sources` | 信源列表增加 `source_type`（`web` / `qq_channel`）与 `channel_id` |
+| `POST /api/admin/sources`、`POST /api/admin/sources/{id}` | QQ 频道传 `source_type=qq_channel`、`channel_id`、`name`、`description`、`enabled`，服务端生成频道 URL，无需传请求头 |
+| `GET /api/collect/qq/sources` | 返回已启用频道的 `id`、`name`、`channel`；沿用后台与采集菜单鉴权，不返回请求头 |
+| `GET /api/collect/sources` | 普通网页选源不包含 QQ 频道；网页批量采集拒绝 QQ 信源并指向专用入口 |
+| `GET /api/collect/qq/runs/{run}/items/{item}/comments` | 返回 `post_content`、`post_is_excerpt`、`post_images` 和评论/回复列表；图片为 URL 数组 |
+| `POST /api/collect/qq/runs/{run}/items/{item}/comments` | 按需读取当前帖；已完成但尚无图片字段的旧记录重新读取补采 |
+| `GET /admin/knowledge?page=N` | 每页 15 篇，总数不受旧版 100 条显示上限影响，页码越界时回退到有效页 |
+
+知识仓库与 RAG 已在知识页面、数字员工绑定和对话检索链路实现。下文版本号及“未闭合项”记录的是 2026-11-07 基线，不能据此认定后续功能仍未实现；当前行为以代码和上述增量说明为准。
+
 > 版本：v0.11.1 ｜ 更新日期：2026-11-07 ｜ 维护：成员 F（测试/文档）
 > 依据：`app/application.py` 路由表 + `app/controllers/*` 实现逐条核对，不含任务书设想、只写代码里真实存在的接口。
 > 代码改动后请同步本文件；与代码冲突时以代码为准。

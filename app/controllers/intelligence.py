@@ -105,8 +105,12 @@ class KnowledgeHandler(AdminBaseHandler):
     template_name = "admin/knowledge.html"
     page_name = "知识仓库"
 
-    def get_context(self):
-        return {"documents": intelligence.documents(), "error": ""}
+    def get_context(self, error=""):
+        try:
+            page = int(self.get_query_argument('page', '1'))
+        except ValueError:
+            page = 1
+        return dict(intelligence.documents_page(page), error=error)
 
     @tornado.web.authenticated
     @backend_required
@@ -142,18 +146,21 @@ class KnowledgeHandler(AdminBaseHandler):
                     raise ValueError("请输入标题和正文，标题最多 160 字，正文最多 4 万字")
                 await index_document(title, content)
             except UnicodeDecodeError:
-                self.render_admin(documents=intelligence.documents(), error="请上传 UTF-8 文档")
+                self.render_admin(**self.get_context(error="请上传 UTF-8 文档"))
                 return
             except ValueError as exc:
-                self.render_admin(documents=intelligence.documents(), error=str(exc))
+                self.render_admin(**self.get_context(error=str(exc)))
                 return
             except Exception:
                 logging.exception("Knowledge indexing failed")
-                self.render_admin(documents=intelligence.documents(), error="向量入库失败，请检查嵌入模型配置")
+                self.render_admin(**self.get_context(error="向量入库失败，请检查嵌入模型配置"))
                 return
         else:
             raise tornado.web.HTTPError(400)
-        self.redirect(self.nav_url, status=303)
+        target = self.nav_url
+        if action == 'remove':
+            target += '?page=' + str(self.get_context()['document_page'])
+        self.redirect(target, status=303)
 
 
 class SentimentHandler(AdminBaseHandler):

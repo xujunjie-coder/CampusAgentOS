@@ -178,7 +178,8 @@ class ChatHandler(BaseHandler):
                         elif etype == "tool_result":
                             await self.send_event("tool_result", {"name": event["name"],
                                                                   "call_id": event.get("call_id"),
-                                                                  "status": event["status"]})
+                                                                  "status": event["status"],
+                                                                  "result": event.get("result", "")})
                         elif etype == "reasoning":
                             await self.send_event("reasoning", {"text": event["text"]})
                         elif etype == "notice":

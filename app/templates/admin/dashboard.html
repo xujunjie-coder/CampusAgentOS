@@ -11,7 +11,7 @@
     {% if site_favicon %}<link rel='icon' href='{{ site_favicon }}'>{% end %}
     <link rel='stylesheet' href='/static/vendor/fontawesome/css/all.min.css'>
     <link rel='stylesheet' href='/static/vendor/bootstrap/bootstrap-grid.min.css'>
-    <link rel='stylesheet' href='/static/css/console.css?v=20261120b'>
+    <link rel='stylesheet' href='{{ static_url("css/console.css") }}'>
     <!-- 科技大屏 HUD 调色变量（保留学校品牌标识而不遮蔽青蓝发光视觉） -->
     <style>
         :root { --cwnu-blue: #00e5ff; --cwnu-red: #ff5a6e; --ckb-cyan: #00e5ff; --ckb-royal: #2563eb; }
@@ -160,8 +160,8 @@
                 <span class="ckb-panel-title"><i class="fas fa-bell"></i>实时预警流</span>
                 <span class="ckb-panel-sub" id="feedSub">最近 8 条</span>
             </div>
-            <div class="ckb-panel-body" style="padding:4px 10px;">
-                <ul class="ckb-feed" id="feedRisk"><li class="ckb-feed-empty">等待风险分析结果…</li></ul>
+            <div class="ckb-panel-body ckb-feed-body">
+                <ul class="ckb-feed" id="feedRisk" tabindex="0" aria-label="实时预警列表，可上下滚动查看"><li class="ckb-feed-empty">等待风险分析结果…</li></ul>
             </div>
         </section>
     </div>
@@ -228,6 +228,6 @@
 <script src="/static/js/chart-kit.js"></script>
 <script src="/static/js/console-common.js"></script>
 <script src="/static/js/dashboard-globe.js"></script>
-<script src="/static/js/dashboard.js"></script>
+<script src="{{ static_url('js/dashboard.js') }}"></script>
 </body>
 </html>

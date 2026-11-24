@@ -306,6 +306,11 @@
             '    </div>' +
             '  </div>' +
             '  <div class="chat-sources-slot" hidden></div>' +
+            '  <section class="chat-team" aria-label="多智能体协作" hidden>' +
+            '    <div class="chat-team-heading"><i class="fas fa-project-diagram" aria-hidden="true"></i><strong>多智能体协作</strong><span class="chat-team-count"></span></div>' +
+            '    <div class="chat-team-coordinator"><i class="fas fa-robot" aria-hidden="true"></i><span>主助理 · 分派任务与汇总</span><span class="chat-team-phase" role="status"></span></div>' +
+            '    <div class="chat-team-list"></div>' +
+            '  </section>' +
             '  <div class="chat-process" hidden>' +
             '    <div class="chat-process-head">' +
             '      <i class="fas fa-layer-group"></i><span class="chat-process-label">执行过程</span>' +
@@ -321,6 +326,8 @@
         var contentEl = row.querySelector(".chat-content");
         var bubbleEl = row.querySelector(".chat-bubble-assistant");
         var sourcesSlotEl = row.querySelector(".chat-sources-slot");
+        var teamEl = row.querySelector(".chat-team");
+        var teamListEl = row.querySelector(".chat-team-list");
         var progressEl = row.querySelector(".chat-progress");
         var progressTextEl = row.querySelector(".chat-progress-text");
         var processEl = row.querySelector(".chat-process");
@@ -338,6 +345,7 @@
             reasoningItem: null,
             reasoningText: "",
             pendingTasks: new Map(),
+            tasks: new Map(),
             finished: false,
             errorShown: false,
         };
@@ -361,6 +369,38 @@
         function setProgress(text) {
             if (state.finished || progressTextEl.textContent === text) return;
             progressTextEl.textContent = text;
+        }
+
+        function updateTeam() {
+            var active = state.pendingTasks.size;
+            teamEl.querySelector(".chat-team-count").textContent = state.tasks.size + " 个子智能体";
+            teamEl.querySelector(".chat-team-phase").textContent = active ? active + " 个执行中" :
+                (state.finished ? (state.errorShown ? "本轮已中断" : "本轮已结束") : "正在汇总");
+        }
+
+        function addTask(args, callId) {
+            if (!callId || state.tasks.has(callId)) return;
+            if (typeof args === "string") {
+                try { args = JSON.parse(args); } catch (e) { args = { description: args }; }
+            }
+            args = args || {};
+            teamEl.hidden = false;
+            var card = document.createElement("details");
+            card.className = "chat-child-card";
+            card.dataset.status = "running";
+            card.innerHTML = '<summary><span class="chat-child-avatar"><i class="fas fa-user-astronaut" aria-hidden="true"></i></span>' +
+                '<span class="chat-child-info"><strong></strong><span class="chat-child-task"></span></span>' +
+                '<span class="chat-child-status" role="status">执行中</span><i class="fas fa-chevron-down chat-child-caret" aria-hidden="true"></i></summary>' +
+                '<div class="chat-child-detail"><div class="chat-child-assignment"></div><strong>返回结果</strong>' +
+                '<div class="chat-child-result">正在独立处理任务，等待返回结果…</div></div>';
+            card.querySelector(".chat-child-info strong").textContent = "资料助手 " + (state.tasks.size + 1);
+            card.querySelector(".chat-child-task").textContent = args.description || "校园资料查询";
+            card.querySelector(".chat-child-assignment").textContent = args.description || "校园资料查询";
+            teamListEl.appendChild(card);
+            state.tasks.set(callId, card);
+            state.pendingTasks.set(callId, card);
+            updateTeam();
+            setProgress(state.pendingTasks.size + " 个子智能体协作中");
         }
 
         // 任务10：按本轮实际应答的数字助理渲染头像与署名（无身份信息则隐藏整行）
@@ -399,6 +439,10 @@
             },
             addTool: function (name, args, callId) {
                 if (state.finished) return;
+                if (name === "task" && callId) {
+                    addTask(args, callId);
+                    return;
+                }
                 setProgress(name === "task" ? "正在分配协同子任务" : "正在处理工具请求 · " + name);
                 ensureProcessVisible();
                 state.processCount++;
@@ -413,30 +457,17 @@
                     (argText ? '<span class="chat-proc-args">' + escapeHtml(argText) + "</span>" : "") +
                     "</span>";
                 processListEl.appendChild(item);
-                if (name === "task" && callId) {
-                    var taskArgs = args;
-                    if (typeof taskArgs === "string") {
-                        try { taskArgs = JSON.parse(taskArgs); } catch (e) { taskArgs = {}; }
-                    }
-                    item.querySelector(".chat-proc-tag").textContent = "协同";
-                    item.querySelector(".chat-proc-text").textContent = (taskArgs && taskArgs.description) || "校园资料查询";
-                    processEl.classList.remove("collapsed");
-                    processListEl.style.display = "";
-                    processHeadEl.querySelector(".chat-process-caret").style.transform = "rotate(180deg)";
-                    var status = document.createElement("span");
-                    status.className = "chat-proc-args";
-                    status.textContent = "执行中";
-                    item.querySelector(".chat-proc-text").appendChild(status);
-                    state.pendingTasks.set(callId, status);
-                    setProgress(state.pendingTasks.size + " 个子智能体协作中");
-                }
             },
-            finishTool: function (callId, status) {
-                var label = state.pendingTasks.get(callId);
-                if (!label || state.finished) return;
-                var statusLabels = { completed: "已返回结果", timeout: "等待超时，主助理将汇总已有资料", partial: "已返回部分结果，主助理继续汇总", failed: "执行失败，主助理将说明资料缺口" };
-                label.textContent = statusLabels[status] || "已结束";
+            finishTool: function (callId, status, result) {
+                var card = state.pendingTasks.get(callId);
+                if (!card || state.finished) return;
+                var statusLabels = { completed: "已完成", timeout: "已超时", partial: "部分完成", failed: "执行失败" };
+                card.dataset.status = statusLabels[status] ? status : "failed";
+                card.querySelector(".chat-child-status").textContent = statusLabels[status] || "执行失败";
+                card.querySelector(".chat-child-result").textContent = result || (status === "completed" ?
+                    "任务已返回，主助理将统一汇总。" : "未取得完整结果，主助理将结合已有资料说明缺口。");
                 state.pendingTasks.delete(callId);
+                updateTeam();
                 setProgress(state.pendingTasks.size ? state.pendingTasks.size + " 个子智能体协作中" : "正在整理协作结果");
             },
             appendReasoning: function (text) {
@@ -545,14 +576,19 @@
             finish: function () {
                 if (state.finished) return;
                 state.finished = true;
-                state.pendingTasks.forEach(function (label) { label.textContent = "本轮已结束"; });
+                state.pendingTasks.forEach(function (card) {
+                    card.dataset.status = "interrupted";
+                    card.querySelector(".chat-child-status").textContent = "已中断";
+                    card.querySelector(".chat-child-result").textContent = "本轮结束前未收到该子任务的结果。";
+                });
                 state.pendingTasks.clear();
+                updateTeam();
                 row.classList.remove("is-working");
                 row.setAttribute("aria-busy", "false");
                 progressEl.hidden = true;
                 // 仅当既无正文、又无错误、也无过程时，才给空兑底
                 if (!state.answer && !state.errorShown) {
-                    var hasProcess = !processEl.hidden;
+                    var hasProcess = !processEl.hidden || !teamEl.hidden;
                     if (!hasProcess) contentEl.innerHTML = '<span class="chat-muted">（无返回内容）</span>';
                 }
             },
@@ -1125,7 +1161,7 @@
         } else if (ev === "tool") {
             turn.addTool((data && data.name) || "tool", data && data.arguments, data && data.call_id);
         } else if (ev === "tool_result" && data) {
-            turn.finishTool(data.call_id, data.status);
+            turn.finishTool(data.call_id, data.status, data.result);
         } else if (ev === "reasoning") {
             turn.appendReasoning((data && data.text) || (typeof data === "string" ? data : ""));
         } else if (ev === "assistant") {

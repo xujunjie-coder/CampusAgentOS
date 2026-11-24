@@ -41,7 +41,7 @@ from app.controllers.collect import (
 )
 from app.controllers.qq_channel import (
     QQChannelRunsHandler, QQChannelRunHandler, QQChannelReviewHandler, QQChannelAnalyzeHandler,
-    QQChannelConnectionHandler, QQChannelCommentsHandler,
+    QQChannelConnectionHandler, QQChannelCommentsHandler, QQChannelSourcesHandler,
 )
 from app.controllers.warehouse import (
     WarehousePageHandler,
@@ -269,6 +269,7 @@ def make_app():
             (r"/api/collect/run", CollectRunApiHandler),
             (r"/api/collect/items", CollectItemsApiHandler),
             (r"/api/collect/qq/runs", QQChannelRunsHandler),
+            (r"/api/collect/qq/sources", QQChannelSourcesHandler),
             (r"/api/collect/qq/connection", QQChannelConnectionHandler),
             (r"/api/collect/qq/runs/(\d+)", QQChannelRunHandler),
             (r"/api/collect/qq/runs/(\d+)/items/(\d+)/review", QQChannelReviewHandler),

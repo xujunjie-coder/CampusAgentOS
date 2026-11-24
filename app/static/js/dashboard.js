@@ -214,17 +214,17 @@
                     name: '对话消息',
                     type: 'line',
                     smooth: 0.42,
-                    symbol: 'circle',
+                    symbol: 'diamond',
                     symbolSize: 5,
                     showSymbol: false,
                     data: messages,
-                    lineStyle: { width: 2.2, color: '#2dd4bf', shadowBlur: 10, shadowColor: 'rgba(45,212,191,.55)' },
-                    itemStyle: { color: '#2dd4bf' },
-                    areaStyle: { color: areaGrad('#2dd4bf') },
+                    lineStyle: { width: 2.6, type: 'dashed', color: '#fbbf24', shadowBlur: 6, shadowColor: 'rgba(251,191,36,.45)' },
+                    itemStyle: { color: '#fbbf24' },
+                    areaStyle: { color: areaGrad('#fbbf24') },
                     markPoint: {
                         symbol: 'pin',
                         symbolSize: 28,
-                        itemStyle: { color: '#2dd4bf' },
+                        itemStyle: { color: '#fbbf24' },
                         label: { color: '#030b19', fontSize: 9.5, fontWeight: 700 },
                         data: [{ type: 'max', name: '峰值' }]
                     }
@@ -882,6 +882,7 @@
     /* ---------------- 列表 ---------------- */
     function renderFeed(risks) {
         var list = id('feedRisk');
+        var scrollTop = list.scrollTop;
         var rows = risks || [];
         id('feedSub').textContent = rows.length ? ('最近 ' + rows.length + ' 条') : '暂无预警';
         if (!rows.length) {
@@ -894,6 +895,7 @@
                 '<span class="meta">' + C.esc(r.level_label || '') + ' · ' +
                 C.esc(C.fmtTime(r.reviewed_at)) + '</span></li>';
         }).join('');
+        list.scrollTop = scrollTop;
     }
 
     function renderHotwords(keywords) {
@@ -922,6 +924,14 @@
     /* ---------------- 快照应用 ---------------- */
     function applySnapshot(snap) {
         if (!snap) { return; }
+        // Also clean snapshots received from an older running backend or SSE connection.
+        snap = Object.assign({}, snap);
+        ['latest_risks', 'high_risks', 'recent_items'].forEach(function (key) {
+            snap[key] = (snap[key] || []).map(function (row) {
+                var title = String(row.title || '').replace(/\[B_[0-9a-fA-F]+X\d+\]/g, '').replace(/\s+/g, ' ').trim();
+                return Object.assign({}, row, { title: title || '图片消息' });
+            });
+        });
         state.snap = snap;
         var ov = snap.overview || {};
         var wh = ov.warehouse || {};
