@@ -75,3 +75,30 @@ def test_retrieve_without_url_keeps_existing_documents(monkeypatch):
          "vector": json.dumps(service.lexical_vector(text))}])
     hits = run_local(service.retrieve("奖学金申请", [7]))
     assert hits and hits[0]["source_url"] == ""
+
+
+@pytest.mark.parametrize("query", [
+    "请给我介绍一下我们计算机学院，时长必须超过1分钟",
+    "计算机学院招生宣传演讲稿",
+])
+def test_college_overview_beats_repeated_teacher_biographies(monkeypatch, query):
+    overview = ("# 学院组织\n\n## 学院简介\n\n"
+                "西华师范大学计算机学院成立于1993年。现有教职员工58人，"
+                "具有博士学位教师16人。学院开设三个本科专业。")
+    continuation = ("# 学院组织\n\n# 学院组织架构 > ## 学院简介\n\n"
+                    "学院设有计算机科学与技术、软件工程、网络空间安全3个教研室。")
+    footer = "\n原文：https://scswiki.com/organization/\n署名：SCSWiki 贡献者"
+    texts = [overview + footer, continuation + footer] + [
+        "# 教研室\n\n#### 教育背景\n\n西华师范大学计算机学院，计算机科学与技术专业，"
+        f"{2000 + i}年毕业，现为计算机学院教师。\n原文：https://scswiki.com/teacher/jys"
+        for i in range(12)
+    ]
+    rows = [{"id": 14 if i < 2 else 19, "title": "学院概况与组织" if i < 2 else "教师专栏",
+             "content": text, "vector": json.dumps(service.lexical_vector(text))}
+            for i, text in enumerate(texts)]
+    monkeypatch.setattr(service, "embedding_engine", lambda: None)
+    monkeypatch.setattr(service.intelligence, "knowledge_chunks", lambda *a: rows)
+    hits = run_local(service.retrieve(query, [14, 19]))
+    assert "1993年" in hits[0]["excerpt"]
+    assert any("3个教研室" in h["excerpt"] for h in hits[:2])
+    assert hits[0]["source_url"] == "https://scswiki.com/organization/"

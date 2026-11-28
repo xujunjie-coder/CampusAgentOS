@@ -1526,6 +1526,7 @@
         }
 
         var leftShoulder = new THREE.Group();
+        leftShoulder.name = "panda-left-shoulder";
         leftShoulder.position.set(0.415, 0.65, 0.0);
         leftShoulder.rotation.z = 0.25;
         leftShoulder.rotation.x = 0.04;
@@ -1805,7 +1806,7 @@
             var pyPhil = -0.185 - (pi / 5) * 0.073; // -0.185 -> -0.258
             philtrumPts.push(new THREE.Vector3(0, HC_Y + pyPhil, evalHeadFrontZ(0, pyPhil) + 0.0055));
         }
-        closedMouth.add(new THREE.Mesh(
+        headPivot.add(new THREE.Mesh(
             new THREE.TubeGeometry(new THREE.CatmullRomCurve3(philtrumPts), 12, 0.0072, 10, false),
             lipMat
         ));
@@ -1842,7 +1843,7 @@
         var mouthCavity = new THREE.Group();
         mouthCavity.position.set(0, HC_Y + mouthYRel, mouthSurfZ + 0.004);
         mouthCavity.rotation.x = 0.22;
-        mouthCavity.scale.set(1, 0.01, 1);
+        mouthCavity.scale.set(1, 0.001, 1);
         mouthCavity.visible = false;
         headPivot.add(mouthCavity);
 
@@ -2095,10 +2096,11 @@
             openLeaf.add(mainPageBack);
         });
 
-        // Two light pages keep the existing flutter animation contract and stay close to the binding.
+        // Two pages alternate around the binding while waiting for an answer.
         var flutterPages = [];
         [0.46, 0.70].forEach(function (ang, fi) {
             var fLeaf = new THREE.Group();
+            fLeaf.name = "panda-book-turning-page-" + fi;
             fLeaf.rotation.y = ang;
             var fMesh = new THREE.Mesh(createCurvedPageGeometry(THREE, 0.218, 0.290, -1, 0.040), pageInnerMat);
             fMesh.position.z = 0.016 + fi * 0.008;
@@ -2200,6 +2202,15 @@
         };
         var GESTURE_DURATIONS = { wave: 1.8, nod: 1.3, book: 2.0, celebrate: 2.0 };
         var gesture = { kind: null, elapsed: 0, duration: 0 };
+        var readingBlend = 0;
+        var readingTime = 0;
+        var narrationBlend = 0;
+        var narrationTime = 0;
+
+        function softBeat(time, start, duration) {
+            var phase = (time - start) / duration;
+            return phase > 0 && phase < 1 ? (1 - Math.cos(phase * Math.PI * 2)) * 0.5 : 0;
+        }
 
         function triggerGesture(kind, durationSec) {
             if (!GESTURE_DURATIONS[kind]) return false;
@@ -2223,14 +2234,26 @@
 
         function update(t, dt, state) {
             var speaking = !!(state && state.voiceActive);
-            var mouthPulse = (state && state.mouthPulse) || 0;
-            var audioLevel = Math.max(0, Math.min(1, Number((state && state.audioLevel) || 0)));
+            var mouthOpen = Math.max(0, Math.min(1, Number((state && state.mouthOpen) || 0)));
             var px = (state && state.pointerNX) || 0;
             var py = (state && state.pointerNY) || 0;
             var isThinking = !!(state && state.thinking);
+            readingBlend += ((isThinking ? 1 : 0) - readingBlend) * (1 - Math.exp(-dt * 6));
+            if (isThinking || readingBlend > 0.01) readingTime += dt;
+            else readingTime = 0;
 
             // 平滑推进当前触发的情绪/交互动作包络
             var gKind = gesture.kind;
+            // Small, spaced presentation gestures, driven only by actual audio.
+            // Smooth the envelope through punctuation pauses and playback stops.
+            var narrationTarget = speaking && !isThinking && !gKind ? 1 : 0;
+            narrationBlend += (narrationTarget - narrationBlend) * (1 - Math.exp(-dt * 4));
+            if (speaking || narrationBlend > 0.01) narrationTime += dt;
+            else narrationTime = 0;
+            var narrationPhase = narrationTime % 11;
+            var explainBeat = softBeat(narrationPhase, 0.7, 2.8) * narrationBlend;
+            var emphasisBeat = softBeat(narrationPhase, 6.0, 2.2) * narrationBlend;
+            var narrationNod = softBeat(narrationPhase, 3.8, 1.2) * narrationBlend;
             var gP = 0;
             var gEnv = 0;
             if (gKind) {
@@ -2254,14 +2277,14 @@
 
             // 柔和呼吸起伏
             bodyBob.position.y = Math.sin(t * 1.8) * 0.014 + celebrateBounce;
-            spinePivot.rotation.z = Math.sin(t * 0.9) * 0.013 + (gKind === "wave" ? -gEnv * 0.04 : 0);
-            spinePivot.rotation.x = Math.sin(t * 1.8 + 0.5) * (speaking ? 0.020 : 0.009) + nodBodyLean;
+            spinePivot.rotation.z = Math.sin(t * 0.9) * 0.013 + (gKind === "wave" ? -gEnv * 0.04 : 0) - explainBeat * 0.012;
+            spinePivot.rotation.x = Math.sin(t * 1.8 + 0.5) * (0.009 + narrationBlend * 0.011) + nodBodyLean + emphasisBeat * 0.018;
 
             // 头部平滑跟随鼠标视线 + 说话轻点头 + 情绪动作叠加
             var nodHeadDelta = gKind === "nod" ? Math.sin(gP * Math.PI * 4) * 0.16 * gEnv : 0;
             var tiltHeadDelta = gKind === "wave" ? gEnv * 0.075 : (gKind === "celebrate" ? Math.sin(gP * Math.PI * 4) * 0.055 * gEnv : 0);
-            var targetHeadY = px * 0.26 + Math.sin(t * 0.55) * 0.035;
-            var targetHeadX = py * 0.13 + Math.sin(t * 1.1) * 0.016 + (speaking ? Math.sin(t * 6.5) * 0.024 : 0) + nodHeadDelta;
+            var targetHeadY = px * 0.26 * (1 - readingBlend) - readingBlend * 0.24 + Math.sin(t * 0.55) * 0.035;
+            var targetHeadX = py * 0.13 * (1 - readingBlend) + readingBlend * 0.12 + Math.sin(t * 1.1) * 0.016 + narrationNod * 0.065 + emphasisBeat * 0.025 + nodHeadDelta;
             headPivot.rotation.y += (targetHeadY - headPivot.rotation.y) * Math.min(1, dt * 6);
             headPivot.rotation.x += (targetHeadX - headPivot.rotation.x) * Math.min(1, dt * 6);
             headPivot.rotation.z = -px * 0.045 + (isThinking ? Math.sin(t * 2.4) * 0.038 : 0) + tiltHeadDelta;
@@ -2307,23 +2330,17 @@
                 eye.gaze.position.y += (targetY - eye.gaze.position.y) * Math.min(1, dt * 5);
             });
 
-            // 说话动态口型（闭嘴时纯享温柔微笑弧，说话时按韵律/音频电平张合）
-            var openTarget = 0.01;
-            if (speaking) {
-                openTarget = Math.max(
-                    0.36 + 0.44 * Math.abs(Math.sin(t * 10.5)) + 0.18 * mouthPulse,
-                    audioLevel > 0 ? (0.24 + audioLevel * 0.72) : 0
-                );
-            }
+            // Speech timeline includes punctuation rests and playback pauses.
+            var openTarget = speaking ? mouthOpen : 0;
             var curOpen = mouthCavity.scale.y;
-            var nextOpen = curOpen + (Math.min(1.0, openTarget) - curOpen) * Math.min(1, dt * 16);
-            mouthCavity.scale.y = nextOpen;
+            var nextOpen = curOpen + (openTarget - curOpen) * (1 - Math.exp(-dt / 0.075));
+            mouthCavity.scale.y = Math.max(0.001, nextOpen);
             mouthCavity.visible = nextOpen > 0.06;
             closedMouth.visible = !mouthCavity.visible;
 
             // 托书右手与挥手左手协同互动（保持书本文字始终面向熊猫阅读方向）
-            var talkWave = speaking ? Math.sin(t * 3.6) * 0.065 : 0;
-            var bookArmBoost = gKind === "book" ? -gEnv * 0.17 : (gKind === "celebrate" ? -gEnv * 0.22 : 0);
+            var talkWave = Math.sin(t * 2.4) * 0.035 * narrationBlend;
+            var bookArmBoost = (gKind === "book" ? -gEnv * 0.17 : (gKind === "celebrate" ? -gEnv * 0.22 : 0)) - readingBlend * 0.08;
             rightElbow.rotation.x = -1.36 + Math.sin(t * 1.8) * 0.032 + talkWave + bookArmBoost;
 
             var waveZ = 0;
@@ -2335,17 +2352,25 @@
                 waveZ = gEnv * (0.95 + Math.sin(gP * Math.PI * 6) * 0.24);
                 waveX = -gEnv * 0.26;
             }
-            leftShoulder.rotation.z = 0.25 + waveZ;
-            leftShoulder.rotation.x = 0.04 + Math.sin(t * 1.4 + 1.1) * (speaking ? 0.075 : 0.028) + waveX;
+            leftShoulder.rotation.z = 0.25 + waveZ + explainBeat * 0.32 + emphasisBeat * 0.18;
+            leftShoulder.rotation.x = 0.04 + Math.sin(t * 1.4 + 1.1) * (0.028 + narrationBlend * 0.035) + waveX - explainBeat * 0.14 - emphasisBeat * 0.08;
 
             // 全息书卷悬浮呼吸、内页微颤翻动与星尘微升
-            var bookLift = gKind === "book" ? gEnv * 0.085 : 0;
+            var bookLift = (gKind === "book" ? gEnv * 0.085 : 0) + readingBlend * 0.055;
             var flutterBoost = gKind === "book" ? (1 + gEnv * 1.6) : 1;
             var sparkBoost = (gKind === "book" || gKind === "celebrate") ? (1 + gEnv * 1.5) : 1;
             holoBookGroup.position.y = 1.33 + Math.sin(t * 2.1) * 0.034 + talkWave * 0.16 + bookLift;
             orientBookForReader(t);
-            flutterPages.forEach(function (fp) {
-                fp.group.rotation.y = fp.baseY + Math.sin(t * 2.6 * flutterBoost + fp.ph) * (speaking ? 0.08 : 0.035);
+            flutterPages.forEach(function (fp, index) {
+                var idleAngle = fp.baseY + Math.sin(t * 2.6 * flutterBoost + fp.ph) * (speaking ? 0.08 : 0.035);
+                // Each page travels right to left, then resets while hidden;
+                // the other page takes over so long waits keep turning pages.
+                var phase = ((readingTime + index * 1.5) % 3) / 1.35;
+                var progress = Math.min(1, phase);
+                var ease = progress * progress * (3 - 2 * progress);
+                var turnAngle = Math.PI - 0.32 - (Math.PI - 0.64) * ease;
+                fp.group.rotation.y = idleAngle + (turnAngle - idleAngle) * readingBlend;
+                fp.group.visible = readingBlend < 0.05 || phase < 1;
             });
             var posArr = sparkGeo.attributes.position.array;
             for (var i = 0; i < sparkCount; i++) {

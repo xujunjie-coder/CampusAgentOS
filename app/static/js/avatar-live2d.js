@@ -10,7 +10,7 @@
         var destroyed = false;
         var voiceActive = false;
         var mouth = 0;
-        var voiceTime = 0;
+        var voiceLevel = 0;
         var nodTime = 0;
         var nodding = false;
         var expression = -1;
@@ -31,13 +31,12 @@
             if (!visible || !model) return;
             var ms = Math.min(50, app.ticker.deltaMS);
             var dt = ms / 1000;
-            if (voiceActive) voiceTime += dt * 13;
             if (nodding) {
                 nodTime += dt;
                 if (nodTime >= 1.25) nodding = false;
             }
-            var target = voiceActive ? 0.20 + 0.65 * Math.abs(Math.sin(voiceTime)) : 0;
-            mouth += (target - mouth) * Math.min(1, dt * 19);
+            var target = voiceActive ? voiceLevel : 0;
+            mouth = voiceActive ? mouth + (target - mouth) * Math.min(1, dt * 28) : 0;
             model.update(ms);
         }
 
@@ -71,7 +70,7 @@
                 var core = internal.coreModel;
                 // 写入在动作、眼神与物理计算之后，仅在播报时覆盖嘴部通道。
                 internal.on("beforeModelUpdate", function () {
-                    if (voiceActive || mouth > 0.005) core.setParameterValueById("ParamMouthOpenY", mouth);
+                    core.setParameterValueById("ParamMouthOpenY", mouth);
                     if (nodding) {
                         var p = nodTime / 1.25;
                         var tilt = -10 * (1 - Math.cos(p * 4 * Math.PI)) * Math.sin(p * Math.PI);
@@ -143,7 +142,10 @@
             focus: focus,
             onTap: onTap,
             triggerGesture: triggerGesture,
-            setVoice: function (active) { voiceActive = !!active; },
+            setVoice: function (active, level) {
+                voiceActive = !!active;
+                voiceLevel = Math.max(0, Math.min(1, Number(level) || 0));
+            },
             resize: function () { if (visible) layout(); },
             isReady: function () { return !!model; },
             destroy: function () {

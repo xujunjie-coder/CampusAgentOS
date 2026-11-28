@@ -469,6 +469,8 @@
 .avatar-playback-controls button:hover:not(:disabled) { background: var(--cwnu-navy-soft); }
 .avatar-playback-controls button:disabled { opacity: .5; cursor: default; }
 .avatar-playback-controls button[hidden] { display: none; }
+::highlight(avatar-reading-sentence) { background-color: #dfedff; color: #153b70; }
+::highlight(avatar-reading-word) { background-color: #ffe18a; color: #4b3500; }
 
 /* 与输入框、发送按钮对齐的 Agent 选择卡片。 */
 .avatar-composer { align-items: stretch; gap: 10px; }

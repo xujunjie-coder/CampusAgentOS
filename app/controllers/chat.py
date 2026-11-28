@@ -97,6 +97,10 @@ class ChatHandler(BaseHandler):
             self.write_json({"detail": "会话编号无效"}, status=400)
             return
         temporary = payload.get("temporary", False)
+        presentation = payload.get("presentation", False)
+        if not isinstance(presentation, bool):
+            self.write_json({"detail": "播报模式标记无效"}, status=400)
+            return
         if not isinstance(temporary, bool):
             self.write_json({"detail": "临时对话标记无效"}, status=400)
             return
@@ -150,6 +154,8 @@ class ChatHandler(BaseHandler):
             async with deadline:
                 await self.send_event("assistant", assistant_brief(employee))
                 options = {"collaboration": True} if collaboration else {}
+                if presentation:
+                    options["presentation"] = True
                 events = stream_answer(message, username, employee, history=history, **options)
                 async with aclosing(_with_heartbeat(events)) as updates:
                     async for event in updates:

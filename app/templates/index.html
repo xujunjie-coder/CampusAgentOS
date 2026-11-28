@@ -33,7 +33,6 @@
             <button type="button" id="temporaryChatBtn" class="layui-btn layui-btn-fluid chat-new-btn chat-temporary-btn" aria-pressed="false">
                 <i class="fas fa-user-clock"></i> 临时对话
             </button>
-            <p id="temporaryChatHint" class="chat-temporary-hint" role="status" hidden>临时对话：不保存聊天记录，刷新或切换对话后清空。</p>
 
             <div class="chat-side-title chat-session-tabs" role="group" aria-label="会话列表">
                 <button type="button" id="chatHistoryTab" aria-pressed="true">历史会话</button>
@@ -90,8 +89,9 @@
     <!-- 右侧：对话主区 -->
     <main class="chat-main">
         <header class="chat-header">
-            <span class="chat-header-title"><i class="fas fa-graduation-cap"></i> 智慧校园对话大厅</span>
-            <span class="chat-header-tip">勤奋 · 求实 · 敬业 · 创新 ｜ 输入「@音乐 轻音乐」可点播校园曲库</span>
+            <span class="chat-header-title" id="chatHeaderTitle"><i class="fas fa-graduation-cap"></i> 智慧校园对话大厅</span>
+            <span class="chat-header-tip" id="chatHeaderTip">勤奋 · 求实 · 敬业 · 创新 ｜ 输入「@音乐 轻音乐」可点播校园曲库</span>
+            <button type="button" class="chat-temporary-exit" id="exitTemporaryBtn" hidden>退出临时对话</button>
             <!-- 成员 D（任务2）：导出当前会话为 PDF（后端 reportlab 真 PDF 附件下载） -->
             <button type="button" class="chat-export-btn" id="exportPdfBtn" title="导出当前会话为 PDF">
                 <i class="fas fa-file-pdf"></i> 导出PDF
@@ -124,7 +124,7 @@
                 <form id="composerForm" class="layui-form">
                     {% module xsrf_form_html() %}
                     <div class="chat-composer-box">
-                        <textarea id="chatInput" class="chat-textarea" rows="1" placeholder="请输入你想了解的校园问题..."></textarea>
+                        <textarea id="chatInput" class="chat-textarea" rows="1" aria-label="聊天消息" placeholder="请输入你想了解的校园问题..."></textarea>
                         <button id="sendBtn" type="submit" class="layui-btn chat-send-btn" title="发送">
                             <i class="fas fa-paper-plane"></i>
                         </button>

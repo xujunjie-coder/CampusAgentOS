@@ -2,14 +2,19 @@
 import asyncio
 from hashlib import blake2b
 import json
+import logging
 import math
 import re
 import unicodedata
 from urllib.parse import urlsplit
 
+from tornado.httpclient import HTTPClientError
+
 from app.models import intelligence
 from app.models.model_engine import ModelEngineRepository
 from app.services.model_service import chat_engine, complete_json, embed_texts
+
+logger = logging.getLogger(__name__)
 
 
 def embedding_engine():
@@ -225,6 +230,18 @@ def knowledge_display_text(content):
     return content
 
 
+def _knowledge_search_text(content):
+    """Keep provenance for citations without ranking on its repeated boilerplate."""
+    if _scswiki_source_url(content):
+        return re.split(r"\n原文[：:]", content, maxsplit=1)[0].strip()
+    return content
+
+
+def _college_overview_query(query):
+    return bool(re.search(r"学院", query) and re.search(
+        r"介绍|简介|概况|招生.*(?:宣传|演讲)|(?:宣传|演讲).*招生", query))
+
+
 async def retrieve(query, ids):
     ids = list(dict.fromkeys(int(i) for i in ids if str(i).isascii() and str(i).isdigit()
                             and len(str(i)) <= 18))[:30]
@@ -235,8 +252,11 @@ async def retrieve(query, ids):
             if is_usable_knowledge_text(row["content"])]
     if not rows:
         return []
-    vector, = await document_vectors(model, [query])
-    bm25_raw = _bm25_scores(query, rows)
+    overview = _college_overview_query(query)
+    search_query = query + " 学院简介 专业介绍 师资 培养" if overview else query
+    vector, = await document_vectors(model, [search_query])
+    search_rows = [dict(row, content=_knowledge_search_text(row["content"])) for row in rows]
+    bm25_raw = _bm25_scores(search_query, search_rows)
     threshold = 0.10 if model is None else 0.0
     hits = []
     for idx, row in enumerate(rows):
@@ -254,6 +274,10 @@ async def retrieve(query, ids):
             score = 0.65 * vec_score + 0.35 * bm25_norm
         else:
             score = 0.78 * vec_score + 0.22 * bm25_norm
+        # The page/section subject matters for an overview: a teacher's education
+        # mentions the college repeatedly but does not introduce the college.
+        if overview and re.search(r"(?m)^(?:#+[^\n]* > )?#+\s*学院(?:简介|概况)\s*$", search_rows[idx]["content"]):
+            score += 0.25
         if math.isfinite(score) and score > threshold:
             hits.append((score, row["id"], row["title"], row["content"]))
     return [{"id": doc_id, "title": title, "excerpt": knowledge_display_text(content), "score": round(score, 4),
@@ -323,7 +347,34 @@ async def review_channel_pending():
                 'failed':sum(count[1] for count in counts)}
 
 
+def _review_failure(exc):
+    """Return a safe operator message without exposing model credentials or bodies."""
+    if isinstance(exc, ValueError) and str(exc) == "对话模型未配置":
+        return "尚未配置可用的对话模型，请先在模型引擎中配置。", False
+    if isinstance(exc, HTTPClientError):
+        response = getattr(exc, "response", None)
+        try:
+            payload = json.loads(response.body) if response and response.body else {}
+            upstream_code = str((payload.get("error") or {}).get("code", ""))
+        except (ValueError, TypeError, AttributeError):
+            upstream_code = ""
+        if exc.code == 400 and upstream_code == "10013":
+            return "上游模型拒绝处理此内容（内容审核，10013）；请人工核查或选择适用的审核模型。", True
+        if exc.code in (401, 403):
+            return "模型鉴权或访问权限失败，请检查模型引擎配置。", False
+        if exc.code == 429:
+            return "模型请求受限或额度不足，请检查额度并稍后重试。", False
+        if exc.code == 599:
+            return "模型连接失败或请求超时，请检查模型服务后重试。", False
+        return f"模型服务返回 HTTP {exc.code}，请检查模型服务后重试。", False
+    if isinstance(exc, (ValueError, KeyError, IndexError, TypeError, AttributeError)):
+        return "模型未返回有效的审核 JSON，请检查模型输出格式后重试。", False
+    return "模型调用失败，请检查模型服务日志后重试。", False
+
+
 async def classify_reviews(items):
+    if not items:
+        return 0
     try:
         findings = await complete_json(
             chat_engine(),
@@ -336,8 +387,20 @@ async def classify_reviews(items):
             "若资料标为搜索摘要或热门列表摘要，须在结论中说明仅依据摘要，不能声称已核实全文或评论。"
             "不评价作者立场，不识别或追踪个人。无足够证据时标 normal。不得补充材料中不存在的事实。",
             json.dumps(items, ensure_ascii=False))
-    except Exception:
-        findings = {}
+    except Exception as exc:
+        reason, content_rejected = _review_failure(exc)
+        logger.warning("Risk classification failed items=%s exception=%s reason=%s",
+                       [item["id"] for item in items], type(exc).__name__, reason)
+        if content_rejected and len(items) > 1:
+            # Attribute the rejection to individual records without changing the
+            # submitted content or letting one rejection fail unrelated records.
+            failed = 0
+            for item in items:
+                failed += await classify_reviews([item])
+            return failed
+        for item in items:
+            intelligence.save_review(item["id"], "error", reason, "")
+        return len(items)
     failed = 0
     for item in items:
         finding = findings.get(str(item["id"]))
@@ -349,7 +412,13 @@ async def classify_reviews(items):
         if (level not in ("high", "watch", "normal") or not reason or
                 (level != "normal" and not evidence) or
                 (evidence and not any(evidence in item[key] for key in ("title", "summary")))):
-            level, reason, evidence = "error", "模型不可用或证据校验失败，可重试", ""
+            if not finding:
+                failure = "模型回复缺少本条审核结果，请重试。"
+            elif level not in ("high", "watch", "normal") or not reason:
+                failure = "模型回复的风险等级或结论格式无效，请重试。"
+            else:
+                failure = "模型引用的证据为空或不是标题/摘要中的连续原文，请重新分析或人工核查。"
+            level, reason, evidence = "error", failure, ""
             failed += 1
         intelligence.save_review(item["id"], level, reason[:500], evidence[:500])
     return failed

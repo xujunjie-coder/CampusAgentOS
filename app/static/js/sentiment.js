@@ -110,7 +110,7 @@
         var failed = counts.error || 0;
         warning.hidden = !failed;
         warning.textContent = failed
-            ? '点击「开始分析」重试'
+            ? '部分条目未完成分析，请查看具体原因；模型内容审核拒绝的条目需要人工核查或更换适用模型。'
             : '';
     }
 

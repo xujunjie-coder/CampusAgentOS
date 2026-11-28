@@ -23,6 +23,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from app.models.collect import CollectRepository
+from app.services import cwnu_source
 
 # 任务13：配置统一由 app.config 读取（进程内只加载一次 .env），不再各自 load_dotenv()
 
@@ -69,6 +70,8 @@ def build_url(template: str, keyword: str, params: Optional[Dict] = None, page_i
     """把 URL 规格模板替换为可请求的真实 URL：
     - {关键字*} → URL 编码后的关键词；{分页*} → (页码-1)*步长；其余占位符 → params[占位符原文]
     - 自定义参数缺失 / 为空时抛 CollectError（前端参数配置区须先补齐）"""
+    if cwnu_source.is_source(template):
+        return cwnu_source.search_url(keyword)
     params = params or {}
     page_index = max(1, int(page_index))
 
@@ -312,14 +315,20 @@ def collect(source: Dict, keyword: str, params: Optional[Dict] = None,
     try:
         url = build_url(source["url"], keyword, params, page_index)
         headers = json.loads(source.get("headers") or "{}")
-        html = fetch_html(url, headers)
-        items = rss_items(html)
+        official_search = cwnu_source.is_source(source["url"])
+        if official_search:
+            items = cwnu_source.search(keyword, page_index)
+        else:
+            html = fetch_html(url, headers)
+            items = rss_items(html)
     except (CollectError, ValueError) as e:
         return {"ok": False, "source_id": source.get("id"), "source_name": source.get("name"),
                 "error": str(e)}
 
     llm_error = ""
-    if items is not None:
+    if official_search:
+        engine = "official_api"
+    elif items is not None:
         engine = "rss"
         if not any(field["kind"] == "keyword" for field in parse_placeholders(source["url"])):
             query = keyword.casefold()

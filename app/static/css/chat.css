@@ -1386,5 +1386,28 @@
 
 .chat-temporary-btn { margin: 8px 0 0 !important; }
 .chat-temporary-btn[aria-pressed="true"] { background: #e7efff; border-color: #3467ba; color: #003886; }
-.chat-temporary-hint { margin: 10px 4px; font-size: 12px; line-height: 1.6; color: #52627a; }
+.chat-temporary-exit { margin-left: auto; flex-shrink: 0; border: 1px solid #cbd5e1; border-radius: 9px; padding: 8px 12px; background: #fff; color: #475569; cursor: pointer; font-size: 13px; }
+.chat-temporary-exit:hover { background: #f1f5f9; }
+.chat-temporary-exit:focus-visible { outline: 2px solid #003087; outline-offset: 3px; }
+.is-temporary .chat-main { background: radial-gradient(ellipse at 50% 40%, #f1f5fa 0, #fcfdff 60%, #fff 100%); }
+.is-temporary .chat-header { justify-content: flex-start; }
+.is-temporary .chat-header-title i { color: #52627a; }
+.is-temporary .chat-header-tip { font-size: 12px; }
+.chat-temporary-empty { max-width: 760px; padding: 0; }
+.chat-temporary-empty .chat-welcome-title { margin: 0; font-size: clamp(24px, 2.6vw, 32px); font-weight: 700; letter-spacing: 0; }
+.is-temporary .chat-composer-inner { border-color: #cbd5e1; }
+.is-temporary-empty .chat-main { display: grid; grid-template-rows: 62px minmax(100px, 1fr) auto minmax(60px, 1.25fr); }
+.is-temporary-empty .chat-scroll { display: flex; align-items: flex-end; padding: 24px 0 28px; overflow: visible; min-height: 0; }
+.is-temporary-empty .chat-messages { width: 100%; max-width: 816px; box-sizing: border-box; }
+.is-temporary-empty .chat-composer { padding: 0 28px; background: none; }
+.is-temporary-empty .chat-composer-inner { max-width: 760px; padding: 16px 18px; border-radius: 22px; box-shadow: 0 12px 40px rgba(30, 50, 80, .07); }
+.is-temporary-empty .chat-composer-box { padding-top: 14px; }
+.is-temporary-empty .chat-textarea { min-height: 56px; }
+.is-temporary-empty .chat-asst-panel { max-height: min(280px, 28vh); }
+@media (max-width: 720px) {
+    .is-temporary .chat-header { padding: 0 14px; gap: 8px; }
+    .chat-temporary-exit { padding: 7px 9px; font-size: 12px; }
+    .is-temporary-empty .chat-composer { padding: 0 16px; }
+    .is-temporary-empty .chat-composer-inner { padding: 14px; border-radius: 18px; }
+}
 .chat-map-link{display:inline-block;margin-top:10px;padding:9px 14px;border-radius:9px;background:#00368c;color:#fff!important;text-decoration:none;font-weight:600}

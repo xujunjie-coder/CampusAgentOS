@@ -258,7 +258,7 @@
             (data.results || []).forEach(function (r) {
                 if (r.ok) {
                     fetchedTotal += r.fetched;
-                    var engine = ({ llm: "AI 智能体解析", rss: "RSS 解析", heuristic: "规则解析" })[r.engine] || "解析";
+                    var engine = ({ llm: "AI 智能体解析", rss: "RSS 解析", heuristic: "规则解析", official_api: "官网结构化搜索" })[r.engine] || "解析";
                     toast("「" + r.source_name + "」采集完成：解析 " + r.fetched + " 条，新增 " + r.new + " 条（" + engine + "）", "ok");
                     if (r.llm_error) { toast("「" + r.source_name + "」大模型不可用已回退规则解析", "warn"); }
                 } else {

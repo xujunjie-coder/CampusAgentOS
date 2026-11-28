@@ -83,6 +83,20 @@ for(let frame=0;frame<720;frame++) {
     if(frame%90===0) { check(avatar.root); checkReadingPose(); }
 }
 avatar.addYaw(1); avatar.update(13,1/60,{}); avatar.resetYaw();
+// Narration should produce restrained hand beats, then settle after audio stops.
+const shoulder = avatar.root.getObjectByName('panda-left-shoulder');
+let largestLift = 0;
+for (let frame=0; frame<900; frame++) {
+    avatar.update(14+frame/60,1/60,{voiceActive:true,mouthOpen:.4});
+    largestLift = Math.max(largestLift,shoulder.rotation.z-.25);
+    assert(shoulder.rotation.z >= .25 && shoulder.rotation.z <= .58, 'narration gesture must stay restrained');
+}
+assert(largestLift > .25, 'narration must automatically lift the free hand');
+const beforeStop = shoulder.rotation.z;
+avatar.update(29,1/60,{voiceActive:false});
+assert(Math.abs(shoulder.rotation.z-beforeStop)<.04,'stopping narration must not snap the arm');
+for(let frame=1;frame<=180;frame++) avatar.update(29+frame/60,1/60,{voiceActive:false});
+assert(Math.abs(shoulder.rotation.z-.25)<.001,'paused/finished narration must return to rest');
 avatar.root.traverse(o=>{if(o.geometry)assert(geometryIds.has(o.geometry.uuid),'geometry rebuilt during animation');});
 assert(avatar.root.getObjectByName('panda-neck-transition'));
 for(const sx of [-1,1]) {

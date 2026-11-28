@@ -3,9 +3,9 @@
  * 1. 主形象：pixiv three-vrm-girl（VRM/glTF，本地 vendor 2.6MB）——动漫风虚拟主播，
  *    自带 43 个表情 morph（口型 a/i/u/e/o=32~36、眨眼=12、joy=2），
  *    标准 humanoid 骨骼程序化驱动 idle 呼吸/头随鼠标/说话手势；GLTFLoader(r128) 本地加载
- * 2. 语音：浏览器原生 Web Speech API（离线零依赖），回复按句切分排队朗读，
- *    朗读期间口型 morph 随节奏切换；静音开关存 localStorage；
- *    关朗读时按文字增量节奏模拟张嘴（不出声）
+ * 2. 语音：浏览器原生 Web Speech API，回复按句切分排队朗读，
+ *    口型以播放事件和文字边界校正时间线，边界之间估算张合及标点停顿；
+ *    等待、暂停、关闭或结束朗读时收口。
  * 3. 降级链：GLB 加载失败 → 低多边形程序化数字人；WebGL 不可用 → 纯文字页
  * 4. 对话完全复用 /api/chat SSE 契约（与 chat.js 同帧格式），session_id=avatar3d
  */
@@ -202,10 +202,23 @@
 
     // ---------- 字幕 ----------
     var captionFollowLatest = true;
+    var captionAutoScrollTop = null;
+    var captionReveal = null;
+    var narrationCaption = null;
+    var reading = null;
 
     function bindCaptionScroll() {
         var body = $("captionBody");
+        body.addEventListener("wheel", function (event) {
+            if (event.deltaY < 0) { captionFollowLatest = false; captionAutoScrollTop = null; }
+        }, { passive: true });
+        body.addEventListener("touchstart", function () {
+            captionFollowLatest = false;
+            captionAutoScrollTop = null;
+        }, { passive: true });
         body.addEventListener("scroll", function () {
+            if (captionAutoScrollTop !== null && Math.abs(body.scrollTop - captionAutoScrollTop) < 2) return;
+            captionAutoScrollTop = null;
             captionFollowLatest = body.scrollHeight - body.clientHeight - body.scrollTop <= 8;
         }, { passive: true });
     }
@@ -213,7 +226,100 @@
     function scrollCaptionToLatest() {
         if (!captionFollowLatest) return;
         var body = $("captionBody");
+        if (reading && reading.range) { followReadingRange(); return; }
         body.scrollTop = body.scrollHeight;
+        captionAutoScrollTop = body.scrollTop;
+    }
+
+    function followReadingRange() {
+        if (!captionFollowLatest || !reading || !reading.range) return;
+        var body = $("captionBody"), rect = reading.range.getBoundingClientRect(), box = body.getBoundingClientRect();
+        if (rect.bottom > box.bottom - 20 || rect.top < box.top + 12) {
+            body.scrollTop = Math.max(0, body.scrollTop + rect.top - box.top - body.clientHeight * 0.35);
+            captionAutoScrollTop = body.scrollTop;
+        }
+    }
+
+    function revealCaption() {
+        var reveal = captionReveal;
+        if (!reveal || reveal.scheduled) return;
+        var remaining = reveal.text.length - reveal.shown;
+        reveal.shown += Math.min(remaining, reveal.shown ? 3 : 18);
+        // Do not split a UTF-16 surrogate pair during gradual display.
+        if (/[\uD800-\uDBFF]/.test(reveal.text.charAt(reveal.shown - 1)) && reveal.shown < reveal.text.length) reveal.shown++;
+        reveal.el.innerHTML = renderMarkdown(reveal.text.slice(0, reveal.shown));
+        renderReading();
+        scrollCaptionToLatest();
+        if (reveal.shown < reveal.text.length) {
+            reveal.scheduled = true;
+            setTimeout(function () {
+                if (captionReveal !== reveal) return;
+                reveal.scheduled = false;
+                revealCaption();
+            }, 32);
+        }
+    }
+
+    function finishCaptionReveal() {
+        if (captionReveal) captionReveal.el.innerHTML = renderMarkdown(captionReveal.text);
+        captionReveal = null;
+    }
+
+    function clearReading() {
+        reading = null;
+        if (window.CSS && window.CSS.highlights) {
+            window.CSS.highlights.delete("avatar-reading-sentence");
+            window.CSS.highlights.delete("avatar-reading-word");
+        }
+    }
+
+    function renderReading() {
+        if (!reading) return;
+        var text = reading.u.text;
+        var index = reading.index, end = Math.min(text.length, index + reading.length);
+        if (!narrationCaption || !document.createTreeWalker || !window.CSS || !window.CSS.highlights || !window.Highlight) return;
+        var walker = document.createTreeWalker(narrationCaption, 4), node, compact = "", positions = [];
+        while ((node = walker.nextNode())) {
+            for (var offset = 0; offset < node.textContent.length;) {
+                var char = String.fromCodePoint(node.textContent.codePointAt(offset));
+                if (/[\p{L}\p{N}]/u.test(char)) {
+                    compact += char;
+                    for (var unit = 0; unit < char.length; unit++) positions.push({ node: node, offset: offset + unit });
+                }
+                offset += char.length;
+            }
+        }
+        var spoken = text.replace(/[^\p{L}\p{N}]/gu, ""), start = compact.indexOf(spoken, tts.captionCursor);
+        var matched = [], cursor = tts.captionCursor;
+        if (start >= 0) {
+            for (var i = 0; i < spoken.length; i++) matched.push(start + i);
+        } else {
+            // Omitted parentheses and Markdown headings need not be spoken.
+            for (var j = 0; j < spoken.length; j++) {
+                cursor = compact.indexOf(spoken[j], cursor);
+                if (cursor < 0) { matched = []; break; }
+                matched.push(cursor++);
+            }
+        }
+        if (!matched.length) return;
+        reading.u.captionEnd = matched[matched.length - 1] + 1;
+        var wordStart = text.slice(0, index).replace(/[^\p{L}\p{N}]/gu, "").length;
+        var wordEnd = text.slice(0, end).replace(/[^\p{L}\p{N}]/gu, "").length;
+        function makeRanges(indices) {
+            return indices.map(function (i) {
+                var point = positions[i], range = document.createRange();
+                range.setStart(point.node, point.offset);
+                range.setEnd(point.node, point.offset + 1);
+                return range;
+            });
+        }
+        var sentenceRanges = makeRanges(matched), wordRanges = makeRanges(matched.slice(wordStart, wordEnd));
+        window.CSS.highlights.set("avatar-reading-sentence", new window.Highlight(...sentenceRanges));
+        var wordHighlight = new window.Highlight(...wordRanges);
+        wordHighlight.priority = 1;
+        window.CSS.highlights.set("avatar-reading-word", wordHighlight);
+        reading.range = wordRanges[0] || sentenceRanges[0];
+        followReadingRange();
     }
 
     function clearCaptionEmpty() {
@@ -263,6 +369,23 @@
     var thinking = false;
     var mouthPulse = 0;             // 文字驱动口型的脉冲强度
     var pointerNX = 0, pointerNY = 0; // 鼠标视线 [-1,1]
+    var pointerTargetX = 0, pointerTargetY = 0;
+    var pointerVelocityX = 0, pointerVelocityY = 0;
+
+    function updatePointerGaze(dt) {
+        // Exact critically damped spring: position and velocity stay continuous
+        // on exit/re-entry, and settling speed does not depend on frame rate.
+        var omega = 7.5;
+        var decay = Math.exp(-omega * dt);
+        var offsetX = pointerNX - pointerTargetX;
+        var offsetY = pointerNY - pointerTargetY;
+        var springX = pointerVelocityX + omega * offsetX;
+        var springY = pointerVelocityY + omega * offsetY;
+        pointerNX = pointerTargetX + (offsetX + springX * dt) * decay;
+        pointerNY = pointerTargetY + (offsetY + springY * dt) * decay;
+        pointerVelocityX = (pointerVelocityX - omega * springX * dt) * decay;
+        pointerVelocityY = (pointerVelocityY - omega * springY * dt) * decay;
+    }
     var nextBlinkAt = 2, blinkPhase = -1;
     var dragging = false, dragLastX = 0, dragMoved = false;
 
@@ -313,10 +436,24 @@
             }
             if (live2dAvatar) live2dAvatar.resize();
         });
+        function resetStageGaze() {
+            pointerTargetX = 0;
+            pointerTargetY = 0;
+        }
+        function isInsideStage(clientX, clientY, r) {
+            return r.width > 0 && r.height > 0 && clientX >= r.left && clientX <= r.left + r.width
+                && clientY >= r.top && clientY <= r.top + r.height;
+        }
         function updateStageDrag(clientX, clientY) {
             var r = stage.getBoundingClientRect();
-            pointerNX = ((clientX - r.left) / r.width - 0.5) * 2;
-            pointerNY = ((clientY - r.top) / r.height - 0.5) * 2;
+            // Pointer capture can keep delivering moves after leaving the stage.
+            if (!isInsideStage(clientX, clientY, r)) {
+                resetStageGaze();
+                dragLastX = clientX;
+                return;
+            }
+            pointerTargetX = ((clientX - r.left) / r.width - 0.5) * 2;
+            pointerTargetY = ((clientY - r.top) / r.height - 0.5) * 2;
             if (MODE === "live2d" && live2dAvatar) {
                 live2dAvatar.focus(clientX, clientY);
                 return;
@@ -338,12 +475,17 @@
             }
             dragging = false;
             dragMoved = false;
+            if (e && (e.type === "pointercancel" || e.pointerType === "touch"
+                || (typeof e.clientX === "number" && !isInsideStage(e.clientX, e.clientY, stage.getBoundingClientRect())))) {
+                resetStageGaze();
+            }
         }
 
         if (window.PointerEvent) {
             stage.addEventListener("pointermove", function (e) {
                 updateStageDrag(e.clientX, e.clientY);
             });
+            stage.addEventListener("pointerleave", resetStageGaze);
             stage.addEventListener("pointerdown", function (e) {
                 if (e.pointerType === "mouse" && e.button !== 0) return;
                 if (e.target && e.target.closest && e.target.closest(".avatar-stage-actions")) return;
@@ -360,6 +502,7 @@
             stage.addEventListener("mousemove", function (e) {
                 updateStageDrag(e.clientX, e.clientY);
             });
+            stage.addEventListener("mouseleave", resetStageGaze);
             stage.addEventListener("mousedown", function (e) {
                 if (e.button !== 0) return;
                 if (e.target && e.target.closest && e.target.closest(".avatar-stage-actions")) return;
@@ -369,6 +512,10 @@
             });
             window.addEventListener("mouseup", stopStageDrag);
         }
+        window.addEventListener("blur", function () {
+            resetStageGaze();
+            stopStageDrag();
+        });
         stage.addEventListener("dblclick", function () {
             if (MODE === "panda" && pandaAvatar) pandaAvatar.resetYaw();
             else if (MODE === "vrm") vtuber.yaw = 0;
@@ -741,10 +888,56 @@
     }
 
     // ---------- 口型 / 表情 / idle 动画 ----------
-    var last = 0, visemeTick = 0;
+    var last = 0;
 
     function voiceActive() {
-        return !tts.paused && (tts.speaking || mouthPulse > 0.02);
+        return tts.on && !tts.paused && tts.speaking;
+    }
+
+    function speechNow() {
+        return typeof performance !== "undefined" ? performance.now() / 1000 : Date.now() / 1000;
+    }
+
+    // Web Speech exposes boundaries, not PCM or phonemes. Estimate between
+    // boundaries, then re-anchor to the position reported by the speech engine.
+    function createSpeechTimeline(text) {
+        var segments = [], end = 0;
+        for (var index = 0; index < text.length;) {
+            var char = String.fromCodePoint(text.codePointAt(index));
+            var voiced = /[\p{L}\p{N}]/u.test(char);
+            var duration = /[。！？!?；;]/.test(char) ? 0.32
+                : /[，,、：:]/.test(char) ? 0.20
+                : /[\u3400-\u9fff]/.test(char) ? 0.19 : voiced ? 0.075 : 0.045;
+            segments.push({ index: index, start: end, end: end + duration, voiced: voiced });
+            end += duration;
+            index += char.length;
+        }
+        return { segments: segments, position: 0, at: speechNow(), speed: 1, boundary: null, pausedAt: null };
+    }
+
+    function pauseSpeechTimeline() {
+        if (tts.lip && tts.lip.pausedAt === null) tts.lip.pausedAt = speechNow();
+    }
+
+    function resumeSpeechTimeline() {
+        if (tts.lip && tts.lip.pausedAt !== null) {
+            var delay = speechNow() - tts.lip.pausedAt;
+            tts.lip.at += delay;
+            if (tts.lip.boundary) tts.lip.boundary.at += delay;
+            tts.lip.pausedAt = null;
+        }
+    }
+
+    function speechMouth() {
+        var lip = tts.lip;
+        if (!voiceActive() || !lip) return { open: 0 };
+        var position = lip.position + Math.max(0, (lip.pausedAt === null ? speechNow() : lip.pausedAt) - lip.at) * lip.speed;
+        var segment = lip.segments.find(function (item) { return position >= item.start && position < item.end; });
+        if (!segment || !segment.voiced) return { open: 0 };
+        var phase = (position - segment.start) / (segment.end - segment.start);
+        // Adjacent syllables keep a small opening; full closure is reserved for
+        // punctuation/silence. Boundary corrections no longer snap a wide mouth shut.
+        return { open: 0.18 + 0.38 * Math.pow(Math.sin(Math.PI * phase), 2) };
     }
 
     function setMorph(list, idx, v) {
@@ -830,14 +1023,9 @@
                 : voiceActive() ? (tts.speaking ? 0.32 : 0.16) : 0.06;
             setMorph(faces, map.joy, infl[map.joy] + (joyTarget - infl[map.joy]) * Math.min(1, dt * 5));
         }
-        // 口型：朗读/文字脉冲期间按 ~7.5 次/秒切元音 morph，其余归零
+        // Shared speech timeline; no unrelated cycling through vowel shapes.
         var target = [0, 0, 0, 0, 0];
-        if (voiceActive()) {
-            visemeTick += dt * 7.5;
-            var idx = Math.floor(visemeTick) % visemes.length;
-            var open = 0.52 + 0.34 * Math.abs(Math.sin(visemeTick * 2.1)) + 0.22 * mouthPulse;
-            target[idx] = Math.min(0.95, open);
-        }
+        target[0] = speechMouth().open;
         for (var k = 0; k < visemes.length; k++) {
             var vi = visemes[k];
             if (vi < 0 || vi >= infl.length) continue;
@@ -848,13 +1036,13 @@
 
     function updateProcedural(t) {
         mouthPulse = Math.max(0, mouthPulse - 0.05);
-        var speakingAmt = Math.max(mouthPulse, tts.speaking ? 0.8 : 0);
+        var speakingAmt = voiceActive() ? Math.max(mouthPulse, 0.8) : 0;
         if (rig.group) rig.group.position.y = Math.sin(t * 1.2) * 0.05 + speakingAmt * 0.01;
         if (rig.head) {
             rig.head.rotation.y = Math.sin(t * 0.6) * 0.12 + pointerNX * 0.25;
             rig.head.rotation.x = Math.sin(t * 1.1) * 0.04 - pointerNY * 0.12;
         }
-        if (rig.mouth) rig.mouth.scale.y = 0.4 + speakingAmt * (0.9 + Math.sin(t * 11) * 0.45);
+        if (rig.mouth) rig.mouth.scale.y = 0.4 + speechMouth().open * 1.2;
         if (rig.eyes) rig.eyes.forEach(function (eye, i) {
             var blink = Math.sin(t * 0.7 + i * 0.2) > 0.985 ? 0.1 : 1;
             eye.scale.y = blink;
@@ -1098,15 +1286,17 @@
         var t = tick / 1000;
         var dt = Math.min(0.05, t - last || 0.016);
         last = t;
+        updatePointerGaze(dt);
         if (MODE === "live2d") {
             mouthPulse = Math.max(0, mouthPulse - dt * 3);
-            if (live2dAvatar) live2dAvatar.setVoice(voiceActive());
+            if (live2dAvatar) live2dAvatar.setVoice(voiceActive(), speechMouth().open);
         } else {
             if (MODE === "panda" && pandaAvatar) {
                 mouthPulse = Math.max(0, mouthPulse - dt * 3);
                 pandaAvatar.update(t, dt, {
                     voiceActive: voiceActive(),
                     mouthPulse: mouthPulse,
+                    mouthOpen: speechMouth().open,
                     pointerNX: pointerNX,
                     pointerNY: pointerNY,
                     thinking: thinking
@@ -1125,9 +1315,13 @@
         speaking: false,
         paused: false,
         current: null,
+        lip: null,
+        captionCursor: 0,
         generation: 0,
         queue: [],
         buf: "",
+        raw: "",
+        filteredLength: 0,
         voice: null
     };
 
@@ -1154,6 +1348,36 @@
             .replace(/[#*`>_~\[\]()]/g, " ").replace(/\s+/g, " ").trim();
     }
 
+    function narrationText(text, final) {
+        var lines = String(text).replace(/\r\n?/g, "\n").split("\n");
+        var bodyStarted = false, trailingNotice = false;
+        var kept = lines.map(function (line, index) {
+            var trimmed = line.trim();
+            var plain = trimmed.replace(/\*\*/g, "");
+            var pending = !final && index === lines.length - 1;
+            var heading = /^(?:#{1,6}\s|[一二三四五六七八九十百]+[、．.]|第[一二三四五六七八九十\d]+[章节部分]|[—－]{2,})/.test(trimmed)
+                || /^\*\*[^。！？!?：:]{1,60}\*\*\s*$/.test(trimmed);
+            var preface = !bodyStarted && /^(?:我来|我先|我将|我会|先检索|先查询|网络检索|资料库中|下面我|以下(?:是|为)|好的[，,。！!])/.test(plain);
+            if (/^(?:(?:说明|备注|注|提示|温馨提示|资料说明|来源说明)[：:]|以上(?:信息|内容|资料|数据).*(?:参考|为准))/.test(plain)) trailingNotice = true;
+            if (trailingNotice) return "";
+            // Hold possible headings/preambles until their complete line arrives.
+            var possiblePrefix = ["网络", "资料库", "下面", "以下", "以上", "说明", "备注", "提示", "温馨提示", "资料说明", "来源说明"]
+                .some(function (prefix) { return prefix.startsWith(plain); });
+            if (pending && (possiblePrefix || /^(?:#|\*|[一二三四五六七八九十百]|第|—|－|我|先|网络|资料库|下面|以下|以上|好|说明|备注|注|提示|温馨提示|资料说明|来源说明)/.test(trimmed))) return "";
+            if (heading || preface || /^\s*[-=]{3,}\s*$/.test(line)) return "";
+            if (trimmed) bodyStarted = true;
+            return line + (index < lines.length - 1 ? "\n" : "");
+        }).join("");
+        // Parentheses may nest and may span streamed chunks or whole paragraphs.
+        var depth = 0, out = "";
+        for (var char of kept) {
+            if (char === "（" || char === "(") depth++;
+            else if (char === "）" || char === ")") depth = Math.max(0, depth - 1);
+            else if (!depth) out += char;
+        }
+        return out;
+    }
+
     function renderPlaybackControls() {
         var btn = $("avatarPlaybackBtn");
         if (!btn) return;
@@ -1173,7 +1397,7 @@
     }
 
     function ttsPump() {
-        if (!tts.on || !tts.supported || tts.paused || tts.speaking || !tts.queue.length) {
+        if (!tts.on || !tts.supported || tts.paused || tts.current || !tts.queue.length) {
             renderPlaybackControls();
             return;
         }
@@ -1186,20 +1410,59 @@
         if (tts.voice) u.voice = tts.voice;
         // Reserve the utterance before onstart, so streaming chunks cannot enqueue duplicates.
         tts.current = u;
-        tts.speaking = true;
+        tts.speaking = false;
         u.onstart = function () {
-            if (generation !== tts.generation) return;
-            if (tts.paused) window.speechSynthesis.pause();
+            if (generation !== tts.generation || tts.current !== u) return;
+            tts.speaking = true;
+            tts.lip = createSpeechTimeline(text);
+            reading = { u: u, index: 0, length: 1, range: null };
+            renderReading();
+            mouthPulse = 0;
+            if (tts.paused) { pauseSpeechTimeline(); window.speechSynthesis.pause(); }
             renderPlaybackControls();
         };
-        u.onboundary = function () {
-            if (generation !== tts.generation) return;
+        u.onpause = function () {
+            if (generation !== tts.generation || tts.current !== u) return;
+            pauseSpeechTimeline();
+            tts.speaking = false;
+            mouthPulse = 0;
+            renderReading();
+        };
+        u.onresume = function () {
+            if (generation !== tts.generation || tts.current !== u) return;
+            resumeSpeechTimeline();
+            tts.speaking = true;
+            renderReading();
+        };
+        u.onboundary = function (event) {
+            if (generation !== tts.generation || tts.current !== u || !tts.lip || !voiceActive()) return;
+            if (!event || !Number.isInteger(event.charIndex)) return;
+            if (event.name === "sentence") return;
+            if (event.charIndex >= 0 && event.charIndex < text.length && reading && reading.u === u && event.charIndex >= reading.index) {
+                reading.index = event.charIndex;
+                reading.length = event.charLength > 0 ? event.charLength : String.fromCodePoint(text.codePointAt(event.charIndex)).length;
+                renderReading();
+            }
+            var lip = tts.lip;
+            var segment = lip.segments.find(function (item) { return item.index === event.charIndex; });
+            if (!segment || (lip.boundary && segment.start <= lip.boundary.position)) return;
+            var now = speechNow();
+            if (lip.boundary && now > lip.boundary.at) {
+                lip.speed = Math.max(0.5, Math.min(2, (segment.start - lip.boundary.position) / (now - lip.boundary.at)));
+            }
+            lip.position = segment.start;
+            lip.at = now;
+            lip.boundary = { position: segment.start, at: now };
             mouthPulse = Math.max(mouthPulse, 0.92);
         };
         u.onend = u.onerror = function () {
-            if (generation !== tts.generation) return;
+            if (generation !== tts.generation || tts.current !== u) return;
             tts.current = null;
+            if (u.captionEnd != null) tts.captionCursor = u.captionEnd;
+            clearReading();
+            tts.lip = null;
             tts.speaking = false;
+            mouthPulse = 0;
             renderPlaybackControls();
             setTimeout(function () {
                 if (generation === tts.generation) ttsPump();
@@ -1212,7 +1475,13 @@
     // Keep receiving text while paused; only audio playback is suspended.
     function ttsFeed(chunk) {
         if (!tts.on || !tts.supported) return;
-        tts.buf += chunk;
+        tts.raw += chunk;
+        feedNarration(narrationText(tts.raw, false));
+    }
+
+    function feedNarration(filtered) {
+        tts.buf += filtered.slice(tts.filteredLength);
+        tts.filteredLength = filtered.length;
         var parts = tts.buf.split(/(?<=[。！？!?；;\n])/);
         tts.buf = /[。！？!?；;\n]$/.test(tts.buf) ? "" : (parts.pop() || "");
         parts.forEach(queueSentence);
@@ -1221,6 +1490,7 @@
 
     function queueSentence(text) {
         var cleaned = cleanSentence(text);
+        if (!/[\p{L}\p{N}]/u.test(cleaned)) return;
         // Long paragraphs are split instead of silently dropping their tail.
         while (cleaned.length) {
             tts.queue.push(cleaned.slice(0, 220));
@@ -1230,8 +1500,11 @@
 
     function ttsFlush() {
         if (!tts.on || !tts.supported) return;
+        feedNarration(narrationText(tts.raw, true));
         queueSentence(tts.buf);
         tts.buf = "";
+        tts.raw = "";
+        tts.filteredLength = 0;
         ttsPump();
     }
 
@@ -1239,9 +1512,15 @@
         tts.generation += 1;
         tts.queue = [];
         tts.buf = "";
+        tts.raw = "";
+        tts.filteredLength = 0;
         tts.current = null;
+        tts.captionCursor = 0;
+        clearReading();
+        tts.lip = null;
         tts.paused = false;
         tts.speaking = false;
+        mouthPulse = 0;
         if (tts.supported) {
             window.speechSynthesis.cancel();
             window.speechSynthesis.resume();
@@ -1263,15 +1542,18 @@
         btn.addEventListener("click", function () {
             if (tts.paused) {
                 tts.paused = false;
+                resumeSpeechTimeline();
                 window.speechSynthesis.resume();
                 ttsPump();
             } else if (tts.on && (tts.current || tts.queue.length || (streaming && answerText))) {
                 tts.paused = true;
+                pauseSpeechTimeline();
                 window.speechSynthesis.pause();
             } else {
                 replayAnswer();
             }
             renderPlaybackControls();
+            renderReading();
         });
         $("avatarRestartBtn").addEventListener("click", replayAnswer);
         renderPlaybackControls();
@@ -1589,21 +1871,10 @@
             renderSourcesDrawer((data && data.items) || []);
             triggerPandaAction("book", 2.0);
         } else if (event === "tool") {
-            var panel = ensureProcessPanel();
-            var args = data && typeof data === "object" ? data.arguments : null;
-            var detail = args == null ? "" : (typeof args === "string" ? args : JSON.stringify(args, null, 2));
-            appendProcessItem("工具：" + frameText(data, "name"), detail, "is-tool");
-            panel.tools += 1;
-            updateProcessSummary();
-            scrollCaptionToLatest();
             triggerPandaAction("book", 1.8);
         } else if (event === "reasoning") {
-            var process = ensureProcessPanel();
-            if (!process.reason) process.reason = appendProcessItem("思考过程", "", "is-reasoning");
-            process.reason.textContent += frameText(data);
-            updateProcessSummary();
-            scrollCaptionToLatest();
-            thinking = !process.finished;
+            // Internal reasoning never enters the captions or speech queue.
+            return;
         } else if (event === "assistant") {
             var nm = (data && typeof data === "object" && data.name) ? data.name : "数字助理";
             assistantName = nm;
@@ -1618,10 +1889,12 @@
             var text = frameText(data);
             gotDelta = true;
             if (!captionEl || !captionEl.parentNode) captionEl = appendCaption(assistantName, "", "is-assistant");
+            narrationCaption = captionEl;
             answerText += text;
-            captionEl.innerHTML = renderMarkdown(answerText);
+            if (!captionReveal || captionReveal.el !== captionEl) captionReveal = { el: captionEl, text: "", shown: 0, scheduled: false };
+            captionReveal.text = answerText;
+            revealCaption();
             scrollCaptionToLatest();
-            mouthPulse = 1;               // 文字节奏兜底驱动口型（TTS 关闭时也张嘴）
             ttsFeed(text);                // 语音：按句排队朗读
         } else if (event === "error") {
             finishProcess();
@@ -1639,7 +1912,9 @@
 
     function sendMessage(text) {
         if (streaming || agentBusy) return;
+        finishCaptionReveal();
         ttsStopAll();
+        narrationCaption = null;
         streaming = true;
         finishProcess();
         processPanel = null;
@@ -1662,7 +1937,7 @@
                 "Content-Type": "application/json",
                 "X-Xsrftoken": xsrfToken()
             },
-            body: JSON.stringify({ message: text, session_id: SESSION_ID, employee_id: selectedAgent ? selectedAgent.id : null }),
+            body: JSON.stringify({ message: text, session_id: SESSION_ID, employee_id: selectedAgent ? selectedAgent.id : null, presentation: true }),
             credentials: "same-origin"
         }).then(function (resp) {
             if (resp.status === 401) { location.href = "/auth/login"; return null; }

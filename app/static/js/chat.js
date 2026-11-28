@@ -232,6 +232,14 @@
     // 空状态欢迎屏（西华师大现代校园白蓝风 + 三大场景快捷提问卡）
     function showEmptyTip() {
         var name = currentAssistant ? currentAssistant.name : "华师小助手";
+        app.classList.toggle("is-temporary-empty", temporaryChat);
+        if (temporaryChat) {
+            messagesEl.innerHTML =
+                '<section class="chat-empty chat-temporary-empty" aria-labelledby="temporaryWelcomeTitle">' +
+                '  <h2 class="chat-welcome-title" id="temporaryWelcomeTitle">此刻想聊些什么？</h2>' +
+                '</section>';
+            return;
+        }
         messagesEl.innerHTML =
             '<div class="chat-empty">' +
             '  <div class="chat-welcome-emblem" aria-hidden="true">' +
@@ -502,6 +510,7 @@
                 var list = document.createElement("div");
                 list.className = "chat-sources-list";
                 var hasSCSWikiSource = false;
+                var hasLocalSCSWikiMaterial = false;
                 items.forEach(function (src) {
                     if (!src) return;
                     var card = document.createElement("div");
@@ -510,6 +519,7 @@
                     head.className = "chat-source-head";
                     var titleEl = document.createElement("strong");
                     titleEl.textContent = src.title || "知识库文档";
+                    if (/^课程附件\s*[·•]/.test(titleEl.textContent)) hasLocalSCSWikiMaterial = true;
                     var sourceUrl = null;
                     try {
                         var parsedSource = new URL(src.source_url || "");
@@ -555,7 +565,7 @@
                 });
                 details.appendChild(summary);
                 details.appendChild(list);
-                if (hasSCSWikiSource) addSCSWikiAttribution(details);
+                if (hasSCSWikiSource || hasLocalSCSWikiMaterial) addSCSWikiAttribution(details);
                 sourcesSlotEl.replaceChildren(details);
                 sourcesSlotEl.hidden = false;
             },
@@ -843,9 +853,20 @@
         temporaryChat = enabled;
         temporaryHistory = [];
         $("temporaryChatBtn").setAttribute("aria-pressed", String(enabled));
-        $("temporaryChatHint").hidden = !enabled;
+        app.classList.toggle("is-temporary", enabled);
+        if (!enabled) app.classList.remove("is-temporary-empty");
+        $("chatHeaderTitle").innerHTML = enabled
+            ? '<i class="fas fa-user-clock" aria-hidden="true"></i> 临时对话'
+            : '<i class="fas fa-graduation-cap" aria-hidden="true"></i> 智慧校园对话大厅';
+        $("chatHeaderTip").textContent = enabled
+            ? "不保存记录"
+            : "勤奋 · 求实 · 敬业 · 创新 ｜ 输入「@音乐 轻音乐」可点播校园曲库";
+        $("exitTemporaryBtn").hidden = !enabled;
         var exportButton = $("exportPdfBtn");
-        if (exportButton) exportButton.disabled = enabled;
+        if (exportButton) {
+            exportButton.disabled = enabled;
+            exportButton.hidden = enabled;
+        }
     }
 
     function newSession(temporary) {
@@ -1047,6 +1068,7 @@
         if (streaming || sessionChanging || sessionArchived) return;
         text = (text || "").trim();
         if (!text) return;
+        clearEmptyTipIfNeeded();
 
         // 成员 D（任务2）：「@音乐 xxx」前缀拦截 → 本地曲库点歌，不走模型对话
         var musicMatch = text.match(/^@音乐\s*([\s\S]*)$/);
@@ -1058,7 +1080,6 @@
             return;
         }
 
-        clearEmptyTipIfNeeded();
         addUserMessage(text);
         inputEl.value = "";
         autosize();
@@ -1183,6 +1204,7 @@
     }
 
     function clearEmptyTipIfNeeded() {
+        app.classList.remove("is-temporary-empty");
         var tip = messagesEl.querySelector(".chat-empty");
         if (tip) messagesEl.innerHTML = "";
     }
@@ -1190,7 +1212,8 @@
     function setBusy(busy) {
         sendEl.disabled = busy || sessionChanging || sessionArchived;
         inputEl.disabled = sessionArchived;
-        inputEl.placeholder = sessionArchived ? "恢复会话后可继续对话" : "请输入你想了解的校园问题...";
+        inputEl.placeholder = sessionArchived ? "恢复会话后可继续对话" :
+            (temporaryChat ? "发送消息…" : "请输入你想了解的校园问题...");
         var sessionList = $("chatSessionList");
         if (sessionList) sessionList.classList.toggle("is-busy", busy || sessionChanging);
         sendEl.classList.toggle("is-busy", busy);
@@ -1317,6 +1340,14 @@
             newSession(true);
             setArchiveList(false);
             loadSessions();
+            inputEl.focus();
+        });
+        $("exitTemporaryBtn").addEventListener("click", function () {
+            if (streaming || sessionChanging) return;
+            newSession();
+            setArchiveList(false);
+            loadSessions();
+            inputEl.focus();
         });
 
         var exportBtn = $("exportPdfBtn");
